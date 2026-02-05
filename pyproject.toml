@@ -1,0 +1,175 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cuvis-ai-schemas"
+dynamic = ["version"]
+description = "Lightweight schema definitions for cuvis-ai ecosystem"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Cubert GmbH, Ulm, Germany", email = "SDK@cubert-gmbh.com" },
+]
+
+# Minimal core dependencies
+dependencies = [
+    "pydantic>=2.0.0,<3.0.0",
+    "pyyaml>=6.0",
+]
+
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.optional-dependencies]
+# Proto generation and gRPC support
+proto = [
+    "grpcio>=1.56.0",
+    "protobuf>=4.25.0",
+    "grpcio-tools>=1.56.0",
+]
+
+# PyTorch integration (for PortSpec dtype handling only - no GPU operations)
+# Version is flexible since only dtype validation is performed
+torch = [
+    "torch>=2.0.0",
+    "torchvision",
+]
+
+# NumPy support (for Artifact.value arrays)
+numpy = [
+    "numpy>=1.21.0",
+]
+
+# PyTorch Lightning integration (for training configs)
+lightning = [
+    "pytorch-lightning>=2.0.0",
+]
+
+# Full feature set
+full = [
+    "cuvis-ai-schemas[proto,torch,numpy,lightning]",
+]
+
+# Development dependencies
+dev = [
+    "ruff",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "mypy>=1.8.0",
+    "types-protobuf",
+    "types-grpcio",
+    "types-PyYAML",
+    "interrogate>=1.7.0",
+]
+
+[project.urls]
+Homepage = "https://www.cubert-hyperspectral.com/"
+Repository = "https://github.com/cubert-hyperspectral/cuvis-ai-schemas"
+Documentation = "https://cubert-hyperspectral.github.io/cuvis-ai-schemas/"
+Issues = "https://github.com/cubert-hyperspectral/cuvis-ai-schemas/issues"
+
+[tool.setuptools.packages.find]
+include = ["cuvis_ai_schemas*"]
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "node-and-date"
+
+# Note: CUDA-specific index removed since this package only performs dtype validation
+# Users can install PyTorch with their preferred CUDA version or CPU-only
+
+[tool.pytest.ini_options]
+addopts = "-ra --showlocals"
+testpaths = ["tests"]
+xfail_strict = true
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "C4",  # flake8-comprehensions
+]
+extend-select = [
+    "ANN201",  # missing-return-type-undocumented-public-function
+    "ANN202",  # missing-return-type-private-function
+    "ANN204",  # missing-return-type-special-method
+]
+ignore = [
+    "ANN401",  # any-type
+    "E501",    # line-too-long (handled by formatter)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "ANN201",
+    "ANN202",
+    "ANN204",
+]
+"cuvis_ai_schemas/grpc/v1/*.py" = [
+    "ANN201",
+    "ANN204",
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_configs = true
+warn_redundant_casts = true
+
+# Exclude auto-generated proto files from strict checks
+[[tool.mypy.overrides]]
+module = "cuvis_ai_schemas.grpc.v1.cuvis_ai_pb2"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "cuvis_ai_schemas.grpc.v1.cuvis_ai_pb2_grpc"
+ignore_errors = true
+
+# Allow missing imports for optional dependencies
+[[tool.mypy.overrides]]
+module = "omegaconf"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "numpy"
+ignore_missing_imports = true
+
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = false
+ignore-magic = false
+ignore-semiprivate = false
+ignore-private = false
+ignore-property-decorators = false
+ignore-module = false
+ignore-nested-functions = false
+ignore-nested-classes = true
+ignore-setters = false
+fail-under = 95
+exclude = ["cuvis_ai_schemas/grpc"]
+verbose = 1
