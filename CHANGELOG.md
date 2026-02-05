@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-02-05
+
+### Added
+- Automated CI/CD pipeline for PyPI releases via GitHub Actions
+- Tag-triggered release workflow (triggers on `v*.*.*` tags)
+- Automated testing and type checking in CI (pytest, mypy, ruff)
+- Automated package building and validation with twine
+- TestPyPI publishing for pre-production verification
+- Production PyPI publishing with manual approval gate
+- Automatic GitHub Release creation with changelog extraction
+- GitHub Environments configuration (testpypi, pypi)
+- PyPI Trusted Publishing (OIDC) for secure authentication
+
+### Changed
+- Enhanced pytest execution to include coverage reporting (`--cov --cov-report=term-missing`)
+- Improved GitHub Release notes generation to parse CHANGELOG.md automatically
+- Added `skip-existing: true` to TestPyPI publish step to prevent re-run failures
+
+### Fixed
+- Workflow now properly extracts version-specific release notes from CHANGELOG.md
+- Release notes now include installation instructions with examples
+
 ## [0.1.0] - 2026-02-04
 
 ### Added

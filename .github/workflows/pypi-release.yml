@@ -1,0 +1,169 @@
+name: PyPI Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  test-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run tests
+        run: uv run pytest tests/ --cov --cov-report=term-missing
+
+      - name: Run mypy
+        run: uv run mypy .
+
+      - name: Run ruff
+        run: uv run ruff check .
+
+  build-and-validate:
+    needs: test-and-typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Build package
+        run: uv build
+
+      - name: Validate package
+        run: uv run twine check dist/*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish-testpypi:
+    needs: build-and-validate
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/cuvis-ai-schemas
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+
+  publish-pypi:
+    needs: publish-testpypi
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/cuvis-ai-schemas
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  create-github-release:
+    needs: publish-pypi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Parse CHANGELOG.md for this version's notes
+          if [ -f CHANGELOG.md ]; then
+            # Escape dots in version for regex (e.g., "0.1.1" -> "0\.1\.1")
+            VERSION_ESCAPED=$(echo "$VERSION" | sed 's/\./\\./g')
+
+            # Extract content between ## [VERSION] headers using sed
+            # Matches from ## [X.Y.Z] to the next ## [ line (exclusive)
+            NOTES=$(sed -n "/^## \[${VERSION_ESCAPED}\]/,/^## \[/{
+              /^## \[${VERSION_ESCAPED}\]/d
+              /^## \[/d
+              p
+            }" CHANGELOG.md)
+
+            # Remove blank lines at start and end
+            NOTES=$(echo "$NOTES" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}')
+
+            if [ -z "$NOTES" ]; then
+              NOTES="See [CHANGELOG.md](https://github.com/cubert-hyperspectral/cuvis-ai-schemas/blob/main/CHANGELOG.md) for details."
+            fi
+          else
+            NOTES="Release ${VERSION}"
+          fi
+
+          # Build release notes
+          {
+            echo "## Release ${VERSION}"
+            echo ""
+            echo "$NOTES"
+            echo ""
+            echo "## Installation"
+            echo '```bash'
+            echo "uv add cuvis-ai-schemas==${VERSION}"
+            echo "# With extras:"
+            echo "uv add 'cuvis-ai-schemas[proto]==${VERSION}'"
+            echo '```'
+            echo ""
+            echo "**PyPI**: https://pypi.org/project/cuvis-ai-schemas/${VERSION}/"
+          } > release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          files: dist/*
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
