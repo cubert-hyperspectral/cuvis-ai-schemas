@@ -173,3 +173,8 @@ ignore-setters = false
 fail-under = 95
 exclude = ["cuvis_ai_schemas/grpc"]
 verbose = 1
+
+[dependency-groups]
+dev = [
+    "twine>=6.2.0",
+]
