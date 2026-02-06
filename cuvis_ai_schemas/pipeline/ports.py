@@ -85,7 +85,22 @@ class PortSpec:
     optional: bool = False
 
     def resolve_shape(self, node: Any) -> tuple[int, ...]:
-        """Resolve symbolic dimensions in shape using node attributes."""
+        """Resolve symbolic dimensions in shape using node attributes.
+
+        Parameters
+        ----------
+        node : Any
+            Node instance to resolve symbolic dimensions from.
+
+        Returns
+        -------
+        tuple[int, ...]
+            Resolved shape with all symbolic dimensions replaced by concrete integer values.
+
+        See Also
+        --------
+        DimensionResolver.resolve : Underlying resolution logic.
+        """
         return DimensionResolver.resolve(self.shape, node)
 
     def is_compatible_with(
@@ -112,12 +127,35 @@ class PortSpec:
         """
 
         def _format_dtype(value: Any) -> str:
+            """Format a dtype value for display in error messages.
+
+            Parameters
+            ----------
+            value : Any
+                A dtype value (torch.dtype, type, or other).
+
+            Returns
+            -------
+            str
+                Human-readable string representation of the dtype.
+            """
             if isinstance(value, torch.dtype):
                 return str(value)
             return getattr(value, "__name__", str(value))
 
         def _is_tensor_related(dtype: Any) -> bool:
-            """Check if dtype is torch.Tensor or a specific torch.dtype."""
+            """Check if dtype is torch.Tensor or a specific torch.dtype.
+
+            Parameters
+            ----------
+            dtype : Any
+                The dtype to check.
+
+            Returns
+            -------
+            bool
+                True if dtype is torch.Tensor or a torch.dtype instance.
+            """
             return dtype is torch.Tensor or isinstance(dtype, torch.dtype)
 
         # Handle variadic ports (list-based specs)
@@ -183,11 +221,29 @@ class OutputPort:
     """Proxy object representing a node's output port."""
 
     def __init__(self, node: Any, name: str, spec: PortSpec) -> None:
+        """Initialize an output port proxy.
+
+        Parameters
+        ----------
+        node : Any
+            The node instance that owns this port.
+        name : str
+            The name of the port on the node.
+        spec : PortSpec
+            The port specification defining type and shape constraints.
+        """
         self.node = node
         self.name = name
         self.spec = spec
 
     def __repr__(self) -> str:
+        """Return string representation of the output port.
+
+        Returns
+        -------
+        str
+            String in format "OutputPort(node_id.port_name)".
+        """
         node_id = getattr(self.node, "id", None) or self.node
         return f"OutputPort({node_id}.{self.name})"
 
@@ -196,11 +252,29 @@ class InputPort:
     """Proxy object representing a node's input port."""
 
     def __init__(self, node: Any, name: str, spec: PortSpec) -> None:
+        """Initialize an input port proxy.
+
+        Parameters
+        ----------
+        node : Any
+            The node instance that owns this port.
+        name : str
+            The name of the port on the node.
+        spec : PortSpec
+            The port specification defining type and shape constraints.
+        """
         self.node = node
         self.name = name
         self.spec = spec
 
     def __repr__(self) -> str:
+        """Return string representation of the input port.
+
+        Returns
+        -------
+        str
+            String in format "InputPort(node_id.port_name)".
+        """
         node_id = getattr(self.node, "id", None) or self.node
         return f"InputPort({node_id}.{self.name})"
 
