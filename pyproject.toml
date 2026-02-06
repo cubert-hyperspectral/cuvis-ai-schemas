@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11,<3.12"
 license = { text = "Apache-2.0" }
 authors = [
-    { name = "Cubert GmbH, Ulm, Germany", email = "SDK@cubert-gmbh.com" },
+    { name = "Cubert GmbH, Ulm, Germany", email = "cuvis.ai@cubert-gmbh.com" },
 ]
 
 # Minimal core dependencies

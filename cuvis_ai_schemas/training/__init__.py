@@ -1,5 +1,6 @@
 """Training configuration schemas for cuvis-ai."""
 
+from cuvis_ai_schemas.pipeline.config import PipelineConfig, PipelineMetadata
 from cuvis_ai_schemas.training.callbacks import (
     CallbacksConfig,
     EarlyStoppingConfig,
@@ -9,11 +10,7 @@ from cuvis_ai_schemas.training.callbacks import (
 from cuvis_ai_schemas.training.config import TrainingConfig
 from cuvis_ai_schemas.training.data import DataConfig
 from cuvis_ai_schemas.training.optimizer import OptimizerConfig
-from cuvis_ai_schemas.training.run import (
-    PipelineConfig,
-    PipelineMetadata,
-    TrainRunConfig,
-)
+from cuvis_ai_schemas.training.run import TrainRunConfig
 from cuvis_ai_schemas.training.scheduler import SchedulerConfig
 from cuvis_ai_schemas.training.trainer import TrainerConfig
 

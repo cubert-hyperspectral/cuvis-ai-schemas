@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from cuvis_ai_schemas.pipeline.config import PipelineConfig
 from cuvis_ai_schemas.training.config import TrainingConfig
 from cuvis_ai_schemas.training.data import DataConfig
 
@@ -16,96 +17,6 @@ if TYPE_CHECKING:
         from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
     except ImportError:
         cuvis_ai_pb2 = None  # type: ignore[assignment]
-
-
-class PipelineMetadata(BaseModel):
-    """Pipeline metadata for documentation and discovery."""
-
-    name: str
-    description: str = ""
-    created: str = ""
-    tags: list[str] = Field(default_factory=list)
-    author: str = ""
-    cuvis_ai_version: str = Field(default="0.1.0")
-
-    model_config = ConfigDict(extra="forbid", validate_assignment=True, populate_by_name=True)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
-        return self.model_dump()
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> PipelineMetadata:
-        """Create from dictionary."""
-        return cls.model_validate(data)
-
-    def to_proto(self) -> Any:
-        """Convert to protobuf message (requires proto extra)."""
-        try:
-            from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-        except ImportError as e:
-            raise ImportError(
-                "Proto support requires the 'proto' extra: pip install cuvis-ai-schemas[proto]"
-            ) from e
-
-        return cuvis_ai_pb2.PipelineMetadata(
-            name=self.name,
-            description=self.description,
-            created=self.created,
-            tags=list(self.tags),
-            author=self.author,
-            cuvis_ai_version=self.cuvis_ai_version,
-        )
-
-
-class PipelineConfig(BaseModel):
-    """Pipeline structure configuration."""
-
-    name: str = Field(default="", description="Pipeline name")
-    nodes: list[dict[str, Any]] = Field(description="Node definitions")
-    connections: list[dict[str, Any]] = Field(description="Node connections")
-    frozen_nodes: list[str] = Field(
-        default_factory=list, description="Node names to keep frozen during training"
-    )
-    metadata: PipelineMetadata | None = Field(
-        default=None, description="Optional pipeline metadata"
-    )
-
-    model_config = ConfigDict(extra="forbid", validate_assignment=True, populate_by_name=True)
-
-    def to_proto(self) -> Any:
-        """Convert to protobuf message (requires proto extra)."""
-        try:
-            from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-        except ImportError as e:
-            raise ImportError(
-                "Proto support requires the 'proto' extra: pip install cuvis-ai-schemas[proto]"
-            ) from e
-
-        return cuvis_ai_pb2.PipelineConfig(config_bytes=self.model_dump_json().encode("utf-8"))
-
-    @classmethod
-    def from_proto(cls, proto_config):
-        """Create from protobuf message (requires proto extra)."""
-        return cls.model_validate_json(proto_config.config_bytes.decode("utf-8"))
-
-    def to_json(self) -> str:
-        """JSON serialization helper for legacy callers."""
-        return self.model_dump_json()
-
-    @classmethod
-    def from_json(cls, payload: str) -> PipelineConfig:
-        """Create from JSON string."""
-        return cls.model_validate_json(payload)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
-        return self.model_dump()
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> PipelineConfig:
-        """Create from dictionary."""
-        return cls.model_validate(data)
 
 
 class TrainRunConfig(BaseModel):
@@ -195,4 +106,4 @@ class TrainRunConfig(BaseModel):
         return self
 
 
-__all__ = ["PipelineMetadata", "PipelineConfig", "TrainRunConfig"]
+__all__ = ["TrainRunConfig"]
