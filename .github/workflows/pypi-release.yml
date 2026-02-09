@@ -28,8 +28,18 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
 
-      - name: Run tests
-        run: uv run pytest tests/ --cov --cov-report=term-missing
+      - name: Run tests with coverage
+        run: |
+          uv run pytest tests/ --cov=cuvis_ai_schemas --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-release
+          fail_ci_if_error: false
 
       - name: Run mypy
         run: uv run mypy .
