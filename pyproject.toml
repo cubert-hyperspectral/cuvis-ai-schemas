@@ -12,6 +12,19 @@ license = { text = "Apache-2.0" }
 authors = [
     { name = "Cubert GmbH, Ulm, Germany", email = "cuvis.ai@cubert-gmbh.com" },
 ]
+keywords = [
+    "schema",
+    "validation",
+    "pydantic",
+    "pipeline",
+    "hyperspectral",
+    "cuvis",
+    "grpc",
+    "protobuf",
+    "ai",
+    "machine-learning",
+    "type-safety",
+]
 
 # Minimal core dependencies
 dependencies = [
@@ -20,12 +33,34 @@ dependencies = [
 ]
 
 classifiers = [
+    # Development status
+    "Development Status :: 4 - Beta",
+
+    # Audience
     "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+
+    # License
     "License :: OSI Approved :: Apache Software License",
+
+    # Programming language
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3 :: Only",
+
+    # Topics
     "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Distributed Computing",
+
+    # Framework and typing
+    "Framework :: Pydantic",
+    "Framework :: Pydantic :: 2",
+    "Typing :: Typed",
+
+    # Operating System
+    "Operating System :: OS Independent",
 ]
 
 [project.optional-dependencies]
@@ -75,6 +110,8 @@ Homepage = "https://www.cubert-hyperspectral.com/"
 Repository = "https://github.com/cubert-hyperspectral/cuvis-ai-schemas"
 Documentation = "https://cubert-hyperspectral.github.io/cuvis-ai-schemas/"
 Issues = "https://github.com/cubert-hyperspectral/cuvis-ai-schemas/issues"
+Changelog = "https://github.com/cubert-hyperspectral/cuvis-ai-schemas/blob/main/CHANGELOG.md"
+Source = "https://github.com/cubert-hyperspectral/cuvis-ai-schemas"
 
 [tool.setuptools.packages.find]
 include = ["cuvis_ai_schemas*"]
