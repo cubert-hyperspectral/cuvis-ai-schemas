@@ -10,55 +10,18 @@ permissions:
   id-token: write
 
 jobs:
-  test-and-typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.11
-
-      - name: Install dependencies
-        run: uv sync --all-extras
-
-      - name: Run tests with coverage
-        run: |
-          uv run pytest tests/ --cov=cuvis_ai_schemas --cov-report=xml --cov-report=term-missing
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-release
-          fail_ci_if_error: false
-
-      - name: Run mypy
-        run: uv run mypy .
-
-      - name: Run ruff
-        run: uv run ruff check .
-
   build-and-validate:
-    needs: test-and-typecheck
+    name: Build and validate package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
-          version: "latest"
+          enable-cache: true
 
       - name: Set up Python
         run: uv python install 3.11
@@ -72,20 +35,51 @@ jobs:
       - name: Validate package
         run: uv run twine check dist/*
 
-      - name: Upload artifacts
+      - name: Verify version matches tag
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          PKG_VERSION=$(ls dist/*.tar.gz | sed 's/.*cuvis_ai_schemas-\(.*\)\.tar\.gz/\1/')
+          echo "Tag version: $TAG_VERSION"
+          echo "Package version: $PKG_VERSION"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match package version ($PKG_VERSION)"
+            exit 1
+          fi
+
+      - name: Generate SBOM
+        run: |
+          uv run cyclonedx-py -o sbom.cdx.json || true
+
+      - name: Generate license report
+        run: |
+          uv run pip-licenses --format=markdown --with-authors > licenses.md || true
+
+      - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
 
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            sbom.cdx.json
+            licenses.md
+
   publish-testpypi:
+    name: Publish to TestPyPI
     needs: build-and-validate
     runs-on: ubuntu-latest
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/cuvis-ai-schemas
+      url: https://test.pypi.org/project/cuvis-ai-schemas/
+    permissions:
+      id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download dist
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
@@ -97,13 +91,17 @@ jobs:
           skip-existing: true
 
   publish-pypi:
+    name: Publish to PyPI
     needs: publish-testpypi
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/cuvis-ai-schemas
+      url: https://pypi.org/project/cuvis-ai-schemas/
+    permissions:
+      id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download dist
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
@@ -111,69 +109,44 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
-  create-github-release:
+  create-release:
+    name: Create GitHub Release
     needs: publish-pypi
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v6
 
-      - uses: actions/download-artifact@v4
+      - name: Download dist
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
 
-      - name: Extract changelog
-        id: changelog
+      - name: Download reports
+        uses: actions/download-artifact@v4
+        with:
+          name: reports
+          path: dist/
+
+      - name: Extract release notes
+        id: extract-notes
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-          # Parse CHANGELOG.md for this version's notes
-          if [ -f CHANGELOG.md ]; then
-            # Escape dots in version for regex (e.g., "0.1.1" -> "0\.1\.1")
-            VERSION_ESCAPED=$(echo "$VERSION" | sed 's/\./\\./g')
-
-            # Extract content between ## [VERSION] headers using sed
-            # Matches from ## [X.Y.Z] to the next ## [ line (exclusive)
-            NOTES=$(sed -n "/^## \[${VERSION_ESCAPED}\]/,/^## \[/{
-              /^## \[${VERSION_ESCAPED}\]/d
-              /^## \[/d
-              p
-            }" CHANGELOG.md)
-
-            # Remove blank lines at start and end
-            NOTES=$(echo "$NOTES" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}')
-
-            if [ -z "$NOTES" ]; then
-              NOTES="See [CHANGELOG.md](https://github.com/cubert-hyperspectral/cuvis-ai-schemas/blob/main/CHANGELOG.md) for details."
-            fi
-          else
-            NOTES="Release ${VERSION}"
+          sed -n "/## \[${VERSION}\]/,/## \[/p" CHANGELOG.md | sed '1d;$d' > release_notes.md
+          if [ ! -s release_notes.md ]; then
+            echo "No specific release notes found for version ${VERSION}. See CHANGELOG.md for details." > release_notes.md
           fi
-
-          # Build release notes
-          {
-            echo "## Release ${VERSION}"
-            echo ""
-            echo "$NOTES"
-            echo ""
-            echo "## Installation"
-            echo '```bash'
-            echo "uv add cuvis-ai-schemas==${VERSION}"
-            echo "# With extras:"
-            echo "uv add 'cuvis-ai-schemas[proto]==${VERSION}'"
-            echo '```'
-            echo ""
-            echo "**PyPI**: https://pypi.org/project/cuvis-ai-schemas/${VERSION}/"
-          } > release_notes.md
+          cat release_notes.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ github.ref_name }}
-          files: dist/*
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/sbom.cdx.json
+            dist/licenses.md
           body_path: release_notes.md
-          draft: false
-          prerelease: false
+          generate_release_notes: true

@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Lightweight schema definitions for cuvis-ai ecosystem"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 authors = [
     { name = "Cubert GmbH, Ulm, Germany", email = "cuvis.ai@cubert-gmbh.com" },
 ]
@@ -39,9 +39,6 @@ classifiers = [
     # Audience
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-
-    # License
-    "License :: OSI Approved :: Apache Software License",
 
     # Programming language
     "Programming Language :: Python :: 3",
@@ -103,6 +100,13 @@ dev = [
     "types-grpcio",
     "types-PyYAML",
     "interrogate>=1.7.0",
+    # Security and packaging tools
+    "twine>=6.2.0",
+    "pip-audit>=2.7.0",
+    "bandit[toml]>=1.7.0",
+    "detect-secrets>=1.4.0",
+    "pip-licenses>=4.0.0",
+    "cyclonedx-bom>=4.0.0",
 ]
 
 [project.urls]
@@ -211,7 +215,6 @@ fail-under = 95
 exclude = ["cuvis_ai_schemas/grpc"]
 verbose = 1
 
-[dependency-groups]
-dev = [
-    "twine>=6.2.0",
-]
+[tool.bandit]
+exclude_dirs = ["tests", "cuvis_ai_schemas/grpc"]
+skips = ["B101"]
