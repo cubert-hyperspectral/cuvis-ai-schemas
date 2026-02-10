@@ -148,9 +148,6 @@ jobs:
       - name: Validate package
         run: uv run twine check dist/*
 
-      - name: Show package version
-        run: ls dist/
-
       - name: Generate SBOM
         run: |
           uv run cyclonedx-py -o sbom.cdx.json || true
