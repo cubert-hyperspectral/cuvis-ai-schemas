@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-02-10
+
+### Added
+- Security tooling: pip-audit, bandit, detect-secrets, cyclonedx-bom, pip-licenses
+- CI security job running pip-audit, detect-secrets, and bandit in parallel
+- CI build-and-validate job with SBOM generation and license report
+- Dependabot configuration for Python dependencies and GitHub Actions
+- `.secrets.baseline` for detect-secrets
+- `[tool.bandit]` configuration in pyproject.toml
+- Version-tag sanity check in release workflow
+- SBOM and license report attached to GitHub Releases
+
+### Changed
+- CI workflow: added `tags-ignore`, concurrency control, updated actions (checkout@v6, setup-uv@v7, codecov@v5)
+- Release workflow: removed redundant test re-runs, streamlined to build → TestPyPI → PyPI → GitHub Release
+- License format migrated to plain SPDX string (`license = "Apache-2.0"`) for setuptools 77+
+
+### Removed
+- Redundant `License ::` classifier (superseded by SPDX license field)
+- `[dependency-groups]` section (twine moved into dev extras)
+
+## [0.1.3] - 2026-02-07
+
+### Added
+- Continuous integration workflow (test, typecheck, lint)
+- Codecov integration with `codecov.yml` configuration (80% target)
+- Codecov upload in both CI and release workflows
+- README badges (PyPI version, CI status, codecov, license, Python version)
+- PyPI metadata enhancements (keywords, expanded classifiers)
+
+### Fixed
+- Pipeline port system: restored complete port compatibility checking
+- CI branch triggers changed from `develop` to `staging`
+
 ## [0.1.2] - 2026-02-05
 
 ### Added
