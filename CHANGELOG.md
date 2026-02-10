@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Changelog validation in release workflow (hard-fails if no entry for tag version)
 
+### Changed
+- Bumped `actions/upload-artifact` from v4 to v6 and `actions/download-artifact` from v4 to v7 in release workflow
+
 ## [0.1.4] - 2026-02-10
 
 ### Added
