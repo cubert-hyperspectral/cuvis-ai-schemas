@@ -2,6 +2,9 @@
 
 Lightweight schema definitions for the cuvis-ai ecosystem.
 
+[![PyPI version](https://img.shields.io/pypi/v/cuvis-ai-schemas.svg)](https://pypi.org/project/cuvis-ai-schemas/)
+[![CI Status](https://github.com/cubert-hyperspectral/cuvis-ai-schemas/actions/workflows/ci.yml/badge.svg)](https://github.com/cubert-hyperspectral/cuvis-ai-schemas/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/cubert-hyperspectral/cuvis-ai-schemas/branch/main/graph/badge.svg)](https://codecov.io/gh/cubert-hyperspectral/cuvis-ai-schemas)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
 
