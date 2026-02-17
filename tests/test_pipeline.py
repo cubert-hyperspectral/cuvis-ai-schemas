@@ -40,16 +40,16 @@ def test_pipeline_metadata():
 
 def test_node_config():
     """Test NodeConfig with direct field names (no aliases)."""
-    node = NodeConfig(name="normalizer", class_name="module.Normalizer", params={"min": 0})
+    node = NodeConfig(name="normalizer", class_name="module.Normalizer", hparams={"min": 0})
     assert node.name == "normalizer"
     assert node.class_name == "module.Normalizer"
-    assert node.params == {"min": 0}
+    assert node.hparams == {"min": 0}
 
 
-def test_node_config_default_params():
-    """Test NodeConfig with default empty params."""
+def test_node_config_default_hparams():
+    """Test NodeConfig with default empty hparams."""
     node = NodeConfig(name="node_1", class_name="my.package.MyNode")
-    assert node.params == {}
+    assert node.hparams == {}
 
 
 def test_node_config_rejects_old_aliases():
@@ -58,7 +58,7 @@ def test_node_config_rejects_old_aliases():
         NodeConfig(name="node_1", **{"class": "my.package.MyNode"})
 
     with pytest.raises(ValidationError):
-        NodeConfig(name="node_1", class_name="my.package.MyNode", **{"hparams": {"lr": 0.001}})
+        NodeConfig(name="node_1", class_name="my.package.MyNode", **{"params": {"lr": 0.001}})
 
 
 def test_connection_config():
@@ -97,7 +97,7 @@ def test_pipeline_config():
     pipeline = PipelineConfig(
         name="test_pipeline",
         nodes=[
-            NodeConfig(name="normalizer", class_name="module.Normalizer", params={"min": 0}),
+            NodeConfig(name="normalizer", class_name="module.Normalizer", hparams={"min": 0}),
         ],
         connections=[],
         frozen_nodes=["normalizer"],
@@ -114,7 +114,7 @@ def test_pipeline_config_from_dict():
     data = {
         "name": "test_pipeline",
         "nodes": [
-            {"name": "normalizer", "class_name": "module.Normalizer", "params": {"min": 0}},
+            {"name": "normalizer", "class_name": "module.Normalizer", "hparams": {"min": 0}},
             {"name": "model", "class_name": "module.Model"},
         ],
         "connections": [
@@ -134,7 +134,7 @@ def test_pipeline_config_round_trip():
     original = {
         "name": "round_trip_test",
         "nodes": [
-            {"name": "node_a", "class_name": "pkg.NodeA", "params": {"lr": 0.001}},
+            {"name": "node_a", "class_name": "pkg.NodeA", "hparams": {"lr": 0.001}},
             {"name": "node_b", "class_name": "pkg.NodeB"},
         ],
         "connections": [
@@ -172,15 +172,15 @@ def test_pipeline_config_json_round_trip():
 
 def test_model_dump_uses_field_names():
     """Verify model_dump() uses field names directly (no alias indirection)."""
-    node = NodeConfig(name="test", class_name="pkg.Test", params={"x": 1})
+    node = NodeConfig(name="test", class_name="pkg.Test", hparams={"x": 1})
     dumped = node.model_dump()
     assert "name" in dumped
     assert "class_name" in dumped
-    assert "params" in dumped
+    assert "hparams" in dumped
     # Old alias keys must not appear
     assert "id" not in dumped
     assert "class" not in dumped
-    assert "hparams" not in dumped
+    assert "params" not in dumped
 
     conn = ConnectionConfig(source="a.outputs.b", target="c.inputs.d")
     dumped = conn.model_dump()

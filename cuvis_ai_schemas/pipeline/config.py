@@ -89,13 +89,13 @@ class NodeConfig(_BaseConfig):
         Node identifier / base name
     class_name : str
         Fully-qualified class name (e.g., 'my_package.MyNode')
-    params : dict[str, Any]
-        Node parameters
+    hparams : dict[str, Any]
+        Node hyperparameters
     """
 
     name: str = Field(description="Node identifier / base name")
     class_name: str = Field(description="Fully-qualified class name")
-    params: dict[str, Any] = Field(default_factory=dict, description="Node parameters")
+    hparams: dict[str, Any] = Field(default_factory=dict, description="Node hyperparameters")
 
 
 class ConnectionConfig(_BaseConfig):
