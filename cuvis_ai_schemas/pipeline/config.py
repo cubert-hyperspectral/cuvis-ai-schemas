@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class _BaseConfig(BaseModel):
     """Base model with strict validation."""
 
-    model_config = ConfigDict(extra="forbid", validate_assignment=True, populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
 
 class PipelineMetadata(_BaseConfig):
@@ -47,7 +47,7 @@ class PipelineMetadata(_BaseConfig):
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        return self.model_dump()
+        return self.model_dump(mode="json")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> PipelineMetadata:
@@ -85,42 +85,68 @@ class NodeConfig(_BaseConfig):
 
     Attributes
     ----------
-    id : str
-        Unique node identifier
+    name : str
+        Node identifier / base name
     class_name : str
         Fully-qualified class name (e.g., 'my_package.MyNode')
-        Alias: 'class' for backward compatibility
     params : dict[str, Any]
-        Node parameters/hyperparameters
-        Alias: 'hparams' for backward compatibility
+        Node parameters
     """
 
-    id: str = Field(description="Unique node identifier")
-    class_name: str = Field(description="Fully-qualified class name", alias="class")
-    params: dict[str, Any] = Field(
-        default_factory=dict, description="Node parameters", alias="hparams"
-    )
+    name: str = Field(description="Node identifier / base name")
+    class_name: str = Field(description="Fully-qualified class name")
+    params: dict[str, Any] = Field(default_factory=dict, description="Node parameters")
 
 
 class ConnectionConfig(_BaseConfig):
-    """Connection between two nodes.
+    """Connection between two nodes using compact string format.
 
     Attributes
     ----------
-    from_node : str
-        Source node ID
-    from_port : str
-        Source port name
-    to_node : str
-        Target node ID
-    to_port : str
-        Target port name
+    source : str
+        Source endpoint in format ``"node.outputs.port"``
+    target : str
+        Target endpoint in format ``"node.inputs.port"``
     """
 
-    from_node: str = Field(description="Source node ID")
-    from_port: str = Field(description="Source port name")
-    to_node: str = Field(description="Target node ID")
-    to_port: str = Field(description="Target port name")
+    source: str = Field(description='Source: "node.outputs.port"')
+    target: str = Field(description='Target: "node.inputs.port"')
+
+    @field_validator("source")
+    @classmethod
+    def _validate_source(cls, v: str) -> str:
+        parts = v.split(".")
+        if len(parts) != 3 or parts[1] != "outputs":
+            raise ValueError(f"Invalid source: '{v}'. Expected: 'node.outputs.port'")
+        return v
+
+    @field_validator("target")
+    @classmethod
+    def _validate_target(cls, v: str) -> str:
+        parts = v.split(".")
+        if len(parts) != 3 or parts[1] != "inputs":
+            raise ValueError(f"Invalid target: '{v}'. Expected: 'node.inputs.port'")
+        return v
+
+    @property
+    def from_node(self) -> str:
+        """Source node name."""
+        return self.source.split(".")[0]
+
+    @property
+    def from_port(self) -> str:
+        """Source port name."""
+        return self.source.split(".")[2]
+
+    @property
+    def to_node(self) -> str:
+        """Target node name."""
+        return self.target.split(".")[0]
+
+    @property
+    def to_port(self) -> str:
+        """Target port name."""
+        return self.target.split(".")[2]
 
 
 class PipelineConfig(_BaseConfig):
@@ -130,19 +156,19 @@ class PipelineConfig(_BaseConfig):
     ----------
     name : str
         Pipeline name
-    nodes : list[NodeConfig] | list[dict[str, Any]]
-        Node definitions (can be NodeConfig or dict for flexibility)
-    connections : list[ConnectionConfig] | list[dict[str, Any]]
-        Node connections (can be ConnectionConfig or dict for flexibility)
+    nodes : list[NodeConfig]
+        Node definitions
+    connections : list[ConnectionConfig]
+        Node connections
     frozen_nodes : list[str]
-        Node IDs to keep frozen during training
+        Node names to keep frozen during training
     metadata : PipelineMetadata | None
         Optional pipeline metadata
     """
 
     name: str = Field(default="", description="Pipeline name")
-    nodes: list[dict[str, Any]] = Field(description="Node definitions")
-    connections: list[dict[str, Any]] = Field(description="Node connections")
+    nodes: list[NodeConfig] = Field(default_factory=list, description="Node definitions")
+    connections: list[ConnectionConfig] = Field(default_factory=list, description="Connections")
     frozen_nodes: list[str] = Field(
         default_factory=list, description="Node names to keep frozen during training"
     )
@@ -195,7 +221,7 @@ class PipelineConfig(_BaseConfig):
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        return self.model_dump()
+        return self.model_dump(mode="json")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> PipelineConfig:

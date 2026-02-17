@@ -6,6 +6,7 @@ from cuvis_ai_schemas.training.callbacks import (
     EarlyStoppingConfig,
     LearningRateMonitorConfig,
     ModelCheckpointConfig,
+    create_callbacks_from_config,
 )
 from cuvis_ai_schemas.training.config import TrainingConfig
 from cuvis_ai_schemas.training.data import DataConfig
@@ -20,6 +21,7 @@ __all__ = [
     "EarlyStoppingConfig",
     "LearningRateMonitorConfig",
     "ModelCheckpointConfig",
+    "create_callbacks_from_config",
     # Config
     "TrainingConfig",
     # Data

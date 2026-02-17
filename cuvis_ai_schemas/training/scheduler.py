@@ -47,7 +47,7 @@ class SchedulerConfig(BaseModel):
     eps: float = Field(default=1e-8, ge=0.0, description="Minimum change in LR for plateau")
     verbose: bool = Field(default=False, description="Verbose scheduler logging")
 
-    model_config = ConfigDict(extra="forbid", validate_assignment=True, populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
     def to_proto(self) -> Any:
         """Convert to protobuf message (requires proto extra)."""
@@ -64,6 +64,15 @@ class SchedulerConfig(BaseModel):
     def from_proto(cls, proto_config):
         """Create from protobuf message (requires proto extra)."""
         return cls.model_validate_json(proto_config.config_bytes.decode("utf-8"))
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return self.model_dump(mode="json")
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> SchedulerConfig:
+        """Create from dictionary."""
+        return cls.model_validate(data)
 
 
 __all__ = ["SchedulerConfig"]

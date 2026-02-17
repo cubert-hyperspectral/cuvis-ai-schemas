@@ -44,7 +44,6 @@ class OptimizerConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
         validate_assignment=True,
-        populate_by_name=True,
         json_schema_extra={
             "examples": [
                 {
@@ -89,6 +88,15 @@ class OptimizerConfig(BaseModel):
     def from_proto(cls, proto_config):
         """Create from protobuf message (requires proto extra)."""
         return cls.model_validate_json(proto_config.config_bytes.decode("utf-8"))
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return self.model_dump(mode="json")
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> OptimizerConfig:
+        """Create from dictionary."""
+        return cls.model_validate(data)
 
 
 __all__ = ["OptimizerConfig"]

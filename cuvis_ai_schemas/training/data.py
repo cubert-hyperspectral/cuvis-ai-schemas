@@ -33,7 +33,7 @@ class DataConfig(BaseModel):
     batch_size: int = Field(default=1, ge=1, description="Batch size")
     processing_mode: str = Field(default="Reflectance", description="Raw or Reflectance mode")
 
-    model_config = ConfigDict(extra="forbid", validate_assignment=True, populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
     def to_proto(self) -> Any:
         """Convert to protobuf message (requires proto extra)."""
@@ -62,7 +62,7 @@ class DataConfig(BaseModel):
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        return self.model_dump()
+        return self.model_dump(mode="json")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> DataConfig:

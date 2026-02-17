@@ -34,7 +34,7 @@ class TrainerConfig(BaseModel):
         default=None, description="Callback configurations for trainer"
     )
 
-    model_config = ConfigDict(extra="forbid", validate_assignment=True, populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
 
 __all__ = ["TrainerConfig"]

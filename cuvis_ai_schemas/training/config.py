@@ -44,7 +44,7 @@ class TrainingConfig(BaseModel):
         default=1, ge=1, description="Accumulate gradients over n batches"
     )
 
-    model_config = ConfigDict(extra="forbid", validate_assignment=True, populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
     @model_validator(mode="after")
     def _sync_trainer_fields(self) -> TrainingConfig:
@@ -104,14 +104,14 @@ class TrainingConfig(BaseModel):
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        return self.model_dump()
+        return self.model_dump(mode="json")
 
     def to_dict_config(self) -> dict[str, Any]:
         """Compatibility shim for legacy OmegaConf usage."""
         try:
             from omegaconf import OmegaConf
         except Exception:
-            return self.model_dump()
+            return self.model_dump(mode="json")
 
         return OmegaConf.create(self.model_dump())  # type: ignore[return-value]
 

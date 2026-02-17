@@ -15,7 +15,6 @@ class _BasePluginConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",  # Reject unknown fields (catch typos)
         validate_assignment=True,  # Validate on attribute assignment
-        populate_by_name=True,  # Allow field aliases
     )
 
     provides: list[str] = Field(

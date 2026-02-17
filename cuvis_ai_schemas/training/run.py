@@ -48,7 +48,7 @@ class TrainRunConfig(BaseModel):
     output_dir: str = Field(default="./outputs", description="Output directory for artifacts")
     tags: dict[str, str] = Field(default_factory=dict, description="Metadata tags for tracking")
 
-    model_config = ConfigDict(extra="forbid", validate_assignment=True, populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
     def to_proto(self) -> Any:
         """Convert to protobuf message (requires proto extra)."""
@@ -77,7 +77,7 @@ class TrainRunConfig(BaseModel):
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        return self.model_dump()
+        return self.model_dump(mode="json")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> TrainRunConfig:
