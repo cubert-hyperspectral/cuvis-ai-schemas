@@ -40,10 +40,12 @@ class TrainRunConfig(BaseModel):
         default_factory=list, description="Metric node names for monitoring"
     )
     freeze_nodes: list[str] = Field(
-        default_factory=list, description="Node names to keep frozen during training"
+        default_factory=list,
+        description="Nodes to freeze for this training run (runtime action)",
     )
     unfreeze_nodes: list[str] = Field(
-        default_factory=list, description="Node names to unfreeze during training"
+        default_factory=list,
+        description="Nodes to unfreeze for this training run (runtime action)",
     )
     output_dir: str = Field(default="./outputs", description="Output directory for artifacts")
     tags: dict[str, str] = Field(default_factory=dict, description="Metadata tags for tracking")

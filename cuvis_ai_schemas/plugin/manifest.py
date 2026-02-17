@@ -1,7 +1,9 @@
 """Plugin manifest schema."""
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -43,7 +45,7 @@ class PluginManifest(BaseModel):
         return value
 
     @classmethod
-    def from_yaml(cls, yaml_path: Path) -> "PluginManifest":
+    def from_yaml(cls, yaml_path: Path) -> PluginManifest:
         """Load and validate manifest from YAML file.
 
         Args:
@@ -68,7 +70,7 @@ class PluginManifest(BaseModel):
         return cls.model_validate(data)
 
     @classmethod
-    def from_dict(cls, data: dict) -> "PluginManifest":
+    def from_dict(cls, data: dict) -> PluginManifest:
         """Load and validate manifest from dictionary.
 
         Args:
@@ -78,6 +80,10 @@ class PluginManifest(BaseModel):
             Validated PluginManifest instance
         """
         return cls.model_validate(data)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return self.model_dump(exclude_none=True, mode="json")
 
     def to_yaml(self, yaml_path: Path) -> None:
         """Save manifest to YAML file.

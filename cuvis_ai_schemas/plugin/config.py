@@ -1,6 +1,9 @@
 """Plugin configuration schemas."""
 
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -21,6 +24,15 @@ class _BasePluginConfig(BaseModel):
         description="List of fully-qualified class paths this plugin provides",
         min_length=1,  # At least one class required
     )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return self.model_dump(mode="json")
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> _BasePluginConfig:
+        """Create from dictionary."""
+        return cls.model_validate(data)
 
     @field_validator("provides")
     @classmethod
