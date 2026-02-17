@@ -100,13 +100,11 @@ def test_pipeline_config():
             NodeConfig(name="normalizer", class_name="module.Normalizer", hparams={"min": 0}),
         ],
         connections=[],
-        frozen_nodes=["normalizer"],
     )
     assert pipeline.name == "test_pipeline"
     assert len(pipeline.nodes) == 1
     assert isinstance(pipeline.nodes[0], NodeConfig)
     assert pipeline.nodes[0].name == "normalizer"
-    assert "normalizer" in pipeline.frozen_nodes
 
 
 def test_pipeline_config_from_dict():
@@ -140,7 +138,6 @@ def test_pipeline_config_round_trip():
         "connections": [
             {"source": "node_a.outputs.result", "target": "node_b.inputs.data"},
         ],
-        "frozen_nodes": ["node_a"],
     }
     pipeline = PipelineConfig.from_dict(original)
     dumped = pipeline.to_dict()
@@ -151,7 +148,6 @@ def test_pipeline_config_round_trip():
     assert len(reloaded.connections) == 1
     assert reloaded.nodes[0].name == "node_a"
     assert reloaded.connections[0].source == "node_a.outputs.result"
-    assert reloaded.frozen_nodes == ["node_a"]
 
 
 def test_pipeline_config_json_round_trip():

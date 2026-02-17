@@ -160,8 +160,6 @@ class PipelineConfig(_BaseConfig):
         Node definitions
     connections : list[ConnectionConfig]
         Node connections
-    frozen_nodes : list[str]
-        Node names to keep frozen during training
     metadata : PipelineMetadata | None
         Optional pipeline metadata
     """
@@ -169,10 +167,6 @@ class PipelineConfig(_BaseConfig):
     name: str = Field(default="", description="Pipeline name")
     nodes: list[NodeConfig] = Field(default_factory=list, description="Node definitions")
     connections: list[ConnectionConfig] = Field(default_factory=list, description="Connections")
-    frozen_nodes: list[str] = Field(
-        default_factory=list,
-        description="Nodes frozen in the pipeline definition (static state)",
-    )
     metadata: PipelineMetadata | None = Field(
         default=None, description="Optional pipeline metadata"
     )
