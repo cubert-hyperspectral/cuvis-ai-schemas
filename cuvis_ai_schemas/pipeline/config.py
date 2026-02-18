@@ -5,7 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
+
+from cuvis_ai_schemas.base import BaseSchemaModel
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -13,13 +15,7 @@ if TYPE_CHECKING:
     from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
 
 
-class _BaseConfig(BaseModel):
-    """Base model with strict validation."""
-
-    model_config = ConfigDict(extra="forbid", validate_assignment=True)
-
-
-class PipelineMetadata(_BaseConfig):
+class PipelineMetadata(BaseSchemaModel):
     """Pipeline metadata for documentation and discovery.
 
     Attributes
@@ -45,24 +41,11 @@ class PipelineMetadata(_BaseConfig):
     author: str = ""
     cuvis_ai_version: str = "0.1.0"
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
-        return self.model_dump(mode="json")
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> PipelineMetadata:
-        """Load from dictionary."""
-        return cls.model_validate(data)
-
     def to_proto(self) -> cuvis_ai_pb2.PipelineMetadata:
         """Convert to proto message.
 
-        Requires cuvis-ai-schemas[proto] to be installed.
-
-        Returns
-        -------
-        cuvis_ai_pb2.PipelineMetadata
-            Proto message representation
+        Uses field-by-field mapping (not config_bytes) because the proto
+        message has typed fields that gRPC services access directly.
         """
         try:
             from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
@@ -80,7 +63,7 @@ class PipelineMetadata(_BaseConfig):
         )
 
 
-class NodeConfig(_BaseConfig):
+class NodeConfig(BaseSchemaModel):
     """Node configuration within a pipeline.
 
     Attributes
@@ -98,7 +81,7 @@ class NodeConfig(_BaseConfig):
     hparams: dict[str, Any] = Field(default_factory=dict, description="Node hyperparameters")
 
 
-class ConnectionConfig(_BaseConfig):
+class ConnectionConfig(BaseSchemaModel):
     """Connection between two nodes using compact string format.
 
     Attributes
@@ -149,7 +132,7 @@ class ConnectionConfig(_BaseConfig):
         return self.target.split(".")[2]
 
 
-class PipelineConfig(_BaseConfig):
+class PipelineConfig(BaseSchemaModel):
     """Pipeline structure configuration.
 
     Attributes
@@ -164,64 +147,14 @@ class PipelineConfig(_BaseConfig):
         Optional pipeline metadata
     """
 
+    __proto_message__: str = "PipelineConfig"
+
     name: str = Field(default="", description="Pipeline name")
     nodes: list[NodeConfig] = Field(default_factory=list, description="Node definitions")
     connections: list[ConnectionConfig] = Field(default_factory=list, description="Connections")
     metadata: PipelineMetadata | None = Field(
         default=None, description="Optional pipeline metadata"
     )
-
-    def to_proto(self) -> cuvis_ai_pb2.PipelineConfig:
-        """Convert to proto message.
-
-        Requires cuvis-ai-schemas[proto] to be installed.
-
-        Returns
-        -------
-        cuvis_ai_pb2.PipelineConfig
-            Proto message representation
-        """
-        try:
-            from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-        except ImportError as exc:
-            msg = "Proto support not installed. Install with: pip install cuvis-ai-schemas[proto]"
-            raise ImportError(msg) from exc
-
-        return cuvis_ai_pb2.PipelineConfig(config_bytes=self.model_dump_json().encode("utf-8"))
-
-    @classmethod
-    def from_proto(cls, proto_config: cuvis_ai_pb2.PipelineConfig) -> PipelineConfig:
-        """Load from proto message.
-
-        Parameters
-        ----------
-        proto_config : cuvis_ai_pb2.PipelineConfig
-            Proto message to deserialize
-
-        Returns
-        -------
-        PipelineConfig
-            Loaded configuration
-        """
-        return cls.model_validate_json(proto_config.config_bytes.decode("utf-8"))
-
-    def to_json(self) -> str:
-        """Convert to JSON string."""
-        return self.model_dump_json()
-
-    @classmethod
-    def from_json(cls, payload: str) -> PipelineConfig:
-        """Load from JSON string."""
-        return cls.model_validate_json(payload)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
-        return self.model_dump(mode="json")
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> PipelineConfig:
-        """Load from dictionary."""
-        return cls.model_validate(data)
 
     def save_to_file(self, path: str | Path) -> None:
         """Save pipeline configuration to YAML file.

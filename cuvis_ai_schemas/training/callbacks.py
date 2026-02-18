@@ -3,24 +3,14 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
-if TYPE_CHECKING:
-    try:
-        from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-    except ImportError:
-        cuvis_ai_pb2 = None  # type: ignore[assignment]
+from cuvis_ai_schemas.base import BaseSchemaModel
 
 
-class _BaseConfig(BaseModel):
-    """Base model with strict validation."""
-
-    model_config = ConfigDict(extra="forbid", validate_assignment=True)
-
-
-class EarlyStoppingConfig(_BaseConfig):
+class EarlyStoppingConfig(BaseSchemaModel):
     """Early stopping callback configuration."""
 
     monitor: str = Field(description="Metric to monitor")
@@ -48,7 +38,7 @@ class EarlyStoppingConfig(_BaseConfig):
     )
 
 
-class ModelCheckpointConfig(_BaseConfig):
+class ModelCheckpointConfig(BaseSchemaModel):
     """Model checkpoint callback configuration."""
 
     dirpath: str = Field(default="checkpoints", description="Directory to save checkpoints")
@@ -87,7 +77,7 @@ class ModelCheckpointConfig(_BaseConfig):
     )
 
 
-class LearningRateMonitorConfig(_BaseConfig):
+class LearningRateMonitorConfig(BaseSchemaModel):
     """Learning rate monitor callback configuration."""
 
     logging_interval: Literal["step", "epoch"] | None = Field(
@@ -97,8 +87,10 @@ class LearningRateMonitorConfig(_BaseConfig):
     log_weight_decay: bool = Field(default=False, description="Log weight decay values as well")
 
 
-class CallbacksConfig(_BaseConfig):
+class CallbacksConfig(BaseSchemaModel):
     """Callbacks configuration."""
+
+    __proto_message__: str = "CallbacksConfig"
 
     checkpoint: ModelCheckpointConfig | None = Field(
         default=None,
@@ -110,31 +102,6 @@ class CallbacksConfig(_BaseConfig):
     learning_rate_monitor: LearningRateMonitorConfig | None = Field(
         default=None, description="Learning rate monitor configuration"
     )
-
-    def to_proto(self) -> Any:
-        """Convert to protobuf message (requires proto extra)."""
-        try:
-            from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-        except ImportError as e:
-            raise ImportError(
-                "Proto support requires the 'proto' extra: pip install cuvis-ai-schemas[proto]"
-            ) from e
-
-        return cuvis_ai_pb2.CallbacksConfig(config_bytes=self.model_dump_json().encode("utf-8"))
-
-    @classmethod
-    def from_proto(cls, proto_config):
-        """Create from protobuf message (requires proto extra)."""
-        return cls.model_validate_json(proto_config.config_bytes.decode("utf-8"))
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
-        return self.model_dump(mode="json")
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> CallbacksConfig:
-        """Create from dictionary."""
-        return cls.model_validate(data)
 
 
 def create_callbacks_from_config(config: CallbacksConfig | None) -> list:

@@ -2,19 +2,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from pydantic import Field
 
-from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    try:
-        from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-    except ImportError:
-        cuvis_ai_pb2 = None  # type: ignore[assignment]
+from cuvis_ai_schemas.base import BaseSchemaModel
 
 
-class SchedulerConfig(BaseModel):
+class SchedulerConfig(BaseSchemaModel):
     """Learning rate scheduler configuration."""
+
+    __proto_message__: str = "SchedulerConfig"
 
     name: str | None = Field(
         default=None, description="Scheduler type: cosine, step, exponential, plateau"
@@ -46,33 +42,6 @@ class SchedulerConfig(BaseModel):
     cooldown: int = Field(default=0, ge=0, description="Cooldown epochs for plateau")
     eps: float = Field(default=1e-8, ge=0.0, description="Minimum change in LR for plateau")
     verbose: bool = Field(default=False, description="Verbose scheduler logging")
-
-    model_config = ConfigDict(extra="forbid", validate_assignment=True)
-
-    def to_proto(self) -> Any:
-        """Convert to protobuf message (requires proto extra)."""
-        try:
-            from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-        except ImportError as e:
-            raise ImportError(
-                "Proto support requires the 'proto' extra: pip install cuvis-ai-schemas[proto]"
-            ) from e
-
-        return cuvis_ai_pb2.SchedulerConfig(config_bytes=self.model_dump_json().encode("utf-8"))
-
-    @classmethod
-    def from_proto(cls, proto_config):
-        """Create from protobuf message (requires proto extra)."""
-        return cls.model_validate_json(proto_config.config_bytes.decode("utf-8"))
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
-        return self.model_dump(mode="json")
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> SchedulerConfig:
-        """Create from dictionary."""
-        return cls.model_validate(data)
 
 
 __all__ = ["SchedulerConfig"]

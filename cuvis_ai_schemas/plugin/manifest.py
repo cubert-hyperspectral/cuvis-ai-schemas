@@ -6,22 +6,18 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
 
+from cuvis_ai_schemas.base import BaseSchemaModel
 from cuvis_ai_schemas.plugin.config import GitPluginConfig, LocalPluginConfig
 
 
-class PluginManifest(BaseModel):
+class PluginManifest(BaseSchemaModel):
     """Complete plugin manifest containing all plugin configurations.
 
     This is the root configuration object validated when loading
     a plugins.yaml file or dictionary.
     """
-
-    model_config = ConfigDict(
-        extra="forbid",
-        validate_assignment=True,
-    )
 
     plugins: dict[
         str,
@@ -69,20 +65,8 @@ class PluginManifest(BaseModel):
 
         return cls.model_validate(data)
 
-    @classmethod
-    def from_dict(cls, data: dict) -> PluginManifest:
-        """Load and validate manifest from dictionary.
-
-        Args:
-            data: Dictionary containing plugin configurations
-
-        Returns:
-            Validated PluginManifest instance
-        """
-        return cls.model_validate(data)
-
     def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
+        """Convert to dictionary (excludes None values)."""
         return self.model_dump(exclude_none=True, mode="json")
 
     def to_yaml(self, yaml_path: Path) -> None:

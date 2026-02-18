@@ -3,36 +3,23 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
+
+from cuvis_ai_schemas.base import BaseSchemaModel
 
 
-class _BasePluginConfig(BaseModel):
+class _BasePluginConfig(BaseSchemaModel):
     """Base plugin configuration with strict validation.
 
     All plugin types inherit from this base class to ensure
     consistent validation and error handling.
     """
 
-    model_config = ConfigDict(
-        extra="forbid",  # Reject unknown fields (catch typos)
-        validate_assignment=True,  # Validate on attribute assignment
-    )
-
     provides: list[str] = Field(
         description="List of fully-qualified class paths this plugin provides",
         min_length=1,  # At least one class required
     )
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
-        return self.model_dump(mode="json")
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> _BasePluginConfig:
-        """Create from dictionary."""
-        return cls.model_validate(data)
 
     @field_validator("provides")
     @classmethod

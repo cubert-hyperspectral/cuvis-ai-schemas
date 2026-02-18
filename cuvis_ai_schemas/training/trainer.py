@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
+from cuvis_ai_schemas.base import BaseSchemaModel
 from cuvis_ai_schemas.training.callbacks import CallbacksConfig
 
 
-class TrainerConfig(BaseModel):
+class TrainerConfig(BaseSchemaModel):
     """Lightning Trainer configuration."""
 
     max_epochs: int = Field(default=100, ge=1, description="Maximum number of epochs")
@@ -33,8 +34,6 @@ class TrainerConfig(BaseModel):
     callbacks: CallbacksConfig | None = Field(
         default=None, description="Callback configurations for trainer"
     )
-
-    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
 
 __all__ = ["TrainerConfig"]
