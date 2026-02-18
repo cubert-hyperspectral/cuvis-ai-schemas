@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+- Added `BaseSchemaModel` base class with unified serialization (`to_dict`, `from_dict`, `to_json`, `from_json`) and optional proto support
+- Added `create_callbacks_from_config` utility for training callback instantiation
+- Added `Context` dataclass and plugin serialization support
+- Changed all config models to inherit from `BaseSchemaModel`, removing 3 duplicate `_BaseConfig` classes
+- Changed `NodeConfig.params` to `hparams` for consistency with runtime layer
+- Changed `PipelineConfig` to fully typed Pydantic model with JSON-safe serialization
+- Removed `VALIDATE` duplicate from `ExecutionStage` enum
+- Removed obsolete `PipelineConfig.frozen_nodes` field
+- Removed empty `discovery` module
 - Reformatted CHANGELOG to concise single-list style
 - Updated release workflow changelog extraction for new heading format
 
