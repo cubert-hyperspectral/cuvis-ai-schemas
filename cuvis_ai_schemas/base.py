@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from types import ModuleType
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Self
 
 from pydantic import BaseModel, ConfigDict
 
@@ -40,7 +40,7 @@ class BaseSchemaModel(BaseModel):
         return self.model_dump(mode="json")
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]) -> Self:
         """Load from dictionary."""
         return cls.model_validate(data)
 
@@ -49,7 +49,7 @@ class BaseSchemaModel(BaseModel):
         return self.model_dump_json()
 
     @classmethod
-    def from_json(cls, payload: str):
+    def from_json(cls, payload: str) -> Self:
         """Load from JSON string."""
         return cls.model_validate_json(payload)
 
@@ -77,7 +77,7 @@ class BaseSchemaModel(BaseModel):
         return proto_cls(config_bytes=self.model_dump_json().encode("utf-8"))
 
     @classmethod
-    def from_proto(cls, proto_config: Any):
+    def from_proto(cls, proto_config: Any) -> Self:
         """Load from protobuf message."""
         return cls.model_validate_json(proto_config.config_bytes.decode("utf-8"))
 
