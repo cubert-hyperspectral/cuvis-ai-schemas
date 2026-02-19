@@ -219,12 +219,12 @@ message SchedulerParamsSchema {
 // Pipeline Discovery
 // ============================================================================
 
-message ListAvailablePipelineesRequest {
+message ListAvailablePipelinesRequest {
   optional string filter_tag = 1;  // Optional: filter by tag (e.g., "anomaly", "segmentation")
 }
 
-message ListAvailablePipelineesResponse {
-  repeated PipelineInfo pipelinees = 1;
+message ListAvailablePipelinesResponse {
+  repeated PipelineInfo pipelines = 1;
 }
 
 message GetPipelineInfoRequest {
@@ -558,7 +558,7 @@ message ClearPluginCacheResponse {
 
 service CuvisAIService {
   // Pipeline Discovery
-  rpc ListAvailablePipelinees(ListAvailablePipelineesRequest) returns (ListAvailablePipelineesResponse);
+  rpc ListAvailablePipelines(ListAvailablePipelinesRequest) returns (ListAvailablePipelinesResponse);
   rpc GetPipelineInfo(GetPipelineInfoRequest) returns (GetPipelineInfoResponse);
 
   // Session Management
