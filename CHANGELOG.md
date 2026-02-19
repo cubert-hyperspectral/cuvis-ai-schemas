@@ -11,8 +11,6 @@
 - Removed `VALIDATE` duplicate from `ExecutionStage` enum
 - Removed obsolete `PipelineConfig.frozen_nodes` field
 - Removed empty `discovery` module
-- Reformatted CHANGELOG to concise single-list style
-- Updated release workflow changelog extraction for new heading format
 
 ## 0.1.4 - 2026-02-10
 
