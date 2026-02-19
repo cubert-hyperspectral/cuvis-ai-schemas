@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from pydantic import ConfigDict, Field, field_validator
 
 from cuvis_ai_schemas.base import BaseSchemaModel
@@ -10,7 +12,7 @@ from cuvis_ai_schemas.base import BaseSchemaModel
 class OptimizerConfig(BaseSchemaModel):
     """Optimizer configuration with constraints and documentation."""
 
-    __proto_message__: str = "OptimizerConfig"
+    __proto_message__: ClassVar[str] = "OptimizerConfig"
 
     name: str = Field(
         default="adamw",

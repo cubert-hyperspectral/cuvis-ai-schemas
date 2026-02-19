@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import Field, model_validator
 
@@ -16,7 +16,7 @@ from cuvis_ai_schemas.training.trainer import TrainerConfig
 class TrainingConfig(BaseSchemaModel):
     """Complete training configuration."""
 
-    __proto_message__: str = "TrainingConfig"
+    __proto_message__: ClassVar[str] = "TrainingConfig"
 
     seed: int = Field(default=42, ge=0, description="Random seed for reproducibility")
     optimizer: OptimizerConfig = Field(

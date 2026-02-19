@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Literal
+from typing import Any, ClassVar, Literal
 
 from pydantic import Field
 
@@ -90,7 +90,7 @@ class LearningRateMonitorConfig(BaseSchemaModel):
 class CallbacksConfig(BaseSchemaModel):
     """Callbacks configuration."""
 
-    __proto_message__: str = "CallbacksConfig"
+    __proto_message__: ClassVar[str] = "CallbacksConfig"
 
     checkpoint: ModelCheckpointConfig | None = Field(
         default=None,
@@ -104,7 +104,7 @@ class CallbacksConfig(BaseSchemaModel):
     )
 
 
-def create_callbacks_from_config(config: CallbacksConfig | None) -> list:
+def create_callbacks_from_config(config: CallbacksConfig | None) -> list[Any]:
     """Create PyTorch Lightning callback instances from configuration.
 
     Requires pytorch_lightning to be installed (optional dependency).
@@ -118,7 +118,7 @@ def create_callbacks_from_config(config: CallbacksConfig | None) -> list:
         ModelCheckpoint,
     )
 
-    callbacks = []
+    callbacks: list[Any] = []
 
     if config.early_stopping:
         for es_config in config.early_stopping:

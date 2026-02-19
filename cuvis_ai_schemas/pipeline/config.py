@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import yaml
 from pydantic import Field, field_validator
@@ -147,7 +147,7 @@ class PipelineConfig(BaseSchemaModel):
         Optional pipeline metadata
     """
 
-    __proto_message__: str = "PipelineConfig"
+    __proto_message__: ClassVar[str] = "PipelineConfig"
 
     name: str = Field(default="", description="Pipeline name")
     nodes: list[NodeConfig] = Field(default_factory=list, description="Node definitions")

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import ClassVar
 
 import yaml
 from pydantic import Field, model_validator
@@ -16,7 +17,7 @@ from cuvis_ai_schemas.training.data import DataConfig
 class TrainRunConfig(BaseSchemaModel):
     """Complete reproducible training configuration."""
 
-    __proto_message__: str = "TrainRunConfig"
+    __proto_message__: ClassVar[str] = "TrainRunConfig"
 
     name: str = Field(description="Train run identifier")
     pipeline: PipelineConfig | None = Field(

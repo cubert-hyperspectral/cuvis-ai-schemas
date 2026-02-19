@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from pydantic import Field
 
 from cuvis_ai_schemas.base import BaseSchemaModel
@@ -10,7 +12,7 @@ from cuvis_ai_schemas.base import BaseSchemaModel
 class DataConfig(BaseSchemaModel):
     """Data loading configuration."""
 
-    __proto_message__: str = "DataConfig"
+    __proto_message__: ClassVar[str] = "DataConfig"
 
     cu3s_file_path: str = Field(description="Path to .cu3s file")
     annotation_json_path: str | None = Field(

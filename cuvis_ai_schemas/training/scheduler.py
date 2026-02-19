@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from pydantic import Field
 
 from cuvis_ai_schemas.base import BaseSchemaModel
@@ -10,7 +12,7 @@ from cuvis_ai_schemas.base import BaseSchemaModel
 class SchedulerConfig(BaseSchemaModel):
     """Learning rate scheduler configuration."""
 
-    __proto_message__: str = "SchedulerConfig"
+    __proto_message__: ClassVar[str] = "SchedulerConfig"
 
     name: str | None = Field(
         default=None, description="Scheduler type: cosine, step, exponential, plateau"
