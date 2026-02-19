@@ -169,7 +169,7 @@ class PipelineConfig(BaseSchemaModel):
         output_path = Path(path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("w", encoding="utf-8") as f:
-            yaml.safe_dump(self.model_dump(), f, sort_keys=False)
+            yaml.safe_dump(self.to_dict(), f, sort_keys=False)
 
     @classmethod
     def load_from_file(cls, path: str | Path) -> PipelineConfig:

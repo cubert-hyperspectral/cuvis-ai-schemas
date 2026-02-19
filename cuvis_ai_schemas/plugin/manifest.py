@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Any
 
 import yaml
 from pydantic import Field, field_validator
@@ -21,10 +21,7 @@ class PluginManifest(BaseSchemaModel):
 
     plugins: dict[
         str,
-        Annotated[
-            GitPluginConfig | LocalPluginConfig,
-            Field(discriminator=None),  # Pydantic will auto-detect based on fields
-        ],
+        GitPluginConfig | LocalPluginConfig,
     ] = Field(
         description="Map of plugin names to their configurations",
         default_factory=dict,

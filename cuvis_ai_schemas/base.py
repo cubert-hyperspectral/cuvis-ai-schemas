@@ -68,6 +68,11 @@ class BaseSchemaModel(BaseModel):
                 f"{type(self).__name__} has no proto mapping (set __proto_message__ to enable)"
             )
         pb2 = _get_pb2()
+        if not hasattr(pb2, self.__proto_message__):
+            raise ValueError(
+                f"Proto message '{self.__proto_message__}' not found in cuvis_ai_pb2 for "
+                f"{type(self).__name__}"
+            )
         proto_cls = getattr(pb2, self.__proto_message__)
         return proto_cls(config_bytes=self.model_dump_json().encode("utf-8"))
 

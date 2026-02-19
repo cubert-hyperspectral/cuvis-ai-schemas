@@ -112,11 +112,17 @@ def create_callbacks_from_config(config: CallbacksConfig | None) -> list[Any]:
     if config is None:
         return []
 
-    from pytorch_lightning.callbacks import (
-        EarlyStopping,
-        LearningRateMonitor,
-        ModelCheckpoint,
-    )
+    try:
+        from pytorch_lightning.callbacks import (
+            EarlyStopping,
+            LearningRateMonitor,
+            ModelCheckpoint,
+        )
+    except ImportError as exc:
+        raise ImportError(
+            "pytorch_lightning is required for create_callbacks_from_config(). "
+            "Install with: pip install pytorch-lightning"
+        ) from exc
 
     callbacks: list[Any] = []
 
