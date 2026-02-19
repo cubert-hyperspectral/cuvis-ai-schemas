@@ -2,8 +2,17 @@
 
 ## [Unreleased]
 
-- Reformatted CHANGELOG to concise single-list style
-- Updated release workflow changelog extraction for new heading format
+- Added `BaseSchemaModel` base class with unified serialization (`to_dict`, `from_dict`, `to_json`, `from_json`) and optional proto support via `__proto_message__`
+- Added `-> Self` return type annotations on `BaseSchemaModel` classmethods (`from_dict`, `from_json`, `from_proto`)
+- Added `create_callbacks_from_config()` utility for training callback instantiation (with guarded `pytorch_lightning` import)
+- Added `Context.to_dict()` / `Context.from_dict()` and plugin serialization helpers
+- Changed all config models to inherit from `BaseSchemaModel`, removing 3 duplicate `_BaseConfig` classes
+- Changed `NodeConfig`: renamed `id` → `name`, `params` → `hparams`, dropped `class` alias (now `class_name` only)
+- Changed `ConnectionConfig`: replaced `from_node`/`from_port`/`to_node`/`to_port` fields with compact `source`/`target` dotted-path format (`"node.outputs.port"`)
+- Changed `PipelineConfig` to fully typed Pydantic model with JSON-safe `save_to_file` serialization
+- Removed `VALIDATE` duplicate from `ExecutionStage` enum
+- Removed obsolete `PipelineConfig.frozen_nodes` field
+- Removed empty `discovery` module
 
 ## 0.1.4 - 2026-02-10
 

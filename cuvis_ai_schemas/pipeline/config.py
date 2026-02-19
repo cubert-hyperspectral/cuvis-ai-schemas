@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field, field_validator
+
+from cuvis_ai_schemas.base import BaseSchemaModel
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -13,13 +15,7 @@ if TYPE_CHECKING:
     from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
 
 
-class _BaseConfig(BaseModel):
-    """Base model with strict validation."""
-
-    model_config = ConfigDict(extra="forbid", validate_assignment=True, populate_by_name=True)
-
-
-class PipelineMetadata(_BaseConfig):
+class PipelineMetadata(BaseSchemaModel):
     """Pipeline metadata for documentation and discovery.
 
     Attributes
@@ -45,24 +41,11 @@ class PipelineMetadata(_BaseConfig):
     author: str = ""
     cuvis_ai_version: str = "0.1.0"
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
-        return self.model_dump()
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> PipelineMetadata:
-        """Load from dictionary."""
-        return cls.model_validate(data)
-
     def to_proto(self) -> cuvis_ai_pb2.PipelineMetadata:
         """Convert to proto message.
 
-        Requires cuvis-ai-schemas[proto] to be installed.
-
-        Returns
-        -------
-        cuvis_ai_pb2.PipelineMetadata
-            Proto message representation
+        Uses field-by-field mapping (not config_bytes) because the proto
+        message has typed fields that gRPC services access directly.
         """
         try:
             from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
@@ -80,127 +63,98 @@ class PipelineMetadata(_BaseConfig):
         )
 
 
-class NodeConfig(_BaseConfig):
+class NodeConfig(BaseSchemaModel):
     """Node configuration within a pipeline.
 
     Attributes
     ----------
-    id : str
-        Unique node identifier
+    name : str
+        Node identifier / base name
     class_name : str
         Fully-qualified class name (e.g., 'my_package.MyNode')
-        Alias: 'class' for backward compatibility
-    params : dict[str, Any]
-        Node parameters/hyperparameters
-        Alias: 'hparams' for backward compatibility
+    hparams : dict[str, Any]
+        Node hyperparameters
     """
 
-    id: str = Field(description="Unique node identifier")
-    class_name: str = Field(description="Fully-qualified class name", alias="class")
-    params: dict[str, Any] = Field(
-        default_factory=dict, description="Node parameters", alias="hparams"
-    )
+    name: str = Field(description="Node identifier / base name")
+    class_name: str = Field(description="Fully-qualified class name")
+    hparams: dict[str, Any] = Field(default_factory=dict, description="Node hyperparameters")
 
 
-class ConnectionConfig(_BaseConfig):
-    """Connection between two nodes.
+class ConnectionConfig(BaseSchemaModel):
+    """Connection between two nodes using compact string format.
 
     Attributes
     ----------
-    from_node : str
-        Source node ID
-    from_port : str
-        Source port name
-    to_node : str
-        Target node ID
-    to_port : str
-        Target port name
+    source : str
+        Source endpoint in format ``"node.outputs.port"``
+    target : str
+        Target endpoint in format ``"node.inputs.port"``
     """
 
-    from_node: str = Field(description="Source node ID")
-    from_port: str = Field(description="Source port name")
-    to_node: str = Field(description="Target node ID")
-    to_port: str = Field(description="Target port name")
+    source: str = Field(description='Source: "node.outputs.port"')
+    target: str = Field(description='Target: "node.inputs.port"')
+
+    @field_validator("source")
+    @classmethod
+    def _validate_source(cls, v: str) -> str:
+        parts = v.split(".")
+        if len(parts) != 3 or parts[1] != "outputs":
+            raise ValueError(f"Invalid source: '{v}'. Expected: 'node.outputs.port'")
+        return v
+
+    @field_validator("target")
+    @classmethod
+    def _validate_target(cls, v: str) -> str:
+        parts = v.split(".")
+        if len(parts) != 3 or parts[1] != "inputs":
+            raise ValueError(f"Invalid target: '{v}'. Expected: 'node.inputs.port'")
+        return v
+
+    @property
+    def from_node(self) -> str:
+        """Source node name."""
+        return self.source.split(".")[0]
+
+    @property
+    def from_port(self) -> str:
+        """Source port name."""
+        return self.source.split(".")[2]
+
+    @property
+    def to_node(self) -> str:
+        """Target node name."""
+        return self.target.split(".")[0]
+
+    @property
+    def to_port(self) -> str:
+        """Target port name."""
+        return self.target.split(".")[2]
 
 
-class PipelineConfig(_BaseConfig):
+class PipelineConfig(BaseSchemaModel):
     """Pipeline structure configuration.
 
     Attributes
     ----------
     name : str
         Pipeline name
-    nodes : list[NodeConfig] | list[dict[str, Any]]
-        Node definitions (can be NodeConfig or dict for flexibility)
-    connections : list[ConnectionConfig] | list[dict[str, Any]]
-        Node connections (can be ConnectionConfig or dict for flexibility)
-    frozen_nodes : list[str]
-        Node IDs to keep frozen during training
+    nodes : list[NodeConfig]
+        Node definitions
+    connections : list[ConnectionConfig]
+        Node connections
     metadata : PipelineMetadata | None
         Optional pipeline metadata
     """
 
+    __proto_message__: ClassVar[str] = "PipelineConfig"
+
     name: str = Field(default="", description="Pipeline name")
-    nodes: list[dict[str, Any]] = Field(description="Node definitions")
-    connections: list[dict[str, Any]] = Field(description="Node connections")
-    frozen_nodes: list[str] = Field(
-        default_factory=list, description="Node names to keep frozen during training"
-    )
+    nodes: list[NodeConfig] = Field(default_factory=list, description="Node definitions")
+    connections: list[ConnectionConfig] = Field(default_factory=list, description="Connections")
     metadata: PipelineMetadata | None = Field(
         default=None, description="Optional pipeline metadata"
     )
-
-    def to_proto(self) -> cuvis_ai_pb2.PipelineConfig:
-        """Convert to proto message.
-
-        Requires cuvis-ai-schemas[proto] to be installed.
-
-        Returns
-        -------
-        cuvis_ai_pb2.PipelineConfig
-            Proto message representation
-        """
-        try:
-            from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-        except ImportError as exc:
-            msg = "Proto support not installed. Install with: pip install cuvis-ai-schemas[proto]"
-            raise ImportError(msg) from exc
-
-        return cuvis_ai_pb2.PipelineConfig(config_bytes=self.model_dump_json().encode("utf-8"))
-
-    @classmethod
-    def from_proto(cls, proto_config: cuvis_ai_pb2.PipelineConfig) -> PipelineConfig:
-        """Load from proto message.
-
-        Parameters
-        ----------
-        proto_config : cuvis_ai_pb2.PipelineConfig
-            Proto message to deserialize
-
-        Returns
-        -------
-        PipelineConfig
-            Loaded configuration
-        """
-        return cls.model_validate_json(proto_config.config_bytes.decode("utf-8"))
-
-    def to_json(self) -> str:
-        """Convert to JSON string."""
-        return self.model_dump_json()
-
-    @classmethod
-    def from_json(cls, payload: str) -> PipelineConfig:
-        """Load from JSON string."""
-        return cls.model_validate_json(payload)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
-        return self.model_dump()
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> PipelineConfig:
-        """Load from dictionary."""
-        return cls.model_validate(data)
 
     def save_to_file(self, path: str | Path) -> None:
         """Save pipeline configuration to YAML file.
@@ -215,7 +169,7 @@ class PipelineConfig(_BaseConfig):
         output_path = Path(path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("w", encoding="utf-8") as f:
-            yaml.safe_dump(self.model_dump(), f, sort_keys=False)
+            yaml.safe_dump(self.to_dict(), f, sort_keys=False)
 
     @classmethod
     def load_from_file(cls, path: str | Path) -> PipelineConfig:

@@ -1,5 +1,7 @@
 """Tests for training schemas."""
 
+from unittest.mock import patch
+
 import pytest
 from pydantic import ValidationError
 
@@ -9,7 +11,15 @@ from cuvis_ai_schemas.training import (
     SchedulerConfig,
     TrainerConfig,
     TrainingConfig,
+    create_callbacks_from_config,
 )
+from cuvis_ai_schemas.training.callbacks import (
+    CallbacksConfig,
+    EarlyStoppingConfig,
+    LearningRateMonitorConfig,
+    ModelCheckpointConfig,
+)
+from cuvis_ai_schemas.training.run import TrainRunConfig
 
 
 def test_optimizer_config():
@@ -68,6 +78,50 @@ def test_training_config():
     assert loaded.max_epochs == config.max_epochs
 
 
+def test_training_config_trainer_syncs_gradient_clip():
+    """Test _sync_trainer_fields for gradient_clip_val."""
+    # Trainer provides gradient_clip_val, top-level not set
+    config = TrainingConfig(
+        trainer=TrainerConfig(gradient_clip_val=1.0),
+    )
+    assert config.gradient_clip_val == 1.0
+
+    # Top-level provides gradient_clip_val, synced to trainer
+    config = TrainingConfig(gradient_clip_val=0.5)
+    assert config.trainer.gradient_clip_val == 0.5
+
+
+def test_training_config_trainer_syncs_accumulate_grad():
+    """Test _sync_trainer_fields for accumulate_grad_batches."""
+    config = TrainingConfig(
+        trainer=TrainerConfig(accumulate_grad_batches=4),
+    )
+    assert config.accumulate_grad_batches == 4
+
+
+def test_training_config_callbacks_synced_to_trainer():
+    """Test that callbacks are synced to trainer config."""
+    cb = CallbacksConfig(early_stopping=[EarlyStoppingConfig(monitor="val_loss")])
+    config = TrainingConfig(callbacks=cb)
+    assert config.trainer.callbacks is cb
+
+
+def test_training_config_to_dict_config_fallback():
+    """Test to_dict_config falls back to model_dump when omegaconf unavailable."""
+    config = TrainingConfig(max_epochs=10)
+    result = config.to_dict_config()
+    assert isinstance(result, dict)
+    assert result["max_epochs"] == 10
+
+
+def test_training_config_from_dict_config():
+    """Test from_dict_config with a plain dict."""
+    data = {"seed": 123, "max_epochs": 25, "batch_size": 8}
+    config = TrainingConfig.from_dict_config(data)
+    assert config.seed == 123
+    assert config.max_epochs == 25
+
+
 def test_data_config():
     """Test DataConfig."""
     data = DataConfig(
@@ -80,3 +134,54 @@ def test_data_config():
     assert data.cu3s_file_path == "/path/to/data.cu3s"
     assert data.train_split == 0.8
     assert data.batch_size == 16
+
+
+def test_create_callbacks_from_config_none():
+    """Test create_callbacks_from_config with None returns empty list."""
+    assert create_callbacks_from_config(None) == []
+
+
+def test_create_callbacks_from_config_all_types():
+    """Test create_callbacks_from_config creates all callback types."""
+    config = CallbacksConfig(
+        early_stopping=[EarlyStoppingConfig(monitor="val_loss", patience=5)],
+        checkpoint=ModelCheckpointConfig(monitor="val_loss", save_top_k=1),
+        learning_rate_monitor=LearningRateMonitorConfig(logging_interval="epoch"),
+    )
+    callbacks = create_callbacks_from_config(config)
+    assert len(callbacks) == 3
+
+    from pytorch_lightning.callbacks import (
+        EarlyStopping,
+        LearningRateMonitor,
+        ModelCheckpoint,
+    )
+
+    types = {type(cb) for cb in callbacks}
+    assert EarlyStopping in types
+    assert ModelCheckpoint in types
+    assert LearningRateMonitor in types
+
+
+def test_create_callbacks_from_config_import_error():
+    """Test create_callbacks_from_config raises ImportError when lightning missing."""
+    config = CallbacksConfig(early_stopping=[EarlyStoppingConfig(monitor="val_loss")])
+
+    with patch.dict(
+        "sys.modules", {"pytorch_lightning": None, "pytorch_lightning.callbacks": None}
+    ):
+        with pytest.raises(ImportError, match="pytorch_lightning is required"):
+            create_callbacks_from_config(config)
+
+
+def test_trainrun_save_and_load(tmp_path):
+    """Test TrainRunConfig save_to_file and load_from_file round-trip."""
+    config = TrainRunConfig(
+        name="test_run",
+        data=DataConfig(cu3s_file_path="/data/test.cu3s"),
+    )
+    path = tmp_path / "trainrun.yaml"
+    config.save_to_file(path)
+    loaded = TrainRunConfig.load_from_file(path)
+    assert loaded.name == "test_run"
+    assert loaded.data.cu3s_file_path == "/data/test.cu3s"

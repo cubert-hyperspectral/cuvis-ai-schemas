@@ -3,24 +3,14 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, ClassVar, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
-if TYPE_CHECKING:
-    try:
-        from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-    except ImportError:
-        cuvis_ai_pb2 = None  # type: ignore[assignment]
+from cuvis_ai_schemas.base import BaseSchemaModel
 
 
-class _BaseConfig(BaseModel):
-    """Base model with strict validation."""
-
-    model_config = ConfigDict(extra="forbid", validate_assignment=True, populate_by_name=True)
-
-
-class EarlyStoppingConfig(_BaseConfig):
+class EarlyStoppingConfig(BaseSchemaModel):
     """Early stopping callback configuration."""
 
     monitor: str = Field(description="Metric to monitor")
@@ -48,7 +38,7 @@ class EarlyStoppingConfig(_BaseConfig):
     )
 
 
-class ModelCheckpointConfig(_BaseConfig):
+class ModelCheckpointConfig(BaseSchemaModel):
     """Model checkpoint callback configuration."""
 
     dirpath: str = Field(default="checkpoints", description="Directory to save checkpoints")
@@ -87,7 +77,7 @@ class ModelCheckpointConfig(_BaseConfig):
     )
 
 
-class LearningRateMonitorConfig(_BaseConfig):
+class LearningRateMonitorConfig(BaseSchemaModel):
     """Learning rate monitor callback configuration."""
 
     logging_interval: Literal["step", "epoch"] | None = Field(
@@ -97,13 +87,14 @@ class LearningRateMonitorConfig(_BaseConfig):
     log_weight_decay: bool = Field(default=False, description="Log weight decay values as well")
 
 
-class CallbacksConfig(_BaseConfig):
+class CallbacksConfig(BaseSchemaModel):
     """Callbacks configuration."""
+
+    __proto_message__: ClassVar[str] = "CallbacksConfig"
 
     checkpoint: ModelCheckpointConfig | None = Field(
         default=None,
         description="Model checkpoint configuration",
-        alias="model_checkpoint",
     )
     early_stopping: list[EarlyStoppingConfig] = Field(
         default_factory=list, description="Early stopping configuration(s)"
@@ -112,21 +103,80 @@ class CallbacksConfig(_BaseConfig):
         default=None, description="Learning rate monitor configuration"
     )
 
-    def to_proto(self) -> Any:
-        """Convert to protobuf message (requires proto extra)."""
-        try:
-            from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-        except ImportError as e:
-            raise ImportError(
-                "Proto support requires the 'proto' extra: pip install cuvis-ai-schemas[proto]"
-            ) from e
 
-        return cuvis_ai_pb2.CallbacksConfig(config_bytes=self.model_dump_json().encode("utf-8"))
+def create_callbacks_from_config(config: CallbacksConfig | None) -> list[Any]:
+    """Create PyTorch Lightning callback instances from configuration.
 
-    @classmethod
-    def from_proto(cls, proto_config):
-        """Create from protobuf message (requires proto extra)."""
-        return cls.model_validate_json(proto_config.config_bytes.decode("utf-8"))
+    Requires pytorch_lightning to be installed (optional dependency).
+    """
+    if config is None:
+        return []
+
+    try:
+        from pytorch_lightning.callbacks import (
+            EarlyStopping,
+            LearningRateMonitor,
+            ModelCheckpoint,
+        )
+    except ImportError as exc:
+        raise ImportError(
+            "pytorch_lightning is required for create_callbacks_from_config(). "
+            "Install with: pip install pytorch-lightning"
+        ) from exc
+
+    callbacks: list[Any] = []
+
+    if config.early_stopping:
+        for es_config in config.early_stopping:
+            callbacks.append(
+                EarlyStopping(
+                    monitor=es_config.monitor,
+                    patience=es_config.patience,
+                    mode=es_config.mode,
+                    min_delta=es_config.min_delta,
+                    stopping_threshold=es_config.stopping_threshold,
+                    verbose=es_config.verbose,
+                    strict=es_config.strict,
+                    check_finite=es_config.check_finite,
+                    divergence_threshold=es_config.divergence_threshold,
+                    check_on_train_epoch_end=es_config.check_on_train_epoch_end,
+                    log_rank_zero_only=es_config.log_rank_zero_only,
+                )
+            )
+
+    if config.checkpoint is not None:
+        mc_config = config.checkpoint
+        callbacks.append(
+            ModelCheckpoint(
+                dirpath=mc_config.dirpath,
+                filename=mc_config.filename,
+                monitor=mc_config.monitor,
+                mode=mc_config.mode,
+                save_top_k=mc_config.save_top_k,
+                save_last=mc_config.save_last,
+                verbose=mc_config.verbose,
+                auto_insert_metric_name=mc_config.auto_insert_metric_name,
+                every_n_epochs=mc_config.every_n_epochs,
+                save_on_exception=mc_config.save_on_exception,
+                save_weights_only=mc_config.save_weights_only,
+                every_n_train_steps=mc_config.every_n_train_steps,
+                train_time_interval=mc_config.train_time_interval,
+                save_on_train_epoch_end=mc_config.save_on_train_epoch_end,
+                enable_version_counter=mc_config.enable_version_counter,
+            )
+        )
+
+    if config.learning_rate_monitor is not None:
+        lr_config = config.learning_rate_monitor
+        callbacks.append(
+            LearningRateMonitor(
+                logging_interval=lr_config.logging_interval,
+                log_momentum=lr_config.log_momentum,
+                log_weight_decay=lr_config.log_weight_decay,
+            )
+        )
+
+    return callbacks
 
 
 __all__ = [
@@ -134,4 +184,5 @@ __all__ = [
     "ModelCheckpointConfig",
     "LearningRateMonitorConfig",
     "CallbacksConfig",
+    "create_callbacks_from_config",
 ]

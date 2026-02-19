@@ -1,6 +1,9 @@
 """Execution context for pipeline execution."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Any
 
 from cuvis_ai_schemas.enums.types import ExecutionStage
 
@@ -39,3 +42,22 @@ class Context:
     epoch: int = 0
     batch_idx: int = 0
     global_step: int = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "stage": self.stage.value,
+            "epoch": self.epoch,
+            "batch_idx": self.batch_idx,
+            "global_step": self.global_step,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Context:
+        """Create from dictionary."""
+        return cls(
+            stage=ExecutionStage(data["stage"]),
+            epoch=data["epoch"],
+            batch_idx=data["batch_idx"],
+            global_step=data["global_step"],
+        )

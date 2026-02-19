@@ -1,22 +1,20 @@
 """Plugin configuration schemas."""
 
+from __future__ import annotations
+
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
+
+from cuvis_ai_schemas.base import BaseSchemaModel
 
 
-class _BasePluginConfig(BaseModel):
+class _BasePluginConfig(BaseSchemaModel):
     """Base plugin configuration with strict validation.
 
     All plugin types inherit from this base class to ensure
     consistent validation and error handling.
     """
-
-    model_config = ConfigDict(
-        extra="forbid",  # Reject unknown fields (catch typos)
-        validate_assignment=True,  # Validate on attribute assignment
-        populate_by_name=True,  # Allow field aliases
-    )
 
     provides: list[str] = Field(
         description="List of fully-qualified class paths this plugin provides",

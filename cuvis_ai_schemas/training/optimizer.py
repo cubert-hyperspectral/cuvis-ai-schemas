@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import ClassVar
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, field_validator
 
-if TYPE_CHECKING:
-    try:
-        from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-    except ImportError:
-        cuvis_ai_pb2 = None  # type: ignore[assignment]
+from cuvis_ai_schemas.base import BaseSchemaModel
 
 
-class OptimizerConfig(BaseModel):
+class OptimizerConfig(BaseSchemaModel):
     """Optimizer configuration with constraints and documentation."""
+
+    __proto_message__: ClassVar[str] = "OptimizerConfig"
 
     name: str = Field(
         default="adamw",
@@ -44,7 +42,6 @@ class OptimizerConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
         validate_assignment=True,
-        populate_by_name=True,
         json_schema_extra={
             "examples": [
                 {
@@ -73,22 +70,6 @@ class OptimizerConfig(BaseModel):
         if value == 0:
             raise ValueError("Learning rate must be non-zero")
         return value
-
-    def to_proto(self) -> Any:
-        """Convert to protobuf message (requires proto extra)."""
-        try:
-            from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-        except ImportError as e:
-            raise ImportError(
-                "Proto support requires the 'proto' extra: pip install cuvis-ai-schemas[proto]"
-            ) from e
-
-        return cuvis_ai_pb2.OptimizerConfig(config_bytes=self.model_dump_json().encode("utf-8"))
-
-    @classmethod
-    def from_proto(cls, proto_config):
-        """Create from protobuf message (requires proto extra)."""
-        return cls.model_validate_json(proto_config.config_bytes.decode("utf-8"))
 
 
 __all__ = ["OptimizerConfig"]

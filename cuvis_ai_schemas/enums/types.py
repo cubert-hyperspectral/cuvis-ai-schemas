@@ -13,7 +13,6 @@ class ExecutionStage(StrEnum):
     ALWAYS = "always"
     TRAIN = "train"
     VAL = "val"
-    VALIDATE = "val"
     TEST = "test"
     INFERENCE = "inference"
 

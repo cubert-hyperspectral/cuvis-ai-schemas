@@ -78,3 +78,46 @@ def test_plugin_manifest():
                 ),
             }
         )
+
+
+def test_plugin_config_to_dict_round_trip():
+    """Plugin configs survive to_dict → from_dict round-trip."""
+    git_plugin = GitPluginConfig(
+        repo="git@gitlab.com:user/repo.git",
+        tag="v2.0.0",
+        provides=["my.package.MyNode", "my.package.OtherNode"],
+    )
+    restored = GitPluginConfig.from_dict(git_plugin.to_dict())
+    assert restored.repo == git_plugin.repo
+    assert restored.tag == git_plugin.tag
+    assert restored.provides == git_plugin.provides
+
+    local_plugin = LocalPluginConfig(
+        path="/opt/plugins/my-plugin",
+        provides=["local.package.LocalNode"],
+    )
+    restored_local = LocalPluginConfig.from_dict(local_plugin.to_dict())
+    assert restored_local.path == local_plugin.path
+    assert restored_local.provides == local_plugin.provides
+
+
+def test_manifest_to_dict_round_trip():
+    """PluginManifest survives to_dict → from_dict round-trip."""
+    manifest = PluginManifest(
+        plugins={
+            "git_plugin": GitPluginConfig(
+                repo="https://github.com/user/repo.git",
+                tag="v1.0.0",
+                provides=["my.package.MyNode"],
+            ),
+            "local_plugin": LocalPluginConfig(
+                path="/path/to/plugin",
+                provides=["other.package.OtherNode"],
+            ),
+        }
+    )
+    d = manifest.to_dict()
+    restored = PluginManifest.from_dict(d)
+    assert set(restored.plugins.keys()) == set(manifest.plugins.keys())
+    assert restored.plugins["git_plugin"].repo == "https://github.com/user/repo.git"
+    assert restored.plugins["local_plugin"].path == "/path/to/plugin"
