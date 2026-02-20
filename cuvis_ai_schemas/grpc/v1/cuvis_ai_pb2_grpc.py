@@ -3,27 +3,7 @@
 
 import grpc
 
-from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2 as cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2
-
-GRPC_GENERATED_VERSION = "1.76.0"
-GRPC_VERSION = grpc.__version__
-_version_not_supported = False
-
-try:
-    from grpc._utilities import first_version_is_lower
-
-    _version_not_supported = first_version_is_lower(GRPC_VERSION, GRPC_GENERATED_VERSION)
-except ImportError:
-    _version_not_supported = True
-
-if _version_not_supported:
-    raise RuntimeError(
-        f"The grpc package installed is at version {GRPC_VERSION},"
-        + " but the generated code in cuvis_ai/grpc/v1/cuvis_ai_pb2_grpc.py depends on"
-        + f" grpcio>={GRPC_GENERATED_VERSION}."
-        + f" Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}"
-        + f" or downgrade your generated code using grpcio-tools<={GRPC_VERSION}."
-    )
+from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2 as grpc_dot_v1_dot_cuvis__ai__pb2
 
 
 class CuvisAIServiceStub:
@@ -39,160 +19,160 @@ class CuvisAIServiceStub:
         Args:
             channel: A grpc.Channel.
         """
-        self.ListAvailablePipelinees = channel.unary_unary(
-            "/cuvis_ai.v1.CuvisAIService/ListAvailablePipelinees",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailablePipelineesRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailablePipelineesResponse.FromString,
+        self.ListAvailablePipelines = channel.unary_unary(
+            "/cuvis_ai.v1.CuvisAIService/ListAvailablePipelines",
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailablePipelinesRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailablePipelinesResponse.FromString,
             _registered_method=True,
         )
         self.GetPipelineInfo = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/GetPipelineInfo",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInfoRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInfoResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInfoRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInfoResponse.FromString,
             _registered_method=True,
         )
         self.CreateSession = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/CreateSession",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CreateSessionRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CreateSessionResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.CreateSessionRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.CreateSessionResponse.FromString,
             _registered_method=True,
         )
         self.SetSessionSearchPaths = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/SetSessionSearchPaths",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetSessionSearchPathsRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetSessionSearchPathsResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.SetSessionSearchPathsRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.SetSessionSearchPathsResponse.FromString,
             _registered_method=True,
         )
         self.CloseSession = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/CloseSession",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionResponse.FromString,
             _registered_method=True,
         )
         self.ResolveConfig = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/ResolveConfig",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ResolveConfigRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ResolveConfigResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.ResolveConfigRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.ResolveConfigResponse.FromString,
             _registered_method=True,
         )
         self.GetParameterSchema = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/GetParameterSchema",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetParameterSchemaRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetParameterSchemaResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetParameterSchemaRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetParameterSchemaResponse.FromString,
             _registered_method=True,
         )
         self.ValidateConfig = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/ValidateConfig",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ValidateConfigRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ValidateConfigResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.ValidateConfigRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.ValidateConfigResponse.FromString,
             _registered_method=True,
         )
         self.LoadPipelineWeights = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/LoadPipelineWeights",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsResponse.FromString,
             _registered_method=True,
         )
         self.SetTrainRunConfig = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/SetTrainRunConfig",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetTrainRunConfigRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetTrainRunConfigResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.SetTrainRunConfigRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.SetTrainRunConfigResponse.FromString,
             _registered_method=True,
         )
         self.Train = channel.unary_stream(
             "/cuvis_ai.v1.CuvisAIService/Train",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.FromString,
             _registered_method=True,
         )
         self.GetTrainStatus = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/GetTrainStatus",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusResponse.FromString,
             _registered_method=True,
         )
         self.GetTrainingCapabilities = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/GetTrainingCapabilities",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainingCapabilitiesRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainingCapabilitiesResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainingCapabilitiesRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainingCapabilitiesResponse.FromString,
             _registered_method=True,
         )
         self.SavePipeline = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/SavePipeline",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SavePipelineRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SavePipelineResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.SavePipelineRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.SavePipelineResponse.FromString,
             _registered_method=True,
         )
         self.LoadPipeline = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/LoadPipeline",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineResponse.FromString,
             _registered_method=True,
         )
         self.SaveTrainRun = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/SaveTrainRun",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SaveTrainRunRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SaveTrainRunResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.SaveTrainRunRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.SaveTrainRunResponse.FromString,
             _registered_method=True,
         )
         self.RestoreTrainRun = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/RestoreTrainRun",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunResponse.FromString,
             _registered_method=True,
         )
         self.GetPipelineInputs = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/GetPipelineInputs",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInputsRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInputsResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInputsRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInputsResponse.FromString,
             _registered_method=True,
         )
         self.GetPipelineOutputs = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/GetPipelineOutputs",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineOutputsRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineOutputsResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineOutputsRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineOutputsResponse.FromString,
             _registered_method=True,
         )
         self.GetPipelineVisualization = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/GetPipelineVisualization",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineVisualizationRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineVisualizationResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineVisualizationRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineVisualizationResponse.FromString,
             _registered_method=True,
         )
         self.Inference = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/Inference",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InferenceRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InferenceResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.InferenceRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.InferenceResponse.FromString,
             _registered_method=True,
         )
         self.LoadPlugins = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/LoadPlugins",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPluginsRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPluginsResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.LoadPluginsRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.LoadPluginsResponse.FromString,
             _registered_method=True,
         )
         self.ListLoadedPlugins = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/ListLoadedPlugins",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListLoadedPluginsRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListLoadedPluginsResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.ListLoadedPluginsRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.ListLoadedPluginsResponse.FromString,
             _registered_method=True,
         )
         self.GetPluginInfo = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/GetPluginInfo",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPluginInfoRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPluginInfoResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPluginInfoRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPluginInfoResponse.FromString,
             _registered_method=True,
         )
         self.ListAvailableNodes = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/ListAvailableNodes",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailableNodesRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailableNodesResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailableNodesRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailableNodesResponse.FromString,
             _registered_method=True,
         )
         self.ClearPluginCache = channel.unary_unary(
             "/cuvis_ai.v1.CuvisAIService/ClearPluginCache",
-            request_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ClearPluginCacheRequest.SerializeToString,
-            response_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ClearPluginCacheResponse.FromString,
+            request_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.ClearPluginCacheRequest.SerializeToString,
+            response_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.ClearPluginCacheResponse.FromString,
             _registered_method=True,
         )
 
@@ -204,7 +184,7 @@ class CuvisAIServiceServicer:
 
     """
 
-    def ListAvailablePipelinees(self, request, context):
+    def ListAvailablePipelines(self, request, context):
         """Pipeline Discovery"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
@@ -363,135 +343,135 @@ class CuvisAIServiceServicer:
 
 def add_CuvisAIServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-        "ListAvailablePipelinees": grpc.unary_unary_rpc_method_handler(
-            servicer.ListAvailablePipelinees,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailablePipelineesRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailablePipelineesResponse.SerializeToString,
+        "ListAvailablePipelines": grpc.unary_unary_rpc_method_handler(
+            servicer.ListAvailablePipelines,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailablePipelinesRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailablePipelinesResponse.SerializeToString,
         ),
         "GetPipelineInfo": grpc.unary_unary_rpc_method_handler(
             servicer.GetPipelineInfo,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInfoRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInfoResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInfoRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInfoResponse.SerializeToString,
         ),
         "CreateSession": grpc.unary_unary_rpc_method_handler(
             servicer.CreateSession,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CreateSessionRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CreateSessionResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.CreateSessionRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.CreateSessionResponse.SerializeToString,
         ),
         "SetSessionSearchPaths": grpc.unary_unary_rpc_method_handler(
             servicer.SetSessionSearchPaths,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetSessionSearchPathsRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetSessionSearchPathsResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.SetSessionSearchPathsRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.SetSessionSearchPathsResponse.SerializeToString,
         ),
         "CloseSession": grpc.unary_unary_rpc_method_handler(
             servicer.CloseSession,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionResponse.SerializeToString,
         ),
         "ResolveConfig": grpc.unary_unary_rpc_method_handler(
             servicer.ResolveConfig,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ResolveConfigRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ResolveConfigResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.ResolveConfigRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.ResolveConfigResponse.SerializeToString,
         ),
         "GetParameterSchema": grpc.unary_unary_rpc_method_handler(
             servicer.GetParameterSchema,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetParameterSchemaRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetParameterSchemaResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetParameterSchemaRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetParameterSchemaResponse.SerializeToString,
         ),
         "ValidateConfig": grpc.unary_unary_rpc_method_handler(
             servicer.ValidateConfig,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ValidateConfigRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ValidateConfigResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.ValidateConfigRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.ValidateConfigResponse.SerializeToString,
         ),
         "LoadPipelineWeights": grpc.unary_unary_rpc_method_handler(
             servicer.LoadPipelineWeights,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsResponse.SerializeToString,
         ),
         "SetTrainRunConfig": grpc.unary_unary_rpc_method_handler(
             servicer.SetTrainRunConfig,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetTrainRunConfigRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetTrainRunConfigResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.SetTrainRunConfigRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.SetTrainRunConfigResponse.SerializeToString,
         ),
         "Train": grpc.unary_stream_rpc_method_handler(
             servicer.Train,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.SerializeToString,
         ),
         "GetTrainStatus": grpc.unary_unary_rpc_method_handler(
             servicer.GetTrainStatus,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusResponse.SerializeToString,
         ),
         "GetTrainingCapabilities": grpc.unary_unary_rpc_method_handler(
             servicer.GetTrainingCapabilities,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainingCapabilitiesRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainingCapabilitiesResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainingCapabilitiesRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainingCapabilitiesResponse.SerializeToString,
         ),
         "SavePipeline": grpc.unary_unary_rpc_method_handler(
             servicer.SavePipeline,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SavePipelineRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SavePipelineResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.SavePipelineRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.SavePipelineResponse.SerializeToString,
         ),
         "LoadPipeline": grpc.unary_unary_rpc_method_handler(
             servicer.LoadPipeline,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineResponse.SerializeToString,
         ),
         "SaveTrainRun": grpc.unary_unary_rpc_method_handler(
             servicer.SaveTrainRun,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SaveTrainRunRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SaveTrainRunResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.SaveTrainRunRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.SaveTrainRunResponse.SerializeToString,
         ),
         "RestoreTrainRun": grpc.unary_unary_rpc_method_handler(
             servicer.RestoreTrainRun,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunResponse.SerializeToString,
         ),
         "GetPipelineInputs": grpc.unary_unary_rpc_method_handler(
             servicer.GetPipelineInputs,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInputsRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInputsResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInputsRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInputsResponse.SerializeToString,
         ),
         "GetPipelineOutputs": grpc.unary_unary_rpc_method_handler(
             servicer.GetPipelineOutputs,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineOutputsRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineOutputsResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineOutputsRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineOutputsResponse.SerializeToString,
         ),
         "GetPipelineVisualization": grpc.unary_unary_rpc_method_handler(
             servicer.GetPipelineVisualization,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineVisualizationRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineVisualizationResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineVisualizationRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineVisualizationResponse.SerializeToString,
         ),
         "Inference": grpc.unary_unary_rpc_method_handler(
             servicer.Inference,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InferenceRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InferenceResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.InferenceRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.InferenceResponse.SerializeToString,
         ),
         "LoadPlugins": grpc.unary_unary_rpc_method_handler(
             servicer.LoadPlugins,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPluginsRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPluginsResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.LoadPluginsRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.LoadPluginsResponse.SerializeToString,
         ),
         "ListLoadedPlugins": grpc.unary_unary_rpc_method_handler(
             servicer.ListLoadedPlugins,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListLoadedPluginsRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListLoadedPluginsResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.ListLoadedPluginsRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.ListLoadedPluginsResponse.SerializeToString,
         ),
         "GetPluginInfo": grpc.unary_unary_rpc_method_handler(
             servicer.GetPluginInfo,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPluginInfoRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPluginInfoResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPluginInfoRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.GetPluginInfoResponse.SerializeToString,
         ),
         "ListAvailableNodes": grpc.unary_unary_rpc_method_handler(
             servicer.ListAvailableNodes,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailableNodesRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailableNodesResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailableNodesRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailableNodesResponse.SerializeToString,
         ),
         "ClearPluginCache": grpc.unary_unary_rpc_method_handler(
             servicer.ClearPluginCache,
-            request_deserializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ClearPluginCacheRequest.FromString,
-            response_serializer=cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ClearPluginCacheResponse.SerializeToString,
+            request_deserializer=grpc_dot_v1_dot_cuvis__ai__pb2.ClearPluginCacheRequest.FromString,
+            response_serializer=grpc_dot_v1_dot_cuvis__ai__pb2.ClearPluginCacheResponse.SerializeToString,
         ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -510,7 +490,7 @@ class CuvisAIService:
     """
 
     @staticmethod
-    def ListAvailablePipelinees(
+    def ListAvailablePipelines(
         request,
         target,
         options=(),
@@ -525,9 +505,9 @@ class CuvisAIService:
         return grpc.experimental.unary_unary(
             request,
             target,
-            "/cuvis_ai.v1.CuvisAIService/ListAvailablePipelinees",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailablePipelineesRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailablePipelineesResponse.FromString,
+            "/cuvis_ai.v1.CuvisAIService/ListAvailablePipelines",
+            grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailablePipelinesRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailablePipelinesResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -556,8 +536,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/GetPipelineInfo",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInfoRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInfoResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInfoRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInfoResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -586,8 +566,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/CreateSession",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CreateSessionRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CreateSessionResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.CreateSessionRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.CreateSessionResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -616,8 +596,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/SetSessionSearchPaths",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetSessionSearchPathsRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetSessionSearchPathsResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.SetSessionSearchPathsRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.SetSessionSearchPathsResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -646,8 +626,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/CloseSession",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -676,8 +656,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/ResolveConfig",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ResolveConfigRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ResolveConfigResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.ResolveConfigRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.ResolveConfigResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -706,8 +686,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/GetParameterSchema",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetParameterSchemaRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetParameterSchemaResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetParameterSchemaRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetParameterSchemaResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -736,8 +716,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/ValidateConfig",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ValidateConfigRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ValidateConfigResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.ValidateConfigRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.ValidateConfigResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -766,8 +746,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/LoadPipelineWeights",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -796,8 +776,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/SetTrainRunConfig",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetTrainRunConfigRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetTrainRunConfigResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.SetTrainRunConfigRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.SetTrainRunConfigResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -826,8 +806,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/Train",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -856,8 +836,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/GetTrainStatus",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -886,8 +866,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/GetTrainingCapabilities",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainingCapabilitiesRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainingCapabilitiesResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainingCapabilitiesRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainingCapabilitiesResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -916,8 +896,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/SavePipeline",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SavePipelineRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SavePipelineResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.SavePipelineRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.SavePipelineResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -946,8 +926,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/LoadPipeline",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -976,8 +956,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/SaveTrainRun",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SaveTrainRunRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SaveTrainRunResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.SaveTrainRunRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.SaveTrainRunResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1006,8 +986,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/RestoreTrainRun",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1036,8 +1016,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/GetPipelineInputs",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInputsRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInputsResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInputsRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineInputsResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1066,8 +1046,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/GetPipelineOutputs",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineOutputsRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineOutputsResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineOutputsRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineOutputsResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1096,8 +1076,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/GetPipelineVisualization",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineVisualizationRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineVisualizationResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineVisualizationRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetPipelineVisualizationResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1126,8 +1106,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/Inference",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InferenceRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InferenceResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.InferenceRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.InferenceResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1156,8 +1136,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/LoadPlugins",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPluginsRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPluginsResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.LoadPluginsRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.LoadPluginsResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1186,8 +1166,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/ListLoadedPlugins",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListLoadedPluginsRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListLoadedPluginsResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.ListLoadedPluginsRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.ListLoadedPluginsResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1216,8 +1196,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/GetPluginInfo",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPluginInfoRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetPluginInfoResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetPluginInfoRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.GetPluginInfoResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1246,8 +1226,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/ListAvailableNodes",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailableNodesRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailableNodesResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailableNodesRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.ListAvailableNodesResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1276,8 +1256,8 @@ class CuvisAIService:
             request,
             target,
             "/cuvis_ai.v1.CuvisAIService/ClearPluginCache",
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ClearPluginCacheRequest.SerializeToString,
-            cuvis__ai_dot_grpc_dot_v1_dot_cuvis__ai__pb2.ClearPluginCacheResponse.FromString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.ClearPluginCacheRequest.SerializeToString,
+            grpc_dot_v1_dot_cuvis__ai__pb2.ClearPluginCacheResponse.FromString,
             options,
             channel_credentials,
             insecure,
