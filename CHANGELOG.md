@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Added `buf.yaml` and `buf.gen.yaml` for proto stub generation via `buf`
+- Fixed `Pipelinees` typo in proto source — renamed to `Pipelines` (message types, field names, and RPC method)
 - Added `BaseSchemaModel` base class with unified serialization (`to_dict`, `from_dict`, `to_json`, `from_json`) and optional proto support via `__proto_message__`
 - Added `-> Self` return type annotations on `BaseSchemaModel` classmethods (`from_dict`, `from_json`, `from_proto`)
 - Added `create_callbacks_from_config()` utility for training callback instantiation (with guarded `pytorch_lightning` import)
