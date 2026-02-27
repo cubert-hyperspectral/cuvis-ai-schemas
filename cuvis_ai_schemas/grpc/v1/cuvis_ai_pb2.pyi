@@ -239,9 +239,7 @@ class BoundingBoxes(_message.Message):
     __slots__ = ("boxes",)
     BOXES_FIELD_NUMBER: _ClassVar[int]
     boxes: _containers.RepeatedCompositeFieldContainer[BoundingBox]
-    def __init__(
-        self, boxes: _Iterable[BoundingBox | _Mapping] | None = ...
-    ) -> None: ...
+    def __init__(self, boxes: _Iterable[BoundingBox | _Mapping] | None = ...) -> None: ...
 
 class Point(_message.Message):
     __slots__ = ("element_id", "x", "y", "type")
@@ -402,17 +400,13 @@ class OptimizerParamsSchema(_message.Message):
     __slots__ = ("parameters",)
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     parameters: _containers.RepeatedCompositeFieldContainer[ParamSpec]
-    def __init__(
-        self, parameters: _Iterable[ParamSpec | _Mapping] | None = ...
-    ) -> None: ...
+    def __init__(self, parameters: _Iterable[ParamSpec | _Mapping] | None = ...) -> None: ...
 
 class SchedulerParamsSchema(_message.Message):
     __slots__ = ("parameters",)
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     parameters: _containers.RepeatedCompositeFieldContainer[ParamSpec]
-    def __init__(
-        self, parameters: _Iterable[ParamSpec | _Mapping] | None = ...
-    ) -> None: ...
+    def __init__(self, parameters: _Iterable[ParamSpec | _Mapping] | None = ...) -> None: ...
 
 class ListAvailablePipelinesRequest(_message.Message):
     __slots__ = ("filter_tag",)
@@ -424,9 +418,7 @@ class ListAvailablePipelinesResponse(_message.Message):
     __slots__ = ("pipelines",)
     PIPELINES_FIELD_NUMBER: _ClassVar[int]
     pipelines: _containers.RepeatedCompositeFieldContainer[PipelineInfo]
-    def __init__(
-        self, pipelines: _Iterable[PipelineInfo | _Mapping] | None = ...
-    ) -> None: ...
+    def __init__(self, pipelines: _Iterable[PipelineInfo | _Mapping] | None = ...) -> None: ...
 
 class GetPipelineInfoRequest(_message.Message):
     __slots__ = ("pipeline_name",)
@@ -534,9 +526,7 @@ class ValidateConfigRequest(_message.Message):
     CONFIG_BYTES_FIELD_NUMBER: _ClassVar[int]
     config_type: str
     config_bytes: bytes
-    def __init__(
-        self, config_type: str | None = ..., config_bytes: bytes | None = ...
-    ) -> None: ...
+    def __init__(self, config_type: str | None = ..., config_bytes: bytes | None = ...) -> None: ...
 
 class ValidateConfigResponse(_message.Message):
     __slots__ = ("valid", "errors", "warnings")
@@ -577,9 +567,7 @@ class LoadPipelineWeightsResponse(_message.Message):
     RESOLVED_PATH_FIELD_NUMBER: _ClassVar[int]
     success: bool
     resolved_path: str
-    def __init__(
-        self, success: bool | None = ..., resolved_path: str | None = ...
-    ) -> None: ...
+    def __init__(self, success: bool | None = ..., resolved_path: str | None = ...) -> None: ...
 
 class SetTrainRunConfigRequest(_message.Message):
     __slots__ = ("session_id", "config")
@@ -631,9 +619,7 @@ class GetTrainStatusResponse(_message.Message):
     __slots__ = ("latest_progress",)
     LATEST_PROGRESS_FIELD_NUMBER: _ClassVar[int]
     latest_progress: TrainResponse
-    def __init__(
-        self, latest_progress: TrainResponse | _Mapping | None = ...
-    ) -> None: ...
+    def __init__(self, latest_progress: TrainResponse | _Mapping | None = ...) -> None: ...
 
 class GetTrainingCapabilitiesRequest(_message.Message):
     __slots__ = ()
@@ -850,9 +836,7 @@ class GetPipelineVisualizationResponse(_message.Message):
     FORMAT_FIELD_NUMBER: _ClassVar[int]
     image_data: bytes
     format: str
-    def __init__(
-        self, image_data: bytes | None = ..., format: str | None = ...
-    ) -> None: ...
+    def __init__(self, image_data: bytes | None = ..., format: str | None = ...) -> None: ...
 
 class InferenceRequest(_message.Message):
     __slots__ = ("session_id", "inputs", "output_specs")
@@ -1039,9 +1023,7 @@ class ListLoadedPluginsResponse(_message.Message):
     __slots__ = ("plugins",)
     PLUGINS_FIELD_NUMBER: _ClassVar[int]
     plugins: _containers.RepeatedCompositeFieldContainer[PluginInfo]
-    def __init__(
-        self, plugins: _Iterable[PluginInfo | _Mapping] | None = ...
-    ) -> None: ...
+    def __init__(self, plugins: _Iterable[PluginInfo | _Mapping] | None = ...) -> None: ...
 
 class GetPluginInfoRequest(_message.Message):
     __slots__ = ("session_id", "plugin_name")
@@ -1049,9 +1031,7 @@ class GetPluginInfoRequest(_message.Message):
     PLUGIN_NAME_FIELD_NUMBER: _ClassVar[int]
     session_id: str
     plugin_name: str
-    def __init__(
-        self, session_id: str | None = ..., plugin_name: str | None = ...
-    ) -> None: ...
+    def __init__(self, session_id: str | None = ..., plugin_name: str | None = ...) -> None: ...
 
 class GetPluginInfoResponse(_message.Message):
     __slots__ = ("plugin",)
