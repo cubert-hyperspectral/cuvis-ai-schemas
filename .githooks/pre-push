@@ -4,6 +4,10 @@
 
 set -e
 
+# Unset GIT_DIR/GIT_WORK_TREE so that uv's internal git fetch calls
+# (for git-based dependencies) don't inherit the hook's git context.
+unset GIT_DIR GIT_WORK_TREE
+
 echo "Running pre-push checks..."
 
 # Sync dev dependencies first
@@ -29,7 +33,7 @@ fi
 
 # Check docstring coverage (configured in pyproject.toml)
 echo "→ Checking docstring coverage..."
-if ! uv run interrogate cuvis_ai_schemas/; then
+if ! uv run python -m interrogate cuvis_ai_schemas/; then
     echo ""
     echo "✗ Docstring coverage check failed!"
     echo "  See configuration in pyproject.toml [tool.interrogate]"

@@ -1,8 +1,10 @@
 version: v2
+managed:
+  enabled: false
 plugins:
   - remote: buf.build/protocolbuffers/python
-    out: cuvis_ai_schemas
+    out: .
   - remote: buf.build/protocolbuffers/pyi
-    out: cuvis_ai_schemas
+    out: .
   - remote: buf.build/grpc/python
-    out: cuvis_ai_schemas
+    out: .

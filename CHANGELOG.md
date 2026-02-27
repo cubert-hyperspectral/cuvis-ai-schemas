@@ -2,16 +2,20 @@
 
 ## [Unreleased]
 
-- Added `buf.yaml` and `buf.gen.yaml` for proto stub generation via `buf`
-- Fixed `Pipelinees` typo in proto source — renamed to `Pipelines` (message types, field names, and RPC method)
+## 0.2.0 - 2026-02-27
+
 - Added `BaseSchemaModel` base class with unified serialization (`to_dict`, `from_dict`, `to_json`, `from_json`) and optional proto support via `__proto_message__`
 - Added `-> Self` return type annotations on `BaseSchemaModel` classmethods (`from_dict`, `from_json`, `from_proto`)
 - Added `create_callbacks_from_config()` utility for training callback instantiation (with guarded `pytorch_lightning` import)
 - Added `Context.to_dict()` / `Context.from_dict()` and plugin serialization helpers
+- Added `buf.yaml` and `buf.gen.yaml` for proto stub generation via `buf`
+- Added breaking/lint rules to buf config
+- Changed proto source location from `proto/cuvis_ai/` to `proto/cuvis_ai_schemas/` to match Python package namespace
 - Changed all config models to inherit from `BaseSchemaModel`, removing 3 duplicate `_BaseConfig` classes
 - Changed `NodeConfig`: renamed `id` → `name`, `params` → `hparams`, dropped `class` alias (now `class_name` only)
 - Changed `ConnectionConfig`: replaced `from_node`/`from_port`/`to_node`/`to_port` fields with compact `source`/`target` dotted-path format (`"node.outputs.port"`)
 - Changed `PipelineConfig` to fully typed Pydantic model with JSON-safe `save_to_file` serialization
+- Fixed `Pipelinees` typo in proto source — renamed to `Pipelines` (message types, field names, and RPC method)
 - Removed `VALIDATE` duplicate from `ExecutionStage` enum
 - Removed obsolete `PipelineConfig.frozen_nodes` field
 - Removed empty `discovery` module
