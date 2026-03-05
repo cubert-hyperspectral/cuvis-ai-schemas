@@ -553,6 +553,44 @@ message ClearPluginCacheResponse {
 }
 
 // ============================================================================
+// Profiling
+// ============================================================================
+
+message SetProfilingRequest {
+  string session_id = 1;
+  bool enabled = 2;
+  optional bool synchronize_cuda = 3;
+  optional bool reset = 4;
+  optional int32 skip_first_n = 5;
+}
+
+message SetProfilingResponse {
+  bool profiling_enabled = 1;
+}
+
+message GetProfilingSummaryRequest {
+  string session_id = 1;
+  optional ExecutionStage stage = 2;
+}
+
+message GetProfilingSummaryResponse {
+  repeated NodeProfilingStats node_stats = 1;
+}
+
+message NodeProfilingStats {
+  string node_name = 1;
+  ExecutionStage stage = 2;
+  int64 count = 3;
+  double mean_ms = 4;
+  double median_ms = 5;
+  double std_ms = 6;
+  double min_ms = 7;
+  double max_ms = 8;
+  double total_ms = 9;
+  double last_ms = 10;
+}
+
+// ============================================================================
 // Service Definition
 // ============================================================================
 
@@ -601,4 +639,8 @@ service CuvisAIService {
   rpc GetPluginInfo(GetPluginInfoRequest) returns (GetPluginInfoResponse);
   rpc ListAvailableNodes(ListAvailableNodesRequest) returns (ListAvailableNodesResponse);
   rpc ClearPluginCache(ClearPluginCacheRequest) returns (ClearPluginCacheResponse);
+
+  // Profiling
+  rpc SetProfiling(SetProfilingRequest) returns (SetProfilingResponse);
+  rpc GetProfilingSummary(GetProfilingSummaryRequest) returns (GetProfilingSummaryResponse);
 }

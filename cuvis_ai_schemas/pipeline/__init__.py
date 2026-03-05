@@ -13,12 +13,14 @@ from cuvis_ai_schemas.pipeline.ports import (
     OutputPort,
     PortSpec,
 )
+from cuvis_ai_schemas.pipeline.profiling import NodeProfilingStats
 
 __all__ = [
     "ConnectionConfig",
     "DimensionResolver",
     "InputPort",
     "NodeConfig",
+    "NodeProfilingStats",
     "OutputPort",
     "PipelineConfig",
     "PipelineMetadata",
