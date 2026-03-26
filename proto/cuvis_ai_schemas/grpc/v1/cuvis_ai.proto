@@ -114,12 +114,14 @@ message PipelineMetadata {
   string author = 6;
 }
 
+// Discovery payload for a single pipeline.
+// `pipeline_path` is the canonical lookup key and always includes the file extension.
 message PipelineInfo {
-  string pipeline_path = 1;           // Relative path from server pipeline root (e.g., "anomaly/deep_svdd/deep_svdd.yaml")
+  string pipeline_path = 1;           // Relative pipeline path from server root (e.g., "anomaly/deep_svdd/deep_svdd.yaml")
   string path = 2;                    // Full absolute path on server
-  PipelineMetadata metadata = 3;      // Metadata from pipeline file
-  string weights_path = 6;            // Path to .pt file if exists
-  string yaml_content = 7;            // Optional: full YAML content
+  PipelineMetadata metadata = 3;      // Metadata loaded from the pipeline file
+  string weights_path = 6;            // Absolute path to the co-located .pt file, if present
+  string yaml_content = 7;            // Optional: full YAML file content
 }
 
 // Configuration message using JSON transport.
@@ -169,9 +171,9 @@ message InputBatch {
   Points points = 5;
   string text_prompt = 6;
   map<string, Tensor> extra_inputs = 7;
-  Tensor mesu_index = 8;  // optional: shape [1], dtype int64; absent -> pipeline/SAM3 uses stream index
-  Tensor rgb_image = 9;   // optional: shape [B,H,W,3], dtype float32
-  Tensor frame_id = 10;   // optional: shape [B], dtype int64; absent -> pipeline/SAM3 uses stream index
+  Tensor mesu_index = 8;  // Optional stream position tensor, shape [1], dtype int64; absent -> pipeline/SAM3 uses stream index
+  Tensor rgb_image = 9;   // Optional explicit RGB frame tensor, shape [B,H,W,3], dtype float32
+  Tensor frame_id = 10;   // Optional external frame id tensor, shape [B], dtype int64; absent -> pipeline/SAM3 uses stream index
 }
 
 message TensorSpec {
@@ -229,7 +231,7 @@ message ListAvailablePipelinesResponse {
 }
 
 message GetPipelineInfoRequest {
-  string pipeline_path = 1;  // Relative path from server pipeline root with extension (e.g., "anomaly/deep_svdd/deep_svdd.yaml")
+  string pipeline_path = 1;  // Canonical relative pipeline path with extension (replaces legacy `pipeline_name`)
 }
 
 message GetPipelineInfoResponse {
