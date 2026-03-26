@@ -8,7 +8,7 @@ from cuvis_ai_schemas.grpc.v1 import (
 )
 
 
-class CuvisAIServiceStub(object):
+class CuvisAIServiceStub:
     """============================================================================
     Service Definition
     ============================================================================
@@ -191,7 +191,7 @@ class CuvisAIServiceStub(object):
         )
 
 
-class CuvisAIServiceServicer(object):
+class CuvisAIServiceServicer:
     """============================================================================
     Service Definition
     ============================================================================
@@ -518,7 +518,7 @@ def add_CuvisAIServiceServicer_to_server(servicer, server):
 
 
 # This class is part of an EXPERIMENTAL API.
-class CuvisAIService(object):
+class CuvisAIService:
     """============================================================================
     Service Definition
     ============================================================================

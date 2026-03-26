@@ -1,9 +1,11 @@
-from google.protobuf.internal import containers as _containers
-from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
+from collections.abc import Iterable as _Iterable
+from collections.abc import Mapping as _Mapping
+from typing import ClassVar as _ClassVar
+
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from collections.abc import Iterable as _Iterable, Mapping as _Mapping
-from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
+from google.protobuf.internal import containers as _containers
+from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -96,9 +98,9 @@ class Tensor(_message.Message):
     raw_data: bytes
     def __init__(
         self,
-        shape: _Optional[_Iterable[int]] = ...,
-        dtype: _Optional[_Union[DType, str]] = ...,
-        raw_data: _Optional[bytes] = ...,
+        shape: _Iterable[int] | None = ...,
+        dtype: DType | str | None = ...,
+        raw_data: bytes | None = ...,
     ) -> None: ...
 
 class Context(_message.Message):
@@ -113,41 +115,41 @@ class Context(_message.Message):
     global_step: int
     def __init__(
         self,
-        stage: _Optional[_Union[ExecutionStage, str]] = ...,
-        epoch: _Optional[int] = ...,
-        batch_idx: _Optional[int] = ...,
-        global_step: _Optional[int] = ...,
+        stage: ExecutionStage | str | None = ...,
+        epoch: int | None = ...,
+        batch_idx: int | None = ...,
+        global_step: int | None = ...,
     ) -> None: ...
 
 class PipelineConfig(_message.Message):
     __slots__ = ("config_bytes",)
     CONFIG_BYTES_FIELD_NUMBER: _ClassVar[int]
     config_bytes: bytes
-    def __init__(self, config_bytes: _Optional[bytes] = ...) -> None: ...
+    def __init__(self, config_bytes: bytes | None = ...) -> None: ...
 
 class DataConfig(_message.Message):
     __slots__ = ("config_bytes",)
     CONFIG_BYTES_FIELD_NUMBER: _ClassVar[int]
     config_bytes: bytes
-    def __init__(self, config_bytes: _Optional[bytes] = ...) -> None: ...
+    def __init__(self, config_bytes: bytes | None = ...) -> None: ...
 
 class OptimizerConfig(_message.Message):
     __slots__ = ("config_bytes",)
     CONFIG_BYTES_FIELD_NUMBER: _ClassVar[int]
     config_bytes: bytes
-    def __init__(self, config_bytes: _Optional[bytes] = ...) -> None: ...
+    def __init__(self, config_bytes: bytes | None = ...) -> None: ...
 
 class SchedulerConfig(_message.Message):
     __slots__ = ("config_bytes",)
     CONFIG_BYTES_FIELD_NUMBER: _ClassVar[int]
     config_bytes: bytes
-    def __init__(self, config_bytes: _Optional[bytes] = ...) -> None: ...
+    def __init__(self, config_bytes: bytes | None = ...) -> None: ...
 
 class CallbacksConfig(_message.Message):
     __slots__ = ("config_bytes",)
     CONFIG_BYTES_FIELD_NUMBER: _ClassVar[int]
     config_bytes: bytes
-    def __init__(self, config_bytes: _Optional[bytes] = ...) -> None: ...
+    def __init__(self, config_bytes: bytes | None = ...) -> None: ...
 
 class PipelineMetadata(_message.Message):
     __slots__ = ("name", "description", "created", "cuvis_ai_version", "tags", "author")
@@ -165,12 +167,12 @@ class PipelineMetadata(_message.Message):
     author: str
     def __init__(
         self,
-        name: _Optional[str] = ...,
-        description: _Optional[str] = ...,
-        created: _Optional[str] = ...,
-        cuvis_ai_version: _Optional[str] = ...,
-        tags: _Optional[_Iterable[str]] = ...,
-        author: _Optional[str] = ...,
+        name: str | None = ...,
+        description: str | None = ...,
+        created: str | None = ...,
+        cuvis_ai_version: str | None = ...,
+        tags: _Iterable[str] | None = ...,
+        author: str | None = ...,
     ) -> None: ...
 
 class PipelineInfo(_message.Message):
@@ -187,24 +189,24 @@ class PipelineInfo(_message.Message):
     yaml_content: str
     def __init__(
         self,
-        pipeline_path: _Optional[str] = ...,
-        path: _Optional[str] = ...,
-        metadata: _Optional[_Union[PipelineMetadata, _Mapping]] = ...,
-        weights_path: _Optional[str] = ...,
-        yaml_content: _Optional[str] = ...,
+        pipeline_path: str | None = ...,
+        path: str | None = ...,
+        metadata: PipelineMetadata | _Mapping | None = ...,
+        weights_path: str | None = ...,
+        yaml_content: str | None = ...,
     ) -> None: ...
 
 class TrainingConfig(_message.Message):
     __slots__ = ("config_bytes",)
     CONFIG_BYTES_FIELD_NUMBER: _ClassVar[int]
     config_bytes: bytes
-    def __init__(self, config_bytes: _Optional[bytes] = ...) -> None: ...
+    def __init__(self, config_bytes: bytes | None = ...) -> None: ...
 
 class TrainRunConfig(_message.Message):
     __slots__ = ("config_bytes",)
     CONFIG_BYTES_FIELD_NUMBER: _ClassVar[int]
     config_bytes: bytes
-    def __init__(self, config_bytes: _Optional[bytes] = ...) -> None: ...
+    def __init__(self, config_bytes: bytes | None = ...) -> None: ...
 
 class BoundingBox(_message.Message):
     __slots__ = ("element_id", "x_min", "y_min", "x_max", "y_max")
@@ -220,20 +222,18 @@ class BoundingBox(_message.Message):
     y_max: float
     def __init__(
         self,
-        element_id: _Optional[int] = ...,
-        x_min: _Optional[float] = ...,
-        y_min: _Optional[float] = ...,
-        x_max: _Optional[float] = ...,
-        y_max: _Optional[float] = ...,
+        element_id: int | None = ...,
+        x_min: float | None = ...,
+        y_min: float | None = ...,
+        x_max: float | None = ...,
+        y_max: float | None = ...,
     ) -> None: ...
 
 class BoundingBoxes(_message.Message):
     __slots__ = ("boxes",)
     BOXES_FIELD_NUMBER: _ClassVar[int]
     boxes: _containers.RepeatedCompositeFieldContainer[BoundingBox]
-    def __init__(
-        self, boxes: _Optional[_Iterable[_Union[BoundingBox, _Mapping]]] = ...
-    ) -> None: ...
+    def __init__(self, boxes: _Iterable[BoundingBox | _Mapping] | None = ...) -> None: ...
 
 class Point(_message.Message):
     __slots__ = ("element_id", "x", "y", "type")
@@ -247,17 +247,17 @@ class Point(_message.Message):
     type: PointType
     def __init__(
         self,
-        element_id: _Optional[int] = ...,
-        x: _Optional[float] = ...,
-        y: _Optional[float] = ...,
-        type: _Optional[_Union[PointType, str]] = ...,
+        element_id: int | None = ...,
+        x: float | None = ...,
+        y: float | None = ...,
+        type: PointType | str | None = ...,
     ) -> None: ...
 
 class Points(_message.Message):
     __slots__ = ("points",)
     POINTS_FIELD_NUMBER: _ClassVar[int]
     points: _containers.RepeatedCompositeFieldContainer[Point]
-    def __init__(self, points: _Optional[_Iterable[_Union[Point, _Mapping]]] = ...) -> None: ...
+    def __init__(self, points: _Iterable[Point | _Mapping] | None = ...) -> None: ...
 
 class InputBatch(_message.Message):
     __slots__ = (
@@ -279,7 +279,7 @@ class InputBatch(_message.Message):
         key: str
         value: Tensor
         def __init__(
-            self, key: _Optional[str] = ..., value: _Optional[_Union[Tensor, _Mapping]] = ...
+            self, key: str | None = ..., value: Tensor | _Mapping | None = ...
         ) -> None: ...
 
     WAVELENGTHS_FIELD_NUMBER: _ClassVar[int]
@@ -304,16 +304,16 @@ class InputBatch(_message.Message):
     frame_id: Tensor
     def __init__(
         self,
-        wavelengths: _Optional[_Union[Tensor, _Mapping]] = ...,
-        cube: _Optional[_Union[Tensor, _Mapping]] = ...,
-        mask: _Optional[_Union[Tensor, _Mapping]] = ...,
-        bboxes: _Optional[_Union[BoundingBoxes, _Mapping]] = ...,
-        points: _Optional[_Union[Points, _Mapping]] = ...,
-        text_prompt: _Optional[str] = ...,
-        extra_inputs: _Optional[_Mapping[str, Tensor]] = ...,
-        mesu_index: _Optional[_Union[Tensor, _Mapping]] = ...,
-        rgb_image: _Optional[_Union[Tensor, _Mapping]] = ...,
-        frame_id: _Optional[_Union[Tensor, _Mapping]] = ...,
+        wavelengths: Tensor | _Mapping | None = ...,
+        cube: Tensor | _Mapping | None = ...,
+        mask: Tensor | _Mapping | None = ...,
+        bboxes: BoundingBoxes | _Mapping | None = ...,
+        points: Points | _Mapping | None = ...,
+        text_prompt: str | None = ...,
+        extra_inputs: _Mapping[str, Tensor] | None = ...,
+        mesu_index: Tensor | _Mapping | None = ...,
+        rgb_image: Tensor | _Mapping | None = ...,
+        frame_id: Tensor | _Mapping | None = ...,
     ) -> None: ...
 
 class TensorSpec(_message.Message):
@@ -328,9 +328,9 @@ class TensorSpec(_message.Message):
     required: bool
     def __init__(
         self,
-        name: _Optional[str] = ...,
-        shape: _Optional[_Iterable[int]] = ...,
-        dtype: _Optional[_Union[DType, str]] = ...,
+        name: str | None = ...,
+        shape: _Iterable[int] | None = ...,
+        dtype: DType | str | None = ...,
         required: bool = ...,
     ) -> None: ...
 
@@ -342,7 +342,7 @@ class TrainResponse(_message.Message):
         VALUE_FIELD_NUMBER: _ClassVar[int]
         key: str
         value: float
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[float] = ...) -> None: ...
+        def __init__(self, key: str | None = ..., value: float | None = ...) -> None: ...
 
     class MetricsEntry(_message.Message):
         __slots__ = ("key", "value")
@@ -350,7 +350,7 @@ class TrainResponse(_message.Message):
         VALUE_FIELD_NUMBER: _ClassVar[int]
         key: str
         value: float
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[float] = ...) -> None: ...
+        def __init__(self, key: str | None = ..., value: float | None = ...) -> None: ...
 
     CONTEXT_FIELD_NUMBER: _ClassVar[int]
     LOSSES_FIELD_NUMBER: _ClassVar[int]
@@ -364,11 +364,11 @@ class TrainResponse(_message.Message):
     message: str
     def __init__(
         self,
-        context: _Optional[_Union[Context, _Mapping]] = ...,
-        losses: _Optional[_Mapping[str, float]] = ...,
-        metrics: _Optional[_Mapping[str, float]] = ...,
-        status: _Optional[_Union[TrainStatus, str]] = ...,
-        message: _Optional[str] = ...,
+        context: Context | _Mapping | None = ...,
+        losses: _Mapping[str, float] | None = ...,
+        metrics: _Mapping[str, float] | None = ...,
+        status: TrainStatus | str | None = ...,
+        message: str | None = ...,
     ) -> None: ...
 
 class ParamSpec(_message.Message):
@@ -387,12 +387,12 @@ class ParamSpec(_message.Message):
     validation: str
     def __init__(
         self,
-        name: _Optional[str] = ...,
-        type: _Optional[str] = ...,
+        name: str | None = ...,
+        type: str | None = ...,
         required: bool = ...,
-        default_value: _Optional[str] = ...,
-        description: _Optional[str] = ...,
-        validation: _Optional[str] = ...,
+        default_value: str | None = ...,
+        description: str | None = ...,
+        validation: str | None = ...,
     ) -> None: ...
 
 class CallbackTypeInfo(_message.Message):
@@ -405,52 +405,46 @@ class CallbackTypeInfo(_message.Message):
     parameters: _containers.RepeatedCompositeFieldContainer[ParamSpec]
     def __init__(
         self,
-        type: _Optional[str] = ...,
-        description: _Optional[str] = ...,
-        parameters: _Optional[_Iterable[_Union[ParamSpec, _Mapping]]] = ...,
+        type: str | None = ...,
+        description: str | None = ...,
+        parameters: _Iterable[ParamSpec | _Mapping] | None = ...,
     ) -> None: ...
 
 class OptimizerParamsSchema(_message.Message):
     __slots__ = ("parameters",)
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     parameters: _containers.RepeatedCompositeFieldContainer[ParamSpec]
-    def __init__(
-        self, parameters: _Optional[_Iterable[_Union[ParamSpec, _Mapping]]] = ...
-    ) -> None: ...
+    def __init__(self, parameters: _Iterable[ParamSpec | _Mapping] | None = ...) -> None: ...
 
 class SchedulerParamsSchema(_message.Message):
     __slots__ = ("parameters",)
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     parameters: _containers.RepeatedCompositeFieldContainer[ParamSpec]
-    def __init__(
-        self, parameters: _Optional[_Iterable[_Union[ParamSpec, _Mapping]]] = ...
-    ) -> None: ...
+    def __init__(self, parameters: _Iterable[ParamSpec | _Mapping] | None = ...) -> None: ...
 
 class ListAvailablePipelinesRequest(_message.Message):
     __slots__ = ("filter_tag",)
     FILTER_TAG_FIELD_NUMBER: _ClassVar[int]
     filter_tag: str
-    def __init__(self, filter_tag: _Optional[str] = ...) -> None: ...
+    def __init__(self, filter_tag: str | None = ...) -> None: ...
 
 class ListAvailablePipelinesResponse(_message.Message):
     __slots__ = ("pipelines",)
     PIPELINES_FIELD_NUMBER: _ClassVar[int]
     pipelines: _containers.RepeatedCompositeFieldContainer[PipelineInfo]
-    def __init__(
-        self, pipelines: _Optional[_Iterable[_Union[PipelineInfo, _Mapping]]] = ...
-    ) -> None: ...
+    def __init__(self, pipelines: _Iterable[PipelineInfo | _Mapping] | None = ...) -> None: ...
 
 class GetPipelineInfoRequest(_message.Message):
     __slots__ = ("pipeline_path",)
     PIPELINE_PATH_FIELD_NUMBER: _ClassVar[int]
     pipeline_path: str
-    def __init__(self, pipeline_path: _Optional[str] = ...) -> None: ...
+    def __init__(self, pipeline_path: str | None = ...) -> None: ...
 
 class GetPipelineInfoResponse(_message.Message):
     __slots__ = ("pipeline_info",)
     PIPELINE_INFO_FIELD_NUMBER: _ClassVar[int]
     pipeline_info: PipelineInfo
-    def __init__(self, pipeline_info: _Optional[_Union[PipelineInfo, _Mapping]] = ...) -> None: ...
+    def __init__(self, pipeline_info: PipelineInfo | _Mapping | None = ...) -> None: ...
 
 class CreateSessionRequest(_message.Message):
     __slots__ = ()
@@ -460,7 +454,7 @@ class CreateSessionResponse(_message.Message):
     __slots__ = ("session_id",)
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     session_id: str
-    def __init__(self, session_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, session_id: str | None = ...) -> None: ...
 
 class SetSessionSearchPathsRequest(_message.Message):
     __slots__ = ("session_id", "search_paths", "append")
@@ -472,8 +466,8 @@ class SetSessionSearchPathsRequest(_message.Message):
     append: bool
     def __init__(
         self,
-        session_id: _Optional[str] = ...,
-        search_paths: _Optional[_Iterable[str]] = ...,
+        session_id: str | None = ...,
+        search_paths: _Iterable[str] | None = ...,
         append: bool = ...,
     ) -> None: ...
 
@@ -488,15 +482,15 @@ class SetSessionSearchPathsResponse(_message.Message):
     def __init__(
         self,
         success: bool = ...,
-        current_paths: _Optional[_Iterable[str]] = ...,
-        rejected_paths: _Optional[_Iterable[str]] = ...,
+        current_paths: _Iterable[str] | None = ...,
+        rejected_paths: _Iterable[str] | None = ...,
     ) -> None: ...
 
 class CloseSessionRequest(_message.Message):
     __slots__ = ("session_id",)
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     session_id: str
-    def __init__(self, session_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, session_id: str | None = ...) -> None: ...
 
 class CloseSessionResponse(_message.Message):
     __slots__ = ("success",)
@@ -516,29 +510,29 @@ class ResolveConfigRequest(_message.Message):
     overrides: _containers.RepeatedScalarFieldContainer[str]
     def __init__(
         self,
-        session_id: _Optional[str] = ...,
-        config_type: _Optional[str] = ...,
-        path: _Optional[str] = ...,
-        overrides: _Optional[_Iterable[str]] = ...,
+        session_id: str | None = ...,
+        config_type: str | None = ...,
+        path: str | None = ...,
+        overrides: _Iterable[str] | None = ...,
     ) -> None: ...
 
 class ResolveConfigResponse(_message.Message):
     __slots__ = ("config_bytes",)
     CONFIG_BYTES_FIELD_NUMBER: _ClassVar[int]
     config_bytes: bytes
-    def __init__(self, config_bytes: _Optional[bytes] = ...) -> None: ...
+    def __init__(self, config_bytes: bytes | None = ...) -> None: ...
 
 class GetParameterSchemaRequest(_message.Message):
     __slots__ = ("config_type",)
     CONFIG_TYPE_FIELD_NUMBER: _ClassVar[int]
     config_type: str
-    def __init__(self, config_type: _Optional[str] = ...) -> None: ...
+    def __init__(self, config_type: str | None = ...) -> None: ...
 
 class GetParameterSchemaResponse(_message.Message):
     __slots__ = ("json_schema",)
     JSON_SCHEMA_FIELD_NUMBER: _ClassVar[int]
     json_schema: str
-    def __init__(self, json_schema: _Optional[str] = ...) -> None: ...
+    def __init__(self, json_schema: str | None = ...) -> None: ...
 
 class ValidateConfigRequest(_message.Message):
     __slots__ = ("config_type", "config_bytes")
@@ -546,9 +540,7 @@ class ValidateConfigRequest(_message.Message):
     CONFIG_BYTES_FIELD_NUMBER: _ClassVar[int]
     config_type: str
     config_bytes: bytes
-    def __init__(
-        self, config_type: _Optional[str] = ..., config_bytes: _Optional[bytes] = ...
-    ) -> None: ...
+    def __init__(self, config_type: str | None = ..., config_bytes: bytes | None = ...) -> None: ...
 
 class ValidateConfigResponse(_message.Message):
     __slots__ = ("valid", "errors", "warnings")
@@ -561,8 +553,8 @@ class ValidateConfigResponse(_message.Message):
     def __init__(
         self,
         valid: bool = ...,
-        errors: _Optional[_Iterable[str]] = ...,
-        warnings: _Optional[_Iterable[str]] = ...,
+        errors: _Iterable[str] | None = ...,
+        warnings: _Iterable[str] | None = ...,
     ) -> None: ...
 
 class LoadPipelineWeightsRequest(_message.Message):
@@ -577,9 +569,9 @@ class LoadPipelineWeightsRequest(_message.Message):
     strict: bool
     def __init__(
         self,
-        session_id: _Optional[str] = ...,
-        weights_path: _Optional[str] = ...,
-        weights_bytes: _Optional[bytes] = ...,
+        session_id: str | None = ...,
+        weights_path: str | None = ...,
+        weights_bytes: bytes | None = ...,
         strict: bool = ...,
     ) -> None: ...
 
@@ -589,7 +581,7 @@ class LoadPipelineWeightsResponse(_message.Message):
     RESOLVED_PATH_FIELD_NUMBER: _ClassVar[int]
     success: bool
     resolved_path: str
-    def __init__(self, success: bool = ..., resolved_path: _Optional[str] = ...) -> None: ...
+    def __init__(self, success: bool = ..., resolved_path: str | None = ...) -> None: ...
 
 class SetTrainRunConfigRequest(_message.Message):
     __slots__ = ("session_id", "config")
@@ -599,8 +591,8 @@ class SetTrainRunConfigRequest(_message.Message):
     config: TrainRunConfig
     def __init__(
         self,
-        session_id: _Optional[str] = ...,
-        config: _Optional[_Union[TrainRunConfig, _Mapping]] = ...,
+        session_id: str | None = ...,
+        config: TrainRunConfig | _Mapping | None = ...,
     ) -> None: ...
 
 class SetTrainRunConfigResponse(_message.Message):
@@ -623,25 +615,23 @@ class TrainRequest(_message.Message):
     training: TrainingConfig
     def __init__(
         self,
-        session_id: _Optional[str] = ...,
-        trainer_type: _Optional[_Union[TrainerType, str]] = ...,
-        data: _Optional[_Union[DataConfig, _Mapping]] = ...,
-        training: _Optional[_Union[TrainingConfig, _Mapping]] = ...,
+        session_id: str | None = ...,
+        trainer_type: TrainerType | str | None = ...,
+        data: DataConfig | _Mapping | None = ...,
+        training: TrainingConfig | _Mapping | None = ...,
     ) -> None: ...
 
 class GetTrainStatusRequest(_message.Message):
     __slots__ = ("session_id",)
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     session_id: str
-    def __init__(self, session_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, session_id: str | None = ...) -> None: ...
 
 class GetTrainStatusResponse(_message.Message):
     __slots__ = ("latest_progress",)
     LATEST_PROGRESS_FIELD_NUMBER: _ClassVar[int]
     latest_progress: TrainResponse
-    def __init__(
-        self, latest_progress: _Optional[_Union[TrainResponse, _Mapping]] = ...
-    ) -> None: ...
+    def __init__(self, latest_progress: TrainResponse | _Mapping | None = ...) -> None: ...
 
 class GetTrainingCapabilitiesRequest(_message.Message):
     __slots__ = ()
@@ -667,11 +657,11 @@ class GetTrainingCapabilitiesResponse(_message.Message):
     scheduler_params: SchedulerParamsSchema
     def __init__(
         self,
-        supported_optimizers: _Optional[_Iterable[str]] = ...,
-        supported_schedulers: _Optional[_Iterable[str]] = ...,
-        supported_callbacks: _Optional[_Iterable[_Union[CallbackTypeInfo, _Mapping]]] = ...,
-        optimizer_params: _Optional[_Union[OptimizerParamsSchema, _Mapping]] = ...,
-        scheduler_params: _Optional[_Union[SchedulerParamsSchema, _Mapping]] = ...,
+        supported_optimizers: _Iterable[str] | None = ...,
+        supported_schedulers: _Iterable[str] | None = ...,
+        supported_callbacks: _Iterable[CallbackTypeInfo | _Mapping] | None = ...,
+        optimizer_params: OptimizerParamsSchema | _Mapping | None = ...,
+        scheduler_params: SchedulerParamsSchema | _Mapping | None = ...,
     ) -> None: ...
 
 class SavePipelineRequest(_message.Message):
@@ -684,9 +674,9 @@ class SavePipelineRequest(_message.Message):
     metadata: PipelineMetadata
     def __init__(
         self,
-        session_id: _Optional[str] = ...,
-        pipeline_path: _Optional[str] = ...,
-        metadata: _Optional[_Union[PipelineMetadata, _Mapping]] = ...,
+        session_id: str | None = ...,
+        pipeline_path: str | None = ...,
+        metadata: PipelineMetadata | _Mapping | None = ...,
     ) -> None: ...
 
 class SavePipelineResponse(_message.Message):
@@ -700,8 +690,8 @@ class SavePipelineResponse(_message.Message):
     def __init__(
         self,
         success: bool = ...,
-        pipeline_path: _Optional[str] = ...,
-        weights_path: _Optional[str] = ...,
+        pipeline_path: str | None = ...,
+        weights_path: str | None = ...,
     ) -> None: ...
 
 class LoadPipelineRequest(_message.Message):
@@ -712,8 +702,8 @@ class LoadPipelineRequest(_message.Message):
     pipeline: PipelineConfig
     def __init__(
         self,
-        session_id: _Optional[str] = ...,
-        pipeline: _Optional[_Union[PipelineConfig, _Mapping]] = ...,
+        session_id: str | None = ...,
+        pipeline: PipelineConfig | _Mapping | None = ...,
     ) -> None: ...
 
 class LoadPipelineResponse(_message.Message):
@@ -723,7 +713,7 @@ class LoadPipelineResponse(_message.Message):
     success: bool
     metadata: PipelineMetadata
     def __init__(
-        self, success: bool = ..., metadata: _Optional[_Union[PipelineMetadata, _Mapping]] = ...
+        self, success: bool = ..., metadata: PipelineMetadata | _Mapping | None = ...
     ) -> None: ...
 
 class SaveTrainRunRequest(_message.Message):
@@ -736,8 +726,8 @@ class SaveTrainRunRequest(_message.Message):
     save_weights: bool
     def __init__(
         self,
-        session_id: _Optional[str] = ...,
-        trainrun_path: _Optional[str] = ...,
+        session_id: str | None = ...,
+        trainrun_path: str | None = ...,
         save_weights: bool = ...,
     ) -> None: ...
 
@@ -754,9 +744,9 @@ class SaveTrainRunResponse(_message.Message):
     def __init__(
         self,
         success: bool = ...,
-        trainrun_path: _Optional[str] = ...,
-        pipeline_path: _Optional[str] = ...,
-        weights_path: _Optional[str] = ...,
+        trainrun_path: str | None = ...,
+        pipeline_path: str | None = ...,
+        weights_path: str | None = ...,
     ) -> None: ...
 
 class RestoreTrainRunRequest(_message.Message):
@@ -769,8 +759,8 @@ class RestoreTrainRunRequest(_message.Message):
     strict: bool
     def __init__(
         self,
-        trainrun_path: _Optional[str] = ...,
-        weights_path: _Optional[str] = ...,
+        trainrun_path: str | None = ...,
+        weights_path: str | None = ...,
         strict: bool = ...,
     ) -> None: ...
 
@@ -782,15 +772,15 @@ class RestoreTrainRunResponse(_message.Message):
     trainrun: TrainRunConfig
     def __init__(
         self,
-        session_id: _Optional[str] = ...,
-        trainrun: _Optional[_Union[TrainRunConfig, _Mapping]] = ...,
+        session_id: str | None = ...,
+        trainrun: TrainRunConfig | _Mapping | None = ...,
     ) -> None: ...
 
 class GetPipelineInputsRequest(_message.Message):
     __slots__ = ("session_id",)
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     session_id: str
-    def __init__(self, session_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, session_id: str | None = ...) -> None: ...
 
 class GetPipelineInputsResponse(_message.Message):
     __slots__ = ("input_names", "input_specs")
@@ -801,7 +791,7 @@ class GetPipelineInputsResponse(_message.Message):
         key: str
         value: TensorSpec
         def __init__(
-            self, key: _Optional[str] = ..., value: _Optional[_Union[TensorSpec, _Mapping]] = ...
+            self, key: str | None = ..., value: TensorSpec | _Mapping | None = ...
         ) -> None: ...
 
     INPUT_NAMES_FIELD_NUMBER: _ClassVar[int]
@@ -810,15 +800,15 @@ class GetPipelineInputsResponse(_message.Message):
     input_specs: _containers.MessageMap[str, TensorSpec]
     def __init__(
         self,
-        input_names: _Optional[_Iterable[str]] = ...,
-        input_specs: _Optional[_Mapping[str, TensorSpec]] = ...,
+        input_names: _Iterable[str] | None = ...,
+        input_specs: _Mapping[str, TensorSpec] | None = ...,
     ) -> None: ...
 
 class GetPipelineOutputsRequest(_message.Message):
     __slots__ = ("session_id",)
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     session_id: str
-    def __init__(self, session_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, session_id: str | None = ...) -> None: ...
 
 class GetPipelineOutputsResponse(_message.Message):
     __slots__ = ("output_names", "output_specs")
@@ -829,7 +819,7 @@ class GetPipelineOutputsResponse(_message.Message):
         key: str
         value: TensorSpec
         def __init__(
-            self, key: _Optional[str] = ..., value: _Optional[_Union[TensorSpec, _Mapping]] = ...
+            self, key: str | None = ..., value: TensorSpec | _Mapping | None = ...
         ) -> None: ...
 
     OUTPUT_NAMES_FIELD_NUMBER: _ClassVar[int]
@@ -838,8 +828,8 @@ class GetPipelineOutputsResponse(_message.Message):
     output_specs: _containers.MessageMap[str, TensorSpec]
     def __init__(
         self,
-        output_names: _Optional[_Iterable[str]] = ...,
-        output_specs: _Optional[_Mapping[str, TensorSpec]] = ...,
+        output_names: _Iterable[str] | None = ...,
+        output_specs: _Mapping[str, TensorSpec] | None = ...,
     ) -> None: ...
 
 class GetPipelineVisualizationRequest(_message.Message):
@@ -848,7 +838,7 @@ class GetPipelineVisualizationRequest(_message.Message):
     FORMAT_FIELD_NUMBER: _ClassVar[int]
     session_id: str
     format: str
-    def __init__(self, session_id: _Optional[str] = ..., format: _Optional[str] = ...) -> None: ...
+    def __init__(self, session_id: str | None = ..., format: str | None = ...) -> None: ...
 
 class GetPipelineVisualizationResponse(_message.Message):
     __slots__ = ("image_data", "format")
@@ -856,9 +846,7 @@ class GetPipelineVisualizationResponse(_message.Message):
     FORMAT_FIELD_NUMBER: _ClassVar[int]
     image_data: bytes
     format: str
-    def __init__(
-        self, image_data: _Optional[bytes] = ..., format: _Optional[str] = ...
-    ) -> None: ...
+    def __init__(self, image_data: bytes | None = ..., format: str | None = ...) -> None: ...
 
 class InferenceRequest(_message.Message):
     __slots__ = ("session_id", "inputs", "output_specs")
@@ -870,9 +858,9 @@ class InferenceRequest(_message.Message):
     output_specs: _containers.RepeatedScalarFieldContainer[str]
     def __init__(
         self,
-        session_id: _Optional[str] = ...,
-        inputs: _Optional[_Union[InputBatch, _Mapping]] = ...,
-        output_specs: _Optional[_Iterable[str]] = ...,
+        session_id: str | None = ...,
+        inputs: InputBatch | _Mapping | None = ...,
+        output_specs: _Iterable[str] | None = ...,
     ) -> None: ...
 
 class InferenceResponse(_message.Message):
@@ -884,7 +872,7 @@ class InferenceResponse(_message.Message):
         key: str
         value: Tensor
         def __init__(
-            self, key: _Optional[str] = ..., value: _Optional[_Union[Tensor, _Mapping]] = ...
+            self, key: str | None = ..., value: Tensor | _Mapping | None = ...
         ) -> None: ...
 
     class MetricsEntry(_message.Message):
@@ -893,7 +881,7 @@ class InferenceResponse(_message.Message):
         VALUE_FIELD_NUMBER: _ClassVar[int]
         key: str
         value: float
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[float] = ...) -> None: ...
+        def __init__(self, key: str | None = ..., value: float | None = ...) -> None: ...
 
     OUTPUTS_FIELD_NUMBER: _ClassVar[int]
     METRICS_FIELD_NUMBER: _ClassVar[int]
@@ -901,15 +889,15 @@ class InferenceResponse(_message.Message):
     metrics: _containers.ScalarMap[str, float]
     def __init__(
         self,
-        outputs: _Optional[_Mapping[str, Tensor]] = ...,
-        metrics: _Optional[_Mapping[str, float]] = ...,
+        outputs: _Mapping[str, Tensor] | None = ...,
+        metrics: _Mapping[str, float] | None = ...,
     ) -> None: ...
 
 class PluginManifest(_message.Message):
     __slots__ = ("config_bytes",)
     CONFIG_BYTES_FIELD_NUMBER: _ClassVar[int]
     config_bytes: bytes
-    def __init__(self, config_bytes: _Optional[bytes] = ...) -> None: ...
+    def __init__(self, config_bytes: bytes | None = ...) -> None: ...
 
 class PluginInfo(_message.Message):
     __slots__ = ("name", "type", "source", "tag", "provides")
@@ -925,11 +913,11 @@ class PluginInfo(_message.Message):
     provides: _containers.RepeatedScalarFieldContainer[str]
     def __init__(
         self,
-        name: _Optional[str] = ...,
-        type: _Optional[str] = ...,
-        source: _Optional[str] = ...,
-        tag: _Optional[str] = ...,
-        provides: _Optional[_Iterable[str]] = ...,
+        name: str | None = ...,
+        type: str | None = ...,
+        source: str | None = ...,
+        tag: str | None = ...,
+        provides: _Iterable[str] | None = ...,
     ) -> None: ...
 
 class PortSpec(_message.Message):
@@ -946,18 +934,18 @@ class PortSpec(_message.Message):
     description: str
     def __init__(
         self,
-        name: _Optional[str] = ...,
-        dtype: _Optional[_Union[DType, str]] = ...,
-        shape: _Optional[_Iterable[int]] = ...,
+        name: str | None = ...,
+        dtype: DType | str | None = ...,
+        shape: _Iterable[int] | None = ...,
         optional: bool = ...,
-        description: _Optional[str] = ...,
+        description: str | None = ...,
     ) -> None: ...
 
 class PortSpecList(_message.Message):
     __slots__ = ("specs",)
     SPECS_FIELD_NUMBER: _ClassVar[int]
     specs: _containers.RepeatedCompositeFieldContainer[PortSpec]
-    def __init__(self, specs: _Optional[_Iterable[_Union[PortSpec, _Mapping]]] = ...) -> None: ...
+    def __init__(self, specs: _Iterable[PortSpec | _Mapping] | None = ...) -> None: ...
 
 class NodeInfo(_message.Message):
     __slots__ = ("class_name", "full_path", "source", "plugin_name", "input_specs", "output_specs")
@@ -968,7 +956,7 @@ class NodeInfo(_message.Message):
         key: str
         value: PortSpecList
         def __init__(
-            self, key: _Optional[str] = ..., value: _Optional[_Union[PortSpecList, _Mapping]] = ...
+            self, key: str | None = ..., value: PortSpecList | _Mapping | None = ...
         ) -> None: ...
 
     class OutputSpecsEntry(_message.Message):
@@ -978,7 +966,7 @@ class NodeInfo(_message.Message):
         key: str
         value: PortSpecList
         def __init__(
-            self, key: _Optional[str] = ..., value: _Optional[_Union[PortSpecList, _Mapping]] = ...
+            self, key: str | None = ..., value: PortSpecList | _Mapping | None = ...
         ) -> None: ...
 
     CLASS_NAME_FIELD_NUMBER: _ClassVar[int]
@@ -995,12 +983,12 @@ class NodeInfo(_message.Message):
     output_specs: _containers.MessageMap[str, PortSpecList]
     def __init__(
         self,
-        class_name: _Optional[str] = ...,
-        full_path: _Optional[str] = ...,
-        source: _Optional[str] = ...,
-        plugin_name: _Optional[str] = ...,
-        input_specs: _Optional[_Mapping[str, PortSpecList]] = ...,
-        output_specs: _Optional[_Mapping[str, PortSpecList]] = ...,
+        class_name: str | None = ...,
+        full_path: str | None = ...,
+        source: str | None = ...,
+        plugin_name: str | None = ...,
+        input_specs: _Mapping[str, PortSpecList] | None = ...,
+        output_specs: _Mapping[str, PortSpecList] | None = ...,
     ) -> None: ...
 
 class LoadPluginsRequest(_message.Message):
@@ -1011,8 +999,8 @@ class LoadPluginsRequest(_message.Message):
     manifest: PluginManifest
     def __init__(
         self,
-        session_id: _Optional[str] = ...,
-        manifest: _Optional[_Union[PluginManifest, _Mapping]] = ...,
+        session_id: str | None = ...,
+        manifest: PluginManifest | _Mapping | None = ...,
     ) -> None: ...
 
 class LoadPluginsResponse(_message.Message):
@@ -1023,7 +1011,7 @@ class LoadPluginsResponse(_message.Message):
         VALUE_FIELD_NUMBER: _ClassVar[int]
         key: str
         value: str
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
+        def __init__(self, key: str | None = ..., value: str | None = ...) -> None: ...
 
     LOADED_PLUGINS_FIELD_NUMBER: _ClassVar[int]
     FAILED_PLUGINS_FIELD_NUMBER: _ClassVar[int]
@@ -1031,23 +1019,21 @@ class LoadPluginsResponse(_message.Message):
     failed_plugins: _containers.ScalarMap[str, str]
     def __init__(
         self,
-        loaded_plugins: _Optional[_Iterable[str]] = ...,
-        failed_plugins: _Optional[_Mapping[str, str]] = ...,
+        loaded_plugins: _Iterable[str] | None = ...,
+        failed_plugins: _Mapping[str, str] | None = ...,
     ) -> None: ...
 
 class ListLoadedPluginsRequest(_message.Message):
     __slots__ = ("session_id",)
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     session_id: str
-    def __init__(self, session_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, session_id: str | None = ...) -> None: ...
 
 class ListLoadedPluginsResponse(_message.Message):
     __slots__ = ("plugins",)
     PLUGINS_FIELD_NUMBER: _ClassVar[int]
     plugins: _containers.RepeatedCompositeFieldContainer[PluginInfo]
-    def __init__(
-        self, plugins: _Optional[_Iterable[_Union[PluginInfo, _Mapping]]] = ...
-    ) -> None: ...
+    def __init__(self, plugins: _Iterable[PluginInfo | _Mapping] | None = ...) -> None: ...
 
 class GetPluginInfoRequest(_message.Message):
     __slots__ = ("session_id", "plugin_name")
@@ -1055,39 +1041,37 @@ class GetPluginInfoRequest(_message.Message):
     PLUGIN_NAME_FIELD_NUMBER: _ClassVar[int]
     session_id: str
     plugin_name: str
-    def __init__(
-        self, session_id: _Optional[str] = ..., plugin_name: _Optional[str] = ...
-    ) -> None: ...
+    def __init__(self, session_id: str | None = ..., plugin_name: str | None = ...) -> None: ...
 
 class GetPluginInfoResponse(_message.Message):
     __slots__ = ("plugin",)
     PLUGIN_FIELD_NUMBER: _ClassVar[int]
     plugin: PluginInfo
-    def __init__(self, plugin: _Optional[_Union[PluginInfo, _Mapping]] = ...) -> None: ...
+    def __init__(self, plugin: PluginInfo | _Mapping | None = ...) -> None: ...
 
 class ListAvailableNodesRequest(_message.Message):
     __slots__ = ("session_id",)
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     session_id: str
-    def __init__(self, session_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, session_id: str | None = ...) -> None: ...
 
 class ListAvailableNodesResponse(_message.Message):
     __slots__ = ("nodes",)
     NODES_FIELD_NUMBER: _ClassVar[int]
     nodes: _containers.RepeatedCompositeFieldContainer[NodeInfo]
-    def __init__(self, nodes: _Optional[_Iterable[_Union[NodeInfo, _Mapping]]] = ...) -> None: ...
+    def __init__(self, nodes: _Iterable[NodeInfo | _Mapping] | None = ...) -> None: ...
 
 class ClearPluginCacheRequest(_message.Message):
     __slots__ = ("plugin_name",)
     PLUGIN_NAME_FIELD_NUMBER: _ClassVar[int]
     plugin_name: str
-    def __init__(self, plugin_name: _Optional[str] = ...) -> None: ...
+    def __init__(self, plugin_name: str | None = ...) -> None: ...
 
 class ClearPluginCacheResponse(_message.Message):
     __slots__ = ("cleared_count",)
     CLEARED_COUNT_FIELD_NUMBER: _ClassVar[int]
     cleared_count: int
-    def __init__(self, cleared_count: _Optional[int] = ...) -> None: ...
+    def __init__(self, cleared_count: int | None = ...) -> None: ...
 
 class SetProfilingRequest(_message.Message):
     __slots__ = ("session_id", "enabled", "synchronize_cuda", "reset", "skip_first_n")
@@ -1103,11 +1087,11 @@ class SetProfilingRequest(_message.Message):
     skip_first_n: int
     def __init__(
         self,
-        session_id: _Optional[str] = ...,
+        session_id: str | None = ...,
         enabled: bool = ...,
         synchronize_cuda: bool = ...,
         reset: bool = ...,
-        skip_first_n: _Optional[int] = ...,
+        skip_first_n: int | None = ...,
     ) -> None: ...
 
 class SetProfilingResponse(_message.Message):
@@ -1123,7 +1107,7 @@ class GetProfilingSummaryRequest(_message.Message):
     session_id: str
     stage: ExecutionStage
     def __init__(
-        self, session_id: _Optional[str] = ..., stage: _Optional[_Union[ExecutionStage, str]] = ...
+        self, session_id: str | None = ..., stage: ExecutionStage | str | None = ...
     ) -> None: ...
 
 class GetProfilingSummaryResponse(_message.Message):
@@ -1131,7 +1115,7 @@ class GetProfilingSummaryResponse(_message.Message):
     NODE_STATS_FIELD_NUMBER: _ClassVar[int]
     node_stats: _containers.RepeatedCompositeFieldContainer[NodeProfilingStats]
     def __init__(
-        self, node_stats: _Optional[_Iterable[_Union[NodeProfilingStats, _Mapping]]] = ...
+        self, node_stats: _Iterable[NodeProfilingStats | _Mapping] | None = ...
     ) -> None: ...
 
 class NodeProfilingStats(_message.Message):
@@ -1169,14 +1153,14 @@ class NodeProfilingStats(_message.Message):
     last_ms: float
     def __init__(
         self,
-        node_name: _Optional[str] = ...,
-        stage: _Optional[_Union[ExecutionStage, str]] = ...,
-        count: _Optional[int] = ...,
-        mean_ms: _Optional[float] = ...,
-        median_ms: _Optional[float] = ...,
-        std_ms: _Optional[float] = ...,
-        min_ms: _Optional[float] = ...,
-        max_ms: _Optional[float] = ...,
-        total_ms: _Optional[float] = ...,
-        last_ms: _Optional[float] = ...,
+        node_name: str | None = ...,
+        stage: ExecutionStage | str | None = ...,
+        count: int | None = ...,
+        mean_ms: float | None = ...,
+        median_ms: float | None = ...,
+        std_ms: float | None = ...,
+        min_ms: float | None = ...,
+        max_ms: float | None = ...,
+        total_ms: float | None = ...,
+        last_ms: float | None = ...,
     ) -> None: ...
