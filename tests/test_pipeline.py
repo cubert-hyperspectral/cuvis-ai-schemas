@@ -95,13 +95,14 @@ def test_connection_config_validation():
 def test_pipeline_config():
     """Test PipelineConfig with typed nodes and connections."""
     pipeline = PipelineConfig(
-        name="test_pipeline",
         nodes=[
             NodeConfig(name="normalizer", class_name="module.Normalizer", hparams={"min": 0}),
         ],
         connections=[],
+        metadata=PipelineMetadata(name="test_pipeline"),
     )
-    assert pipeline.name == "test_pipeline"
+    assert pipeline.metadata is not None
+    assert pipeline.metadata.name == "test_pipeline"
     assert len(pipeline.nodes) == 1
     assert isinstance(pipeline.nodes[0], NodeConfig)
     assert pipeline.nodes[0].name == "normalizer"
@@ -110,7 +111,7 @@ def test_pipeline_config():
 def test_pipeline_config_from_dict():
     """Test PipelineConfig constructed from dict (simulates YAML loading)."""
     data = {
-        "name": "test_pipeline",
+        "metadata": {"name": "test_pipeline"},
         "nodes": [
             {"name": "normalizer", "class_name": "module.Normalizer", "hparams": {"min": 0}},
             {"name": "model", "class_name": "module.Model"},
@@ -130,7 +131,7 @@ def test_pipeline_config_from_dict():
 def test_pipeline_config_round_trip():
     """Test dict -> PipelineConfig -> to_dict() -> reload round trip."""
     original = {
-        "name": "round_trip_test",
+        "metadata": {"name": "round_trip_test"},
         "nodes": [
             {"name": "node_a", "class_name": "pkg.NodeA", "hparams": {"lr": 0.001}},
             {"name": "node_b", "class_name": "pkg.NodeB"},
@@ -143,7 +144,8 @@ def test_pipeline_config_round_trip():
     dumped = pipeline.to_dict()
     reloaded = PipelineConfig.from_dict(dumped)
 
-    assert reloaded.name == original["name"]
+    assert reloaded.metadata is not None
+    assert reloaded.metadata.name == original["metadata"]["name"]
     assert len(reloaded.nodes) == 2
     assert len(reloaded.connections) == 1
     assert reloaded.nodes[0].name == "node_a"
@@ -153,17 +155,32 @@ def test_pipeline_config_round_trip():
 def test_pipeline_config_json_round_trip():
     """Test JSON serialization round trip."""
     pipeline = PipelineConfig(
-        name="json_test",
         nodes=[NodeConfig(name="n1", class_name="pkg.N1")],
         connections=[
             ConnectionConfig(source="n1.outputs.out", target="n2.inputs.in"),
         ],
+        metadata=PipelineMetadata(name="json_test"),
     )
     json_str = pipeline.to_json()
     loaded = PipelineConfig.from_json(json_str)
-    assert loaded.name == pipeline.name
+    assert loaded.metadata is not None
+    assert pipeline.metadata is not None
+    assert loaded.metadata.name == pipeline.metadata.name
     assert loaded.nodes[0].class_name == "pkg.N1"
     assert loaded.connections[0].source == "n1.outputs.out"
+
+
+def test_pipeline_config_rejects_top_level_name():
+    """Test that top-level pipeline name is rejected (extra=forbid)."""
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict(
+            {
+                "name": "legacy_top_level_name",
+                "metadata": {"name": "canonical_name"},
+                "nodes": [],
+                "connections": [],
+            }
+        )
 
 
 def test_model_dump_uses_field_names():

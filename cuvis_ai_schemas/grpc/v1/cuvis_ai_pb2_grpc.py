@@ -8,7 +8,7 @@ from cuvis_ai_schemas.grpc.v1 import (
 )
 
 
-class CuvisAIServiceStub:
+class CuvisAIServiceStub(object):
     """============================================================================
     Service Definition
     ============================================================================
@@ -191,7 +191,7 @@ class CuvisAIServiceStub:
         )
 
 
-class CuvisAIServiceServicer:
+class CuvisAIServiceServicer(object):
     """============================================================================
     Service Definition
     ============================================================================
@@ -355,7 +355,7 @@ class CuvisAIServiceServicer:
         raise NotImplementedError("Method not implemented!")
 
     def SetProfiling(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Profiling"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
@@ -518,7 +518,7 @@ def add_CuvisAIServiceServicer_to_server(servicer, server):
 
 
 # This class is part of an EXPERIMENTAL API.
-class CuvisAIService:
+class CuvisAIService(object):
     """============================================================================
     Service Definition
     ============================================================================

@@ -137,8 +137,6 @@ class PipelineConfig(BaseSchemaModel):
 
     Attributes
     ----------
-    name : str
-        Pipeline name
     nodes : list[NodeConfig]
         Node definitions
     connections : list[ConnectionConfig]
@@ -149,7 +147,6 @@ class PipelineConfig(BaseSchemaModel):
 
     __proto_message__: ClassVar[str] = "PipelineConfig"
 
-    name: str = Field(default="", description="Pipeline name")
     nodes: list[NodeConfig] = Field(default_factory=list, description="Node definitions")
     connections: list[ConnectionConfig] = Field(default_factory=list, description="Connections")
     metadata: PipelineMetadata | None = Field(

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- Changed discovery proto contracts to use `pipeline_path` (with extension) in `PipelineInfo` and `GetPipelineInfoRequest`, removing legacy `name`/`tags`/`has_weights` fields.
+- Added explicit video-stream inputs to `InputBatch` (`mesu_index`, `rgb_image`, `frame_id`) and regenerated gRPC Python stubs.
+- Removed top-level `PipelineConfig.name` in favor of metadata-backed naming and updated pipeline/base-model/proto consistency tests.
+- Updated proto generation toolchain pins in `buf.gen.yaml` and protobuf dependency constraints in `pyproject.toml`.
+
 ## 0.2.0 - 2026-02-27
 
 - Added `BaseSchemaModel` base class with unified serialization (`to_dict`, `from_dict`, `to_json`, `from_json`) and optional proto support via `__proto_message__`
