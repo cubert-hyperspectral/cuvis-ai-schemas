@@ -118,7 +118,7 @@ message PipelineMetadata {
 // `pipeline_path` is the canonical lookup key and always includes the file extension.
 message PipelineInfo {
   string pipeline_path = 1;           // Relative pipeline path from server root (e.g., "anomaly/deep_svdd/deep_svdd.yaml")
-  string path = 2;                    // Full absolute path on server
+  string resolved_path = 2;           // Concrete absolute server path for follow-on calls like ResolveConfig
   PipelineMetadata metadata = 3;      // Metadata loaded from the pipeline file
   string weights_path = 6;            // Absolute path to the co-located .pt file, if present
   string yaml_content = 7;            // Optional: full YAML file content

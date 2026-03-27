@@ -21,3 +21,17 @@ def test_input_batch_has_explicit_video_fields() -> None:
     assert "frame_id" in fields
     assert fields["rgb_image"].number == 9
     assert fields["frame_id"].number == 10
+
+
+def test_pipeline_discovery_uses_explicit_lookup_and_resolved_paths() -> None:
+    """Pipeline discovery should distinguish stable lookup keys from resolved paths."""
+    info_fields = cuvis_ai_pb2.PipelineInfo.DESCRIPTOR.fields_by_name
+    request_fields = cuvis_ai_pb2.GetPipelineInfoRequest.DESCRIPTOR.fields_by_name
+
+    assert "pipeline_path" in info_fields
+    assert "resolved_path" in info_fields
+    assert "path" not in info_fields
+    assert info_fields["pipeline_path"].number == 1
+    assert info_fields["resolved_path"].number == 2
+    assert "pipeline_path" in request_fields
+    assert request_fields["pipeline_path"].number == 1

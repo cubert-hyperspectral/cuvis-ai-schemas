@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- Changed discovery proto contracts to use `pipeline_path` (with extension) in `PipelineInfo` and `GetPipelineInfoRequest`, removing legacy `name`/`tags`/`has_weights` fields.
+- Changed discovery proto contracts to use canonical `pipeline_path` in `PipelineInfo` and `GetPipelineInfoRequest`, and explicit `resolved_path` for the concrete server-side file location, removing legacy `name`/`tags`/`has_weights` fields.
 - Added explicit video-stream inputs to `InputBatch` (`mesu_index`, `rgb_image`, `frame_id`) and regenerated gRPC Python stubs.
 - Removed top-level `PipelineConfig.name` in favor of metadata-backed naming and updated pipeline/base-model/proto consistency tests.
 - Updated proto generation toolchain pins in `buf.gen.yaml` and protobuf dependency constraints in `pyproject.toml`.
