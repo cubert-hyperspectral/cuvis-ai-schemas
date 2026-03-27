@@ -139,6 +139,7 @@ filterwarnings = [
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+extend-exclude = ["cuvis_ai_schemas/grpc/v1/*.py", "cuvis_ai_schemas/grpc/v1/*.pyi"]
 
 [tool.ruff.format]
 quote-style = "double"
