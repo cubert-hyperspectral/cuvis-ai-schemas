@@ -64,7 +64,7 @@ classifiers = [
 # Proto generation and gRPC support
 proto = [
     "grpcio>=1.56.0",
-    "protobuf>=4.25.0",
+    "protobuf>=6.33.5,<7",
     "grpcio-tools>=1.56.0",
 ]
 
@@ -139,6 +139,7 @@ filterwarnings = [
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+extend-exclude = ["cuvis_ai_schemas/grpc/v1/*.py", "cuvis_ai_schemas/grpc/v1/*.pyi"]
 
 [tool.ruff.format]
 quote-style = "double"

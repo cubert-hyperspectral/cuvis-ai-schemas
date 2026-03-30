@@ -69,14 +69,15 @@ def test_pipeline_config_save_and_load(tmp_path):
     from cuvis_ai_schemas.pipeline import ConnectionConfig, NodeConfig
 
     config = PipelineConfig(
-        name="test",
         nodes=[NodeConfig(name="n1", class_name="pkg.N1")],
         connections=[ConnectionConfig(source="n1.outputs.out", target="n2.inputs.in")],
+        metadata=PipelineMetadata(name="test"),
     )
     path = tmp_path / "pipeline.yaml"
     config.save_to_file(path)
     loaded = PipelineConfig.load_from_file(path)
-    assert loaded.name == "test"
+    assert loaded.metadata is not None
+    assert loaded.metadata.name == "test"
     assert loaded.nodes[0].class_name == "pkg.N1"
 
 

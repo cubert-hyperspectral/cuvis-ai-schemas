@@ -2,9 +2,9 @@ version: v2
 managed:
   enabled: false
 plugins:
-  - remote: buf.build/protocolbuffers/python
+  - remote: buf.build/protocolbuffers/python:v31.1
     out: .
-  - remote: buf.build/protocolbuffers/pyi
+  - remote: buf.build/protocolbuffers/pyi:v31.1
     out: .
   - remote: buf.build/grpc/python
     out: .

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+- Added per-node pipeline profiling transport with `SetProfiling` / `GetProfilingSummary` RPCs and `NodeProfilingStats`.
+- Added optional `BoundingBox.object_id` transport for scheduled SAM3 bbox prompting while preserving `element_id` as the batch-element index.
+- Changed discovery proto contracts to use canonical `pipeline_path` in `PipelineInfo` and `GetPipelineInfoRequest`, and explicit `resolved_path` for the concrete server-side file location, removing legacy `name`/`tags`/`has_weights` fields.
+- Added explicit video-stream inputs to `InputBatch` (`mesu_index`, `rgb_image`, `frame_id`) and regenerated gRPC Python stubs.
+- Removed top-level `PipelineConfig.name` in favor of metadata-backed naming and updated pipeline/base-model/proto consistency tests.
+- Updated proto generation toolchain pins in `buf.gen.yaml`, protobuf dependency constraints in `pyproject.toml`, and GitHub Actions workflow dependencies for artifacts and Codecov.
+
 ## 0.2.0 - 2026-02-27
 
 - Added `BaseSchemaModel` base class with unified serialization (`to_dict`, `from_dict`, `to_json`, `from_json`) and optional proto support via `__proto_message__`
