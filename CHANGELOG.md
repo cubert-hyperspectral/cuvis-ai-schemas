@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added optional `BoundingBox.object_id` transport for scheduled SAM3 bbox prompting while preserving `element_id` as the batch-element index.
 - Changed discovery proto contracts to use canonical `pipeline_path` in `PipelineInfo` and `GetPipelineInfoRequest`, and explicit `resolved_path` for the concrete server-side file location, removing legacy `name`/`tags`/`has_weights` fields.
 - Added explicit video-stream inputs to `InputBatch` (`mesu_index`, `rgb_image`, `frame_id`) and regenerated gRPC Python stubs.
 - Removed top-level `PipelineConfig.name` in favor of metadata-backed naming and updated pipeline/base-model/proto consistency tests.

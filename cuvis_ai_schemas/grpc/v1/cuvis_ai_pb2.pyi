@@ -180,18 +180,20 @@ class TrainRunConfig(_message.Message):
     def __init__(self, config_bytes: _Optional[bytes] = ...) -> None: ...
 
 class BoundingBox(_message.Message):
-    __slots__ = ("element_id", "x_min", "y_min", "x_max", "y_max")
+    __slots__ = ("element_id", "x_min", "y_min", "x_max", "y_max", "object_id")
     ELEMENT_ID_FIELD_NUMBER: _ClassVar[int]
     X_MIN_FIELD_NUMBER: _ClassVar[int]
     Y_MIN_FIELD_NUMBER: _ClassVar[int]
     X_MAX_FIELD_NUMBER: _ClassVar[int]
     Y_MAX_FIELD_NUMBER: _ClassVar[int]
+    OBJECT_ID_FIELD_NUMBER: _ClassVar[int]
     element_id: int
     x_min: float
     y_min: float
     x_max: float
     y_max: float
-    def __init__(self, element_id: _Optional[int] = ..., x_min: _Optional[float] = ..., y_min: _Optional[float] = ..., x_max: _Optional[float] = ..., y_max: _Optional[float] = ...) -> None: ...
+    object_id: int
+    def __init__(self, element_id: _Optional[int] = ..., x_min: _Optional[float] = ..., y_min: _Optional[float] = ..., x_max: _Optional[float] = ..., y_max: _Optional[float] = ..., object_id: _Optional[int] = ...) -> None: ...
 
 class BoundingBoxes(_message.Message):
     __slots__ = ("boxes",)

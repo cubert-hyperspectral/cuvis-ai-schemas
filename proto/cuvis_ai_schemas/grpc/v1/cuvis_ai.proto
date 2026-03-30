@@ -146,6 +146,7 @@ message BoundingBox {
   float y_min = 3;
   float x_max = 4;
   float y_max = 5;
+  optional int32 object_id = 6;
 }
 
 message BoundingBoxes {
