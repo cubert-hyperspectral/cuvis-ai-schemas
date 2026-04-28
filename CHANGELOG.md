@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## 0.4.0 - 2026-04-28
+
+- Added `NodeCategory` proto enum (12 named values + `UNSPECIFIED`) capturing each node's exclusive graph role / execution contract (source, sink, transform, model, loss, metric, optimizer, scheduler, regularizer, runner, visualizer, control).
+- Added `NodeTag` proto enum (~50 values, ID-range sub-namespaced into modality/task/lifecycle/properties/backend) for orthogonal axes a node can carry in any combination.
+- Added `NodeInfo.icon_svg` (field 7, `bytes`), `NodeInfo.category` (field 8, `NodeCategory`), and `NodeInfo.tags` (field 9, `repeated NodeTag`); old `NodeInfo` payloads continue to deserialize cleanly under proto3 defaults.
+- Added Python `NodeCategory` and `NodeTag` `StrEnum` mirrors at `cuvis_ai_schemas.enums`, with `NodeCategory.get_display_name()` returning the title-cased label.
+- Added `cuvis_ai_schemas.extensions.ui.node_display` exposing `CATEGORY_STYLES`, `TAG_STYLES`, `resolve_display(node)`, and `is_plugin(node, registry)` as the canonical display module shared by the pipeline visualizer and the Qt UI palette.
+- Added `cuvis_ai_schemas.grpc.conversions` with `node_category_to_proto` / `proto_to_node_category` and `node_tag_to_proto` / `proto_to_node_tag` helpers; unknown wire ints fall back to `UNSPECIFIED` (categories) or `None` (tags) for forward compatibility.
+- Added 13 default monochrome SVG icons under `cuvis_ai_schemas/extensions/ui/icons/` (one per `NodeCategory` value), bundled into the wheel via a new `[tool.setuptools.package-data]` block.
+
 ## 0.3.0 - 2026-03-31
 
 - Added per-node pipeline profiling transport with `SetProfiling` / `GetProfilingSummary` RPCs and `NodeProfilingStats`.
