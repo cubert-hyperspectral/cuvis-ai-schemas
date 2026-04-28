@@ -120,6 +120,9 @@ Source = "https://github.com/cubert-hyperspectral/cuvis-ai-schemas"
 [tool.setuptools.packages.find]
 include = ["cuvis_ai_schemas*"]
 
+[tool.setuptools.package-data]
+cuvis_ai_schemas = ["extensions/ui/icons/*.svg"]
+
 [tool.setuptools_scm]
 version_scheme = "post-release"
 local_scheme = "node-and-date"
