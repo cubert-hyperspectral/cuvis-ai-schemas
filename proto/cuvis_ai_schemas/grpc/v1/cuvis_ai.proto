@@ -54,6 +54,97 @@ enum PointType {
   POINT_TYPE_NEUTRAL = 3;
 }
 
+// Node category — graph role / execution contract. Exclusive.
+enum NodeCategory {
+  NODE_CATEGORY_UNSPECIFIED   = 0;
+
+  // Data plumbing
+  NODE_CATEGORY_SOURCE        = 1;   // produces data, no graph input
+  NODE_CATEGORY_SINK          = 2;   // consumes data, no graph output
+
+  // Functional / parametric
+  NODE_CATEGORY_TRANSFORM     = 3;   // data → data, no learnable params
+  NODE_CATEGORY_MODEL         = 4;   // data → data, learnable params
+
+  // Training plane
+  NODE_CATEGORY_LOSS          = 5;   // (pred, target) → scalar, differentiable
+  NODE_CATEGORY_METRIC        = 6;   // (pred, target) → scalar/dict
+  NODE_CATEGORY_OPTIMIZER     = 7;   // params, grads → updated params
+  NODE_CATEGORY_SCHEDULER     = 8;   // step → hyperparam
+  NODE_CATEGORY_REGULARIZER   = 9;   // params/activations → penalty
+
+  // Orchestration / IO
+  NODE_CATEGORY_RUNNER        = 10;  // drives a subgraph (train/eval/inference loop)
+  NODE_CATEGORY_VISUALIZER    = 11;  // data → figure/overlay/render
+  NODE_CATEGORY_CONTROL       = 12;  // graph control flow: branch, merge, switch, gate
+}
+
+// Node tag — orthogonal axes (modality, task, lifecycle, properties, backend).
+// Multiple values per node. Combinations are free. Sub-namespaces are conveyed
+// by ID-range gaps (100s = modality, 200s = task, 300s = lifecycle,
+// 400s = properties, 500s = backend).
+enum NodeTag {
+  NODE_TAG_UNSPECIFIED = 0;
+
+  // 100s — Modality (what kind of data flows through)
+  NODE_TAG_IMAGE             = 100;
+  NODE_TAG_VIDEO             = 101;
+  NODE_TAG_RGB               = 102;
+  NODE_TAG_MULTISPECTRAL     = 103;
+  NODE_TAG_HYPERSPECTRAL     = 104;
+  NODE_TAG_POINT_CLOUD       = 105;
+  NODE_TAG_DEPTH             = 106;
+  NODE_TAG_MASK              = 107;
+  NODE_TAG_BBOX              = 108;
+  NODE_TAG_KEYPOINTS         = 109;
+  NODE_TAG_TEXT              = 110;
+  NODE_TAG_AUDIO             = 111;
+  NODE_TAG_TABULAR           = 112;
+  NODE_TAG_TIME_SERIES       = 113;
+  NODE_TAG_METADATA          = 114;
+  NODE_TAG_EMBEDDING         = 115;
+
+  // 200s — Task / domain
+  NODE_TAG_CLASSIFICATION    = 200;
+  NODE_TAG_SEGMENTATION      = 201;
+  NODE_TAG_DETECTION         = 202;
+  NODE_TAG_TRACKING          = 203;
+  NODE_TAG_REGRESSION        = 204;
+  NODE_TAG_GENERATION        = 205;
+  NODE_TAG_RECONSTRUCTION    = 206;
+  NODE_TAG_DENOISING         = 207;
+  NODE_TAG_UNMIXING          = 208;
+  NODE_TAG_DIM_REDUCTION     = 209;
+  NODE_TAG_CLUSTERING        = 210;
+  NODE_TAG_ANOMALY           = 211;
+  NODE_TAG_RETRIEVAL         = 212;
+
+  // 300s — Pipeline stage / lifecycle
+  NODE_TAG_PREPROCESSING     = 300;
+  NODE_TAG_POSTPROCESSING    = 301;
+  NODE_TAG_AUGMENTATION      = 302;
+  NODE_TAG_CALIBRATION       = 303;
+  NODE_TAG_NORMALIZATION     = 304;
+  NODE_TAG_TRAINING          = 305;
+  NODE_TAG_EVALUATION        = 306;
+  NODE_TAG_INFERENCE         = 307;
+
+  // 400s — Properties / contract
+  NODE_TAG_LEARNABLE         = 400;
+  NODE_TAG_DIFFERENTIABLE    = 401;
+  NODE_TAG_STOCHASTIC        = 402;
+  NODE_TAG_INVERTIBLE        = 403;
+  NODE_TAG_STREAMING         = 404;
+  NODE_TAG_BATCHED           = 405;
+  NODE_TAG_STATEFUL          = 406;
+
+  // 500s — Backend (execution planning)
+  NODE_TAG_TORCH             = 500;
+  NODE_TAG_NUMPY             = 501;
+  NODE_TAG_JAX               = 502;
+  NODE_TAG_ONNX              = 503;
+}
+
 // ============================================================================
 // Core Types
 // ============================================================================
@@ -510,6 +601,9 @@ message NodeInfo {
   string plugin_name = 4;  // If from plugin
   map<string, PortSpecList> input_specs = 5;   // Input port specifications
   map<string, PortSpecList> output_specs = 6;  // Output port specifications
+  bytes        icon_svg = 7;        // SVG payload (empty when no icon resolves)
+  NodeCategory category = 8;        // Primary graph role / execution contract
+  repeated NodeTag tags = 9;        // Orthogonal axes (modality/task/lifecycle/properties/backend)
 }
 
 // Request/Response messages
