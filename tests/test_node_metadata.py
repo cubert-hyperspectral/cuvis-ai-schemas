@@ -1,6 +1,10 @@
 """Tests for NodeCategory / NodeTag enums, display tables, conversions, and icons."""
 
+import builtins
+import runpy
 from importlib.resources import files
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -8,6 +12,8 @@ from cuvis_ai_schemas.enums import NodeCategory, NodeTag
 from cuvis_ai_schemas.extensions.ui.node_display import (
     CATEGORY_STYLES,
     TAG_STYLES,
+    is_plugin,
+    resolve_display,
 )
 
 
@@ -62,6 +68,71 @@ def test_tag_styles_complete(tag):
     """Every NodeTag has a TAG_STYLES entry with badge_color/short_label."""
     style = TAG_STYLES[tag]
     assert {"badge_color", "short_label"} <= set(style.keys())
+
+
+def test_resolve_display_returns_category_style():
+    """resolve_display() returns the canonical style for the node category."""
+
+    class Node:
+        def get_category(self):
+            return NodeCategory.MODEL
+
+    display = resolve_display(Node())
+    assert display == {
+        "category": NodeCategory.MODEL,
+        "fill": CATEGORY_STYLES[NodeCategory.MODEL]["fill"],
+        "border": CATEGORY_STYLES[NodeCategory.MODEL]["border"],
+        "emoji": CATEGORY_STYLES[NodeCategory.MODEL]["emoji"],
+        "label": None,
+    }
+
+
+def test_resolve_display_unknown_category_uses_unspecified_style():
+    """Unknown categories keep their value but use the UNSPECIFIED style."""
+
+    class Node:
+        def get_category(self):
+            return "future-category"
+
+    display = resolve_display(Node())
+    assert display["category"] == "future-category"
+    assert display["fill"] == CATEGORY_STYLES[NodeCategory.UNSPECIFIED]["fill"]
+    assert display["border"] == CATEGORY_STYLES[NodeCategory.UNSPECIFIED]["border"]
+    assert display["emoji"] == CATEGORY_STYLES[NodeCategory.UNSPECIFIED]["emoji"]
+    assert display["label"] is None
+
+
+def test_is_plugin_only_flags_registered_plugin_classes():
+    """is_plugin() returns true only for classes listed in the plugin registry."""
+
+    class PluginNode:
+        pass
+
+    class BuiltinNode:
+        pass
+
+    registry = SimpleNamespace(plugin_registry={"PluginNode": object()})
+
+    assert is_plugin(PluginNode(), registry)
+    assert not is_plugin(BuiltinNode(), registry)
+    assert not is_plugin(PluginNode())
+
+
+def test_grpc_init_handles_missing_proto_helpers(monkeypatch):
+    """grpc.__init__ keeps imports optional when generated helpers are missing."""
+    original_import = builtins.__import__
+
+    def import_without_conversions(name, globals_=None, locals_=None, fromlist=(), level=0):
+        if name == "cuvis_ai_schemas.grpc.conversions":
+            raise ImportError("simulated missing generated proto helpers")
+        return original_import(name, globals_, locals_, fromlist, level)
+
+    monkeypatch.setattr(builtins, "__import__", import_without_conversions)
+    grpc_init = Path(__file__).parents[1] / "cuvis_ai_schemas" / "grpc" / "__init__.py"
+
+    namespace = runpy.run_path(str(grpc_init))
+
+    assert namespace["__all__"] == []
 
 
 def test_node_info_round_trip():
