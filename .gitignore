@@ -206,3 +206,6 @@ configs/**/*.png
 *.log
 .history/
 .ru
+.gitnexus
+AGENTS.md
+CLAUDE.md

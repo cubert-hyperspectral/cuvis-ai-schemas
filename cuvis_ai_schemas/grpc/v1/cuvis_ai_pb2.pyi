@@ -54,6 +54,74 @@ class PointType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     POINT_TYPE_POSITIVE: _ClassVar[PointType]
     POINT_TYPE_NEGATIVE: _ClassVar[PointType]
     POINT_TYPE_NEUTRAL: _ClassVar[PointType]
+
+class NodeCategory(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    NODE_CATEGORY_UNSPECIFIED: _ClassVar[NodeCategory]
+    NODE_CATEGORY_SOURCE: _ClassVar[NodeCategory]
+    NODE_CATEGORY_SINK: _ClassVar[NodeCategory]
+    NODE_CATEGORY_TRANSFORM: _ClassVar[NodeCategory]
+    NODE_CATEGORY_MODEL: _ClassVar[NodeCategory]
+    NODE_CATEGORY_LOSS: _ClassVar[NodeCategory]
+    NODE_CATEGORY_METRIC: _ClassVar[NodeCategory]
+    NODE_CATEGORY_OPTIMIZER: _ClassVar[NodeCategory]
+    NODE_CATEGORY_SCHEDULER: _ClassVar[NodeCategory]
+    NODE_CATEGORY_REGULARIZER: _ClassVar[NodeCategory]
+    NODE_CATEGORY_RUNNER: _ClassVar[NodeCategory]
+    NODE_CATEGORY_VISUALIZER: _ClassVar[NodeCategory]
+    NODE_CATEGORY_CONTROL: _ClassVar[NodeCategory]
+
+class NodeTag(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    NODE_TAG_UNSPECIFIED: _ClassVar[NodeTag]
+    NODE_TAG_IMAGE: _ClassVar[NodeTag]
+    NODE_TAG_VIDEO: _ClassVar[NodeTag]
+    NODE_TAG_RGB: _ClassVar[NodeTag]
+    NODE_TAG_MULTISPECTRAL: _ClassVar[NodeTag]
+    NODE_TAG_HYPERSPECTRAL: _ClassVar[NodeTag]
+    NODE_TAG_POINT_CLOUD: _ClassVar[NodeTag]
+    NODE_TAG_DEPTH: _ClassVar[NodeTag]
+    NODE_TAG_MASK: _ClassVar[NodeTag]
+    NODE_TAG_BBOX: _ClassVar[NodeTag]
+    NODE_TAG_KEYPOINTS: _ClassVar[NodeTag]
+    NODE_TAG_TEXT: _ClassVar[NodeTag]
+    NODE_TAG_AUDIO: _ClassVar[NodeTag]
+    NODE_TAG_TABULAR: _ClassVar[NodeTag]
+    NODE_TAG_TIME_SERIES: _ClassVar[NodeTag]
+    NODE_TAG_METADATA: _ClassVar[NodeTag]
+    NODE_TAG_EMBEDDING: _ClassVar[NodeTag]
+    NODE_TAG_CLASSIFICATION: _ClassVar[NodeTag]
+    NODE_TAG_SEGMENTATION: _ClassVar[NodeTag]
+    NODE_TAG_DETECTION: _ClassVar[NodeTag]
+    NODE_TAG_TRACKING: _ClassVar[NodeTag]
+    NODE_TAG_REGRESSION: _ClassVar[NodeTag]
+    NODE_TAG_GENERATION: _ClassVar[NodeTag]
+    NODE_TAG_RECONSTRUCTION: _ClassVar[NodeTag]
+    NODE_TAG_DENOISING: _ClassVar[NodeTag]
+    NODE_TAG_UNMIXING: _ClassVar[NodeTag]
+    NODE_TAG_DIM_REDUCTION: _ClassVar[NodeTag]
+    NODE_TAG_CLUSTERING: _ClassVar[NodeTag]
+    NODE_TAG_ANOMALY: _ClassVar[NodeTag]
+    NODE_TAG_RETRIEVAL: _ClassVar[NodeTag]
+    NODE_TAG_PREPROCESSING: _ClassVar[NodeTag]
+    NODE_TAG_POSTPROCESSING: _ClassVar[NodeTag]
+    NODE_TAG_AUGMENTATION: _ClassVar[NodeTag]
+    NODE_TAG_CALIBRATION: _ClassVar[NodeTag]
+    NODE_TAG_NORMALIZATION: _ClassVar[NodeTag]
+    NODE_TAG_TRAINING: _ClassVar[NodeTag]
+    NODE_TAG_EVALUATION: _ClassVar[NodeTag]
+    NODE_TAG_INFERENCE: _ClassVar[NodeTag]
+    NODE_TAG_LEARNABLE: _ClassVar[NodeTag]
+    NODE_TAG_DIFFERENTIABLE: _ClassVar[NodeTag]
+    NODE_TAG_STOCHASTIC: _ClassVar[NodeTag]
+    NODE_TAG_INVERTIBLE: _ClassVar[NodeTag]
+    NODE_TAG_STREAMING: _ClassVar[NodeTag]
+    NODE_TAG_BATCHED: _ClassVar[NodeTag]
+    NODE_TAG_STATEFUL: _ClassVar[NodeTag]
+    NODE_TAG_TORCH: _ClassVar[NodeTag]
+    NODE_TAG_NUMPY: _ClassVar[NodeTag]
+    NODE_TAG_JAX: _ClassVar[NodeTag]
+    NODE_TAG_ONNX: _ClassVar[NodeTag]
 PROCESSING_MODE_UNSPECIFIED: ProcessingMode
 PROCESSING_MODE_RAW: ProcessingMode
 PROCESSING_MODE_REFLECTANCE: ProcessingMode
@@ -84,6 +152,68 @@ POINT_TYPE_UNSPECIFIED: PointType
 POINT_TYPE_POSITIVE: PointType
 POINT_TYPE_NEGATIVE: PointType
 POINT_TYPE_NEUTRAL: PointType
+NODE_CATEGORY_UNSPECIFIED: NodeCategory
+NODE_CATEGORY_SOURCE: NodeCategory
+NODE_CATEGORY_SINK: NodeCategory
+NODE_CATEGORY_TRANSFORM: NodeCategory
+NODE_CATEGORY_MODEL: NodeCategory
+NODE_CATEGORY_LOSS: NodeCategory
+NODE_CATEGORY_METRIC: NodeCategory
+NODE_CATEGORY_OPTIMIZER: NodeCategory
+NODE_CATEGORY_SCHEDULER: NodeCategory
+NODE_CATEGORY_REGULARIZER: NodeCategory
+NODE_CATEGORY_RUNNER: NodeCategory
+NODE_CATEGORY_VISUALIZER: NodeCategory
+NODE_CATEGORY_CONTROL: NodeCategory
+NODE_TAG_UNSPECIFIED: NodeTag
+NODE_TAG_IMAGE: NodeTag
+NODE_TAG_VIDEO: NodeTag
+NODE_TAG_RGB: NodeTag
+NODE_TAG_MULTISPECTRAL: NodeTag
+NODE_TAG_HYPERSPECTRAL: NodeTag
+NODE_TAG_POINT_CLOUD: NodeTag
+NODE_TAG_DEPTH: NodeTag
+NODE_TAG_MASK: NodeTag
+NODE_TAG_BBOX: NodeTag
+NODE_TAG_KEYPOINTS: NodeTag
+NODE_TAG_TEXT: NodeTag
+NODE_TAG_AUDIO: NodeTag
+NODE_TAG_TABULAR: NodeTag
+NODE_TAG_TIME_SERIES: NodeTag
+NODE_TAG_METADATA: NodeTag
+NODE_TAG_EMBEDDING: NodeTag
+NODE_TAG_CLASSIFICATION: NodeTag
+NODE_TAG_SEGMENTATION: NodeTag
+NODE_TAG_DETECTION: NodeTag
+NODE_TAG_TRACKING: NodeTag
+NODE_TAG_REGRESSION: NodeTag
+NODE_TAG_GENERATION: NodeTag
+NODE_TAG_RECONSTRUCTION: NodeTag
+NODE_TAG_DENOISING: NodeTag
+NODE_TAG_UNMIXING: NodeTag
+NODE_TAG_DIM_REDUCTION: NodeTag
+NODE_TAG_CLUSTERING: NodeTag
+NODE_TAG_ANOMALY: NodeTag
+NODE_TAG_RETRIEVAL: NodeTag
+NODE_TAG_PREPROCESSING: NodeTag
+NODE_TAG_POSTPROCESSING: NodeTag
+NODE_TAG_AUGMENTATION: NodeTag
+NODE_TAG_CALIBRATION: NodeTag
+NODE_TAG_NORMALIZATION: NodeTag
+NODE_TAG_TRAINING: NodeTag
+NODE_TAG_EVALUATION: NodeTag
+NODE_TAG_INFERENCE: NodeTag
+NODE_TAG_LEARNABLE: NodeTag
+NODE_TAG_DIFFERENTIABLE: NodeTag
+NODE_TAG_STOCHASTIC: NodeTag
+NODE_TAG_INVERTIBLE: NodeTag
+NODE_TAG_STREAMING: NodeTag
+NODE_TAG_BATCHED: NodeTag
+NODE_TAG_STATEFUL: NodeTag
+NODE_TAG_TORCH: NodeTag
+NODE_TAG_NUMPY: NodeTag
+NODE_TAG_JAX: NodeTag
+NODE_TAG_ONNX: NodeTag
 
 class Tensor(_message.Message):
     __slots__ = ("shape", "dtype", "raw_data")
@@ -727,7 +857,7 @@ class PortSpecList(_message.Message):
     def __init__(self, specs: _Optional[_Iterable[_Union[PortSpec, _Mapping]]] = ...) -> None: ...
 
 class NodeInfo(_message.Message):
-    __slots__ = ("class_name", "full_path", "source", "plugin_name", "input_specs", "output_specs")
+    __slots__ = ("class_name", "full_path", "source", "plugin_name", "input_specs", "output_specs", "icon_svg", "category", "tags")
     class InputSpecsEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -748,13 +878,19 @@ class NodeInfo(_message.Message):
     PLUGIN_NAME_FIELD_NUMBER: _ClassVar[int]
     INPUT_SPECS_FIELD_NUMBER: _ClassVar[int]
     OUTPUT_SPECS_FIELD_NUMBER: _ClassVar[int]
+    ICON_SVG_FIELD_NUMBER: _ClassVar[int]
+    CATEGORY_FIELD_NUMBER: _ClassVar[int]
+    TAGS_FIELD_NUMBER: _ClassVar[int]
     class_name: str
     full_path: str
     source: str
     plugin_name: str
     input_specs: _containers.MessageMap[str, PortSpecList]
     output_specs: _containers.MessageMap[str, PortSpecList]
-    def __init__(self, class_name: _Optional[str] = ..., full_path: _Optional[str] = ..., source: _Optional[str] = ..., plugin_name: _Optional[str] = ..., input_specs: _Optional[_Mapping[str, PortSpecList]] = ..., output_specs: _Optional[_Mapping[str, PortSpecList]] = ...) -> None: ...
+    icon_svg: bytes
+    category: NodeCategory
+    tags: _containers.RepeatedScalarFieldContainer[NodeTag]
+    def __init__(self, class_name: _Optional[str] = ..., full_path: _Optional[str] = ..., source: _Optional[str] = ..., plugin_name: _Optional[str] = ..., input_specs: _Optional[_Mapping[str, PortSpecList]] = ..., output_specs: _Optional[_Mapping[str, PortSpecList]] = ..., icon_svg: _Optional[bytes] = ..., category: _Optional[_Union[NodeCategory, str]] = ..., tags: _Optional[_Iterable[_Union[NodeTag, str]]] = ...) -> None: ...
 
 class LoadPluginsRequest(_message.Message):
     __slots__ = ("session_id", "manifest")
