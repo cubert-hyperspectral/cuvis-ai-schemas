@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## 0.4.1 - 2026-05-04
+
+- Widened `requires-python` from `<3.12` to `<3.14`; package now installs on Python 3.11, 3.12, and 3.13. No API or schema changes.
+- Added Trove classifiers for Python 3.12 and 3.13.
+
 ## 0.4.0 - 2026-04-28
 
 - Added `NodeCategory` proto enum (12 named values + `UNSPECIFIED`) capturing each node's exclusive graph role / execution contract (source, sink, transform, model, loss, metric, optimizer, scheduler, regularizer, runner, visualizer, control).
