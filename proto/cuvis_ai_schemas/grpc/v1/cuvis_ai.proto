@@ -822,9 +822,20 @@ service RunRuntime {
   rpc LoadPipelineWeights(LoadPipelineWeightsRequest) returns (LoadPipelineWeightsResponse);
   rpc RestoreTrainRun(RestoreTrainRunRequest) returns (RestoreTrainRunResponse);
 
+  // Pipeline persistence + introspection — every RPC that touches the live
+  // pipeline must be proxied to the child, since the parent never holds a
+  // pipeline instance in the orchestrator-only world.
+  rpc SavePipeline(SavePipelineRequest) returns (SavePipelineResponse);
+  rpc SaveTrainRun(SaveTrainRunRequest) returns (SaveTrainRunResponse);
+  rpc GetPipelineInputs(GetPipelineInputsRequest) returns (GetPipelineInputsResponse);
+  rpc GetPipelineOutputs(GetPipelineOutputsRequest) returns (GetPipelineOutputsResponse);
+  rpc GetPipelineVisualization(GetPipelineVisualizationRequest) returns (GetPipelineVisualizationResponse);
+  rpc SetTrainRunConfig(SetTrainRunConfigRequest) returns (SetTrainRunConfigResponse);
+
   // Execution.
   rpc Inference(InferenceRequest) returns (InferenceResponse);
   rpc Train(TrainRequest) returns (stream TrainResponse);
+  rpc GetTrainStatus(GetTrainStatusRequest) returns (GetTrainStatusResponse);
 
   // Lifecycle.
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
