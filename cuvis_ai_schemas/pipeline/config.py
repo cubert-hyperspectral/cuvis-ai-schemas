@@ -224,10 +224,9 @@ class PipelineConfig(BaseSchemaModel):
     Attributes
     ----------
     plugins : list[PluginRef] | None
-        Optional declaration of the plugin set this pipeline depends on.
-        If omitted, the loader auto-resolves the set from ``nodes[*].class_name``
-        and emits a deprecation warning naming the resolved plugins.
-        See ALL-5349 item 02 (Phase 1 + Phase 2).
+        Declaration of the plugin set this pipeline depends on. Mandatory
+        in the loader: a pipeline that omits this field is rejected with a
+        fix-it hint pointing at the ``suggest-plugins-fix`` CLI.
     nodes : list[NodeConfig]
         Node definitions
     connections : list[ConnectionConfig]

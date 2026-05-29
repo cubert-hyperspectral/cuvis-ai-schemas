@@ -614,9 +614,8 @@ message LoadPluginsRequest {
 
 message LoadPluginsResponse {
   // Plugin names that were registered into the session's catalog.
-  // Renamed from `loaded_plugins` in cuvis-ai-schemas 0.5 (ALL-5349 Phase 3):
-  // semantics changed from "installed and imported" to "registered as catalog
-  // metadata"; materialisation now happens lazily via LoadPipeline.
+  // Semantics: names registered as catalog metadata, NOT installed —
+  // materialisation happens lazily via LoadPipeline.
   repeated string registered_plugins = 1;
   map<string, string> failed_plugins = 2;  // name → error message (Pydantic validation failure)
 }
@@ -737,14 +736,14 @@ service CuvisAIService {
 
   // Plugin Management
   //
-  // ALL-5349 Phase 3 semantics: LoadPlugins registers manifest entries as
-  // catalog metadata in the session. It does NOT install or import — that
-  // happens lazily via LoadPipeline when a pipeline's `plugins:` field
-  // references the registered entry. Pre-Phase-3 callers that expected
-  // eager install must migrate to the two-step register-then-pipeline
-  // flow. `ListLoadedPlugins` reports the catalog (registered set);
-  // `ListAvailableNodes` reports the materialised set (what's actually
-  // importable in this session right now).
+  // LoadPlugins registers manifest entries as catalog metadata in the
+  // session. It does NOT install or import — that happens lazily via
+  // LoadPipeline when a pipeline's `plugins:` field references the
+  // registered entry. Callers that expected eager install must migrate
+  // to the two-step register-then-pipeline flow. `ListLoadedPlugins`
+  // reports the catalog (registered set); `ListAvailableNodes` reports
+  // the materialised set (what's actually importable in this session
+  // right now).
   rpc LoadPlugins(LoadPluginsRequest) returns (LoadPluginsResponse);
   rpc ListLoadedPlugins(ListLoadedPluginsRequest) returns (ListLoadedPluginsResponse);
   rpc GetPluginInfo(GetPluginInfoRequest) returns (GetPluginInfoResponse);
