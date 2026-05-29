@@ -1022,3 +1022,55 @@ class NodeProfilingStats(_message.Message):
     total_ms: float
     last_ms: float
     def __init__(self, node_name: _Optional[str] = ..., stage: _Optional[_Union[ExecutionStage, str]] = ..., count: _Optional[int] = ..., mean_ms: _Optional[float] = ..., median_ms: _Optional[float] = ..., std_ms: _Optional[float] = ..., min_ms: _Optional[float] = ..., max_ms: _Optional[float] = ..., total_ms: _Optional[float] = ..., last_ms: _Optional[float] = ...) -> None: ...
+
+class InitializeSessionRequest(_message.Message):
+    __slots__ = ("session_id", "search_paths", "resolved_plugins_json", "output_dir", "scratch_dir")
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
+    SEARCH_PATHS_FIELD_NUMBER: _ClassVar[int]
+    RESOLVED_PLUGINS_JSON_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_DIR_FIELD_NUMBER: _ClassVar[int]
+    SCRATCH_DIR_FIELD_NUMBER: _ClassVar[int]
+    session_id: str
+    search_paths: _containers.RepeatedScalarFieldContainer[str]
+    resolved_plugins_json: bytes
+    output_dir: str
+    scratch_dir: str
+    def __init__(self, session_id: _Optional[str] = ..., search_paths: _Optional[_Iterable[str]] = ..., resolved_plugins_json: _Optional[bytes] = ..., output_dir: _Optional[str] = ..., scratch_dir: _Optional[str] = ...) -> None: ...
+
+class InitializeSessionResponse(_message.Message):
+    __slots__ = ("ok",)
+    OK_FIELD_NUMBER: _ClassVar[int]
+    ok: bool
+    def __init__(self, ok: bool = ...) -> None: ...
+
+class StopRunRequest(_message.Message):
+    __slots__ = ("session_id", "grace_seconds")
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
+    GRACE_SECONDS_FIELD_NUMBER: _ClassVar[int]
+    session_id: str
+    grace_seconds: int
+    def __init__(self, session_id: _Optional[str] = ..., grace_seconds: _Optional[int] = ...) -> None: ...
+
+class StopRunResponse(_message.Message):
+    __slots__ = ("ok",)
+    OK_FIELD_NUMBER: _ClassVar[int]
+    ok: bool
+    def __init__(self, ok: bool = ...) -> None: ...
+
+class HealthCheckRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class HealthCheckResponse(_message.Message):
+    __slots__ = ("status",)
+    class ServingStatus(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        SERVING_STATUS_UNSPECIFIED: _ClassVar[HealthCheckResponse.ServingStatus]
+        SERVING_STATUS_SERVING: _ClassVar[HealthCheckResponse.ServingStatus]
+        SERVING_STATUS_NOT_SERVING: _ClassVar[HealthCheckResponse.ServingStatus]
+    SERVING_STATUS_UNSPECIFIED: HealthCheckResponse.ServingStatus
+    SERVING_STATUS_SERVING: HealthCheckResponse.ServingStatus
+    SERVING_STATUS_NOT_SERVING: HealthCheckResponse.ServingStatus
+    STATUS_FIELD_NUMBER: _ClassVar[int]
+    status: HealthCheckResponse.ServingStatus
+    def __init__(self, status: _Optional[_Union[HealthCheckResponse.ServingStatus, str]] = ...) -> None: ...

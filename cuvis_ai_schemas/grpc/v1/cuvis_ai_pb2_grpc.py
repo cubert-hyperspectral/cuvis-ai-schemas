@@ -1267,3 +1267,423 @@ class CuvisAIService(object):
             timeout,
             metadata,
             _registered_method=True)
+
+
+class RunRuntimeStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.InitializeSession = channel.unary_unary(
+                '/cuvis_ai.v1.RunRuntime/InitializeSession',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InitializeSessionRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InitializeSessionResponse.FromString,
+                _registered_method=True)
+        self.LoadPipeline = channel.unary_unary(
+                '/cuvis_ai.v1.RunRuntime/LoadPipeline',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineResponse.FromString,
+                _registered_method=True)
+        self.LoadPipelineWeights = channel.unary_unary(
+                '/cuvis_ai.v1.RunRuntime/LoadPipelineWeights',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsResponse.FromString,
+                _registered_method=True)
+        self.RestoreTrainRun = channel.unary_unary(
+                '/cuvis_ai.v1.RunRuntime/RestoreTrainRun',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunResponse.FromString,
+                _registered_method=True)
+        self.Inference = channel.unary_unary(
+                '/cuvis_ai.v1.RunRuntime/Inference',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InferenceRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InferenceResponse.FromString,
+                _registered_method=True)
+        self.Train = channel.unary_stream(
+                '/cuvis_ai.v1.RunRuntime/Train',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.FromString,
+                _registered_method=True)
+        self.CloseSession = channel.unary_unary(
+                '/cuvis_ai.v1.RunRuntime/CloseSession',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionResponse.FromString,
+                _registered_method=True)
+        self.StopRun = channel.unary_unary(
+                '/cuvis_ai.v1.RunRuntime/StopRun',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopRunRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopRunResponse.FromString,
+                _registered_method=True)
+        self.HealthCheck = channel.unary_unary(
+                '/cuvis_ai.v1.RunRuntime/HealthCheck',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.HealthCheckRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.HealthCheckResponse.FromString,
+                _registered_method=True)
+
+
+class RunRuntimeServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def InitializeSession(self, request, context):
+        """Private init from the parent; never exposed to public clients.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def LoadPipeline(self, request, context):
+        """Pipeline-materialising RPCs the parent proxies unmodified.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def LoadPipelineWeights(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RestoreTrainRun(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Inference(self, request, context):
+        """Execution.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Train(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CloseSession(self, request, context):
+        """Lifecycle.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def StopRun(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def HealthCheck(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_RunRuntimeServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'InitializeSession': grpc.unary_unary_rpc_method_handler(
+                    servicer.InitializeSession,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InitializeSessionRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InitializeSessionResponse.SerializeToString,
+            ),
+            'LoadPipeline': grpc.unary_unary_rpc_method_handler(
+                    servicer.LoadPipeline,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineResponse.SerializeToString,
+            ),
+            'LoadPipelineWeights': grpc.unary_unary_rpc_method_handler(
+                    servicer.LoadPipelineWeights,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsResponse.SerializeToString,
+            ),
+            'RestoreTrainRun': grpc.unary_unary_rpc_method_handler(
+                    servicer.RestoreTrainRun,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunResponse.SerializeToString,
+            ),
+            'Inference': grpc.unary_unary_rpc_method_handler(
+                    servicer.Inference,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InferenceRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InferenceResponse.SerializeToString,
+            ),
+            'Train': grpc.unary_stream_rpc_method_handler(
+                    servicer.Train,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.SerializeToString,
+            ),
+            'CloseSession': grpc.unary_unary_rpc_method_handler(
+                    servicer.CloseSession,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionResponse.SerializeToString,
+            ),
+            'StopRun': grpc.unary_unary_rpc_method_handler(
+                    servicer.StopRun,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopRunRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopRunResponse.SerializeToString,
+            ),
+            'HealthCheck': grpc.unary_unary_rpc_method_handler(
+                    servicer.HealthCheck,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.HealthCheckRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.HealthCheckResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'cuvis_ai.v1.RunRuntime', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('cuvis_ai.v1.RunRuntime', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class RunRuntime(object):
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def InitializeSession(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/cuvis_ai.v1.RunRuntime/InitializeSession',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InitializeSessionRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InitializeSessionResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def LoadPipeline(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/cuvis_ai.v1.RunRuntime/LoadPipeline',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def LoadPipelineWeights(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/cuvis_ai.v1.RunRuntime/LoadPipelineWeights',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.LoadPipelineWeightsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def RestoreTrainRun(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/cuvis_ai.v1.RunRuntime/RestoreTrainRun',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.RestoreTrainRunResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Inference(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/cuvis_ai.v1.RunRuntime/Inference',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InferenceRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.InferenceResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Train(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/cuvis_ai.v1.RunRuntime/Train',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CloseSession(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/cuvis_ai.v1.RunRuntime/CloseSession',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def StopRun(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/cuvis_ai.v1.RunRuntime/StopRun',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopRunRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopRunResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def HealthCheck(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/cuvis_ai.v1.RunRuntime/HealthCheck',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.HealthCheckRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.HealthCheckResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
