@@ -303,6 +303,15 @@ class CuvisAIServiceServicer(object):
 
     def LoadPlugins(self, request, context):
         """Plugin Management
+        
+        ALL-5349 Phase 3 semantics: LoadPlugins registers manifest entries as
+        catalog metadata in the session. It does NOT install or import — that
+        happens lazily via LoadPipeline when a pipeline's `plugins:` field
+        references the registered entry. Pre-Phase-3 callers that expected
+        eager install must migrate to the two-step register-then-pipeline
+        flow. `ListLoadedPlugins` reports the catalog (registered set);
+        `ListAvailableNodes` reports the materialised set (what's actually
+        importable in this session right now).
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')

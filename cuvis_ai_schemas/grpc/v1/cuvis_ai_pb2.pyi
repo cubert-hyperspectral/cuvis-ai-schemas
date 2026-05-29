@@ -901,7 +901,7 @@ class LoadPluginsRequest(_message.Message):
     def __init__(self, session_id: _Optional[str] = ..., manifest: _Optional[_Union[PluginManifest, _Mapping]] = ...) -> None: ...
 
 class LoadPluginsResponse(_message.Message):
-    __slots__ = ("loaded_plugins", "failed_plugins")
+    __slots__ = ("registered_plugins", "failed_plugins")
     class FailedPluginsEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -909,11 +909,11 @@ class LoadPluginsResponse(_message.Message):
         key: str
         value: str
         def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
-    LOADED_PLUGINS_FIELD_NUMBER: _ClassVar[int]
+    REGISTERED_PLUGINS_FIELD_NUMBER: _ClassVar[int]
     FAILED_PLUGINS_FIELD_NUMBER: _ClassVar[int]
-    loaded_plugins: _containers.RepeatedScalarFieldContainer[str]
+    registered_plugins: _containers.RepeatedScalarFieldContainer[str]
     failed_plugins: _containers.ScalarMap[str, str]
-    def __init__(self, loaded_plugins: _Optional[_Iterable[str]] = ..., failed_plugins: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    def __init__(self, registered_plugins: _Optional[_Iterable[str]] = ..., failed_plugins: _Optional[_Mapping[str, str]] = ...) -> None: ...
 
 class ListLoadedPluginsRequest(_message.Message):
     __slots__ = ("session_id",)
