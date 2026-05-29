@@ -8,6 +8,7 @@ import yaml
 from pydantic import Field, field_validator
 
 from cuvis_ai_schemas.base import BaseSchemaModel
+from cuvis_ai_schemas.plugin.config import GitPluginConfig, LocalPluginConfig
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -132,11 +133,101 @@ class ConnectionConfig(BaseSchemaModel):
         return self.target.split(".")[2]
 
 
+class CatalogPluginRef(BaseSchemaModel):
+    """Reference to a plugin defined in the session's plugin catalog.
+
+    Object-form alternative to a bare-string entry in ``PipelineConfig.plugins``.
+    Use this form when you want to override the catalog entry's ``tag``;
+    otherwise prefer the shorter bare-string form (``- my_plugin``).
+    """
+
+    name: str = Field(
+        description="Plugin name (must be a valid Python identifier).",
+        min_length=1,
+    )
+    tag: str | None = Field(
+        default=None,
+        description="Optional Git tag override for the catalog entry. "
+        "Only meaningful when the catalog entry is a Git plugin.",
+    )
+
+    @field_validator("name")
+    @classmethod
+    def _validate_name(cls, value: str) -> str:
+        """Reject plugin names that are not valid Python identifiers."""
+        if not value.isidentifier():
+            msg = f"Invalid plugin name '{value}'. Must be a valid Python identifier"
+            raise ValueError(msg)
+        return value
+
+
+class InlineGitPluginRef(GitPluginConfig):
+    """Inline Git plugin entry embedded in a pipeline YAML.
+
+    Same fields as :class:`cuvis_ai_schemas.plugin.config.GitPluginConfig`
+    plus a ``name`` field (the manifest form uses dict keys for the name;
+    the pipeline-yaml form embeds it inline).
+    """
+
+    name: str = Field(
+        description="Plugin name (must be a valid Python identifier).",
+        min_length=1,
+    )
+
+    @field_validator("name")
+    @classmethod
+    def _validate_name(cls, value: str) -> str:
+        """Reject plugin names that are not valid Python identifiers."""
+        if not value.isidentifier():
+            msg = f"Invalid plugin name '{value}'. Must be a valid Python identifier"
+            raise ValueError(msg)
+        return value
+
+
+class InlineLocalPluginRef(LocalPluginConfig):
+    """Inline local-path plugin entry embedded in a pipeline YAML.
+
+    Same fields as :class:`cuvis_ai_schemas.plugin.config.LocalPluginConfig`
+    plus a ``name`` field.
+    """
+
+    name: str = Field(
+        description="Plugin name (must be a valid Python identifier).",
+        min_length=1,
+    )
+
+    @field_validator("name")
+    @classmethod
+    def _validate_name(cls, value: str) -> str:
+        """Reject plugin names that are not valid Python identifiers."""
+        if not value.isidentifier():
+            msg = f"Invalid plugin name '{value}'. Must be a valid Python identifier"
+            raise ValueError(msg)
+        return value
+
+
+# A plugin reference in a pipeline YAML's ``plugins:`` list.
+#
+# Discriminated by shape (BaseSchemaModel has ``extra="forbid"`` so each
+# form only validates against the model whose fields match exactly):
+#
+# - ``str`` — bare-name reference to a catalog entry.
+# - :class:`InlineGitPluginRef` — ``{name, repo, tag, provides}`` self-contained git plugin.
+# - :class:`InlineLocalPluginRef` — ``{name, path, provides}`` self-contained local plugin.
+# - :class:`CatalogPluginRef` — ``{name}`` or ``{name, tag}`` object-form catalog reference.
+PluginRef = str | InlineGitPluginRef | InlineLocalPluginRef | CatalogPluginRef
+
+
 class PipelineConfig(BaseSchemaModel):
     """Pipeline structure configuration.
 
     Attributes
     ----------
+    plugins : list[PluginRef] | None
+        Optional declaration of the plugin set this pipeline depends on.
+        If omitted, the loader auto-resolves the set from ``nodes[*].class_name``
+        and emits a deprecation warning naming the resolved plugins.
+        See ALL-5349 item 02 (Phase 1 + Phase 2).
     nodes : list[NodeConfig]
         Node definitions
     connections : list[ConnectionConfig]
@@ -147,6 +238,16 @@ class PipelineConfig(BaseSchemaModel):
 
     __proto_message__: ClassVar[str] = "PipelineConfig"
 
+    plugins: list[PluginRef] | None = Field(
+        default=None,
+        description=(
+            "Plugin set this pipeline depends on. Each entry is a bare catalog "
+            "name (string), a catalog ref with optional tag override "
+            "({name, tag}), or an inline self-contained entry "
+            "({name, repo, tag, provides} for Git or {name, path, provides} "
+            "for local). Auto-resolved from class_name if omitted."
+        ),
+    )
     nodes: list[NodeConfig] = Field(default_factory=list, description="Node definitions")
     connections: list[ConnectionConfig] = Field(default_factory=list, description="Connections")
     metadata: PipelineMetadata | None = Field(
