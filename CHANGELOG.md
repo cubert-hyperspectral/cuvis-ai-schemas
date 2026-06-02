@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **Breaking (proto):** a node port now maps to exactly one `PortSpec`. Added `bool variadic` to the `PortSpec` message, removed the `PortSpecList` message, and changed `NodeInfo.input_specs` / `NodeInfo.output_specs` from `map<string, PortSpecList>` to `map<string, PortSpec>`. Regenerated the Python stubs.
+- Added `PortSpec.variadic` (default `False`) to the dataclass and `CatalogPortSpec.variadic`; `variadic` marks an *input* port for fan-in (the node receives a list) and is honored for input ports only.
+- Changed `PortSpec.is_compatible_with` to take a single `PortSpec` (dropped the `PortSpec | list[PortSpec]` overload) and `CatalogNodeEntry.input_specs` / `output_specs` to `dict[str, CatalogPortSpec]`; removed the single-spec→list coercion.
+- Collapsed plugin manifests so `provides` carries the node list directly (`class_name` = fully-qualified class), and restricted pipeline `plugins:` to bare manifest names.
+
 ## 0.4.1 - 2026-05-04
 
 - Widened `requires-python` from `<3.12` to `<3.14`; package now installs on Python 3.11, 3.12, and 3.13. No API or schema changes.
