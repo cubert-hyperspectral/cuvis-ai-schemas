@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import yaml
 from pydantic import Field, field_validator
 
 from cuvis_ai_schemas.base import BaseSchemaModel
-from cuvis_ai_schemas.plugin.config import GitPluginConfig, LocalPluginConfig
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -133,100 +133,16 @@ class ConnectionConfig(BaseSchemaModel):
         return self.target.split(".")[2]
 
 
-class CatalogPluginRef(BaseSchemaModel):
-    """Reference to a plugin defined in the session's plugin catalog.
-
-    Object-form alternative to a bare-string entry in ``PipelineConfig.plugins``.
-    Use this form when you want to override the catalog entry's ``tag``;
-    otherwise prefer the shorter bare-string form (``- my_plugin``).
-    """
-
-    name: str = Field(
-        description="Plugin name (must be a valid Python identifier).",
-        min_length=1,
-    )
-    tag: str | None = Field(
-        default=None,
-        description="Optional Git tag override for the catalog entry. "
-        "Only meaningful when the catalog entry is a Git plugin.",
-    )
-
-    @field_validator("name")
-    @classmethod
-    def _validate_name(cls, value: str) -> str:
-        """Reject plugin names that are not valid Python identifiers."""
-        if not value.isidentifier():
-            msg = f"Invalid plugin name '{value}'. Must be a valid Python identifier"
-            raise ValueError(msg)
-        return value
-
-
-class InlineGitPluginRef(GitPluginConfig):
-    """Inline Git plugin entry embedded in a pipeline YAML.
-
-    Same fields as :class:`cuvis_ai_schemas.plugin.config.GitPluginConfig`
-    plus a ``name`` field (the manifest form uses dict keys for the name;
-    the pipeline-yaml form embeds it inline).
-    """
-
-    name: str = Field(
-        description="Plugin name (must be a valid Python identifier).",
-        min_length=1,
-    )
-
-    @field_validator("name")
-    @classmethod
-    def _validate_name(cls, value: str) -> str:
-        """Reject plugin names that are not valid Python identifiers."""
-        if not value.isidentifier():
-            msg = f"Invalid plugin name '{value}'. Must be a valid Python identifier"
-            raise ValueError(msg)
-        return value
-
-
-class InlineLocalPluginRef(LocalPluginConfig):
-    """Inline local-path plugin entry embedded in a pipeline YAML.
-
-    Same fields as :class:`cuvis_ai_schemas.plugin.config.LocalPluginConfig`
-    plus a ``name`` field.
-    """
-
-    name: str = Field(
-        description="Plugin name (must be a valid Python identifier).",
-        min_length=1,
-    )
-
-    @field_validator("name")
-    @classmethod
-    def _validate_name(cls, value: str) -> str:
-        """Reject plugin names that are not valid Python identifiers."""
-        if not value.isidentifier():
-            msg = f"Invalid plugin name '{value}'. Must be a valid Python identifier"
-            raise ValueError(msg)
-        return value
-
-
-# A plugin reference in a pipeline YAML's ``plugins:`` list.
-#
-# Discriminated by shape (BaseSchemaModel has ``extra="forbid"`` so each
-# form only validates against the model whose fields match exactly):
-#
-# - ``str`` — bare-name reference to a catalog entry.
-# - :class:`InlineGitPluginRef` — ``{name, repo, tag, provides}`` self-contained git plugin.
-# - :class:`InlineLocalPluginRef` — ``{name, path, provides}`` self-contained local plugin.
-# - :class:`CatalogPluginRef` — ``{name}`` or ``{name, tag}`` object-form catalog reference.
-PluginRef = str | InlineGitPluginRef | InlineLocalPluginRef | CatalogPluginRef
-
-
 class PipelineConfig(BaseSchemaModel):
     """Pipeline structure configuration.
 
     Attributes
     ----------
-    plugins : list[PluginRef] | None
-        Declaration of the plugin set this pipeline depends on. Mandatory
-        in the loader: a pipeline that omits this field is rejected with a
-        fix-it hint pointing at the ``suggest-plugins-fix`` CLI.
+    plugins : list[str] | None
+        Declaration of the plugin set this pipeline depends on. Each entry is a
+        bare plugin name that must resolve to a manifest yaml in the plugins
+        directory. Mandatory in the loader: a pipeline that omits this field is
+        rejected with a fix-it hint pointing at the ``suggest-plugins-fix`` CLI.
     nodes : list[NodeConfig]
         Node definitions
     connections : list[ConnectionConfig]
@@ -237,14 +153,12 @@ class PipelineConfig(BaseSchemaModel):
 
     __proto_message__: ClassVar[str] = "PipelineConfig"
 
-    plugins: list[PluginRef] | None = Field(
+    plugins: list[str] | None = Field(
         default=None,
         description=(
-            "Plugin set this pipeline depends on. Each entry is a bare catalog "
-            "name (string), a catalog ref with optional tag override "
-            "({name, tag}), or an inline self-contained entry "
-            "({name, repo, tag, provides} for Git or {name, path, provides} "
-            "for local). Auto-resolved from class_name if omitted."
+            "Plugin set this pipeline depends on. Each entry is a bare plugin "
+            "name (string) that must resolve to a manifest yaml in the plugins "
+            "directory. Auto-resolved from class_name if omitted."
         ),
     )
     nodes: list[NodeConfig] = Field(default_factory=list, description="Node definitions")
@@ -252,6 +166,38 @@ class PipelineConfig(BaseSchemaModel):
     metadata: PipelineMetadata | None = Field(
         default=None, description="Optional pipeline metadata"
     )
+
+    @field_validator("plugins", mode="before")
+    @classmethod
+    def _validate_plugins(cls, value: object) -> object:
+        """Accept only bare plugin-name strings.
+
+        Inline (``{name, repo, tag, provides}`` / ``{name, path, provides}``) and
+        tag-override (``{name, tag}``) entries are no longer supported: a plugin
+        must be declared by name and resolve to a manifest yaml in the plugins
+        directory. Each name must be a valid Python identifier.
+        """
+        if value is None:
+            return value
+        if not isinstance(value, list):
+            msg = "'plugins' must be a list of bare plugin-name strings."
+            raise ValueError(msg)
+        for entry in value:
+            if isinstance(entry, Mapping):
+                msg = (
+                    "Inline and tag-override plugin entries are no longer supported. "
+                    "Each 'plugins' entry must be a bare plugin name (string) that "
+                    "resolves to a manifest yaml in the plugins directory. "
+                    f"Got object entry: {dict(entry)!r}."
+                )
+                raise ValueError(msg)
+            if not isinstance(entry, str):
+                msg = f"'plugins' entries must be strings, got {type(entry).__name__}."
+                raise ValueError(msg)
+            if not entry.isidentifier():
+                msg = f"Invalid plugin name '{entry}'. Must be a valid Python identifier."
+                raise ValueError(msg)
+        return value
 
     def save_to_file(self, path: str | Path) -> None:
         """Save pipeline configuration to YAML file.

@@ -586,11 +586,7 @@ message PortSpec {
   repeated int64 shape = 3;  // -1 for dynamic dimensions
   bool optional = 4;          // For inputs: optional, for outputs: conditional
   string description = 5;
-}
-
-// List of port specs for variadic ports
-message PortSpecList {
-  repeated PortSpec specs = 1;  // Variadic ports carry multiple specs
+  bool variadic = 6;          // Input ports only: accepts fan-in from multiple connections
 }
 
 // Node information with port specifications
@@ -599,8 +595,8 @@ message NodeInfo {
   string full_path = 2;
   string source = 3;  // "builtin", "plugin", or "custom"
   string plugin_name = 4;  // If from plugin
-  map<string, PortSpecList> input_specs = 5;   // Input port specifications
-  map<string, PortSpecList> output_specs = 6;  // Output port specifications
+  map<string, PortSpec> input_specs = 5;   // Input port specifications (one spec per port)
+  map<string, PortSpec> output_specs = 6;  // Output port specifications (one spec per port)
   bytes        icon_svg = 7;        // SVG payload (empty when no icon resolves)
   NodeCategory category = 8;        // Primary graph role / execution contract
   repeated NodeTag tags = 9;        // Orthogonal axes (modality/task/lifecycle/properties/backend)

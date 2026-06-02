@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
 from cuvis_ai_schemas.catalog import (
@@ -20,8 +18,7 @@ def _minimal_payload(*, plugin_name: str = "my_plugin") -> dict:
         "plugin_version": "0.1.0",
         "nodes": [
             {
-                "class_name": "MyNode",
-                "full_path": "my_plugin.node.MyNode",
+                "class_name": "my_plugin.node.MyNode",
                 "category": "transform",
                 "tags": ["image"],
                 "icon_svg": "<svg></svg>",
@@ -29,12 +26,11 @@ def _minimal_payload(*, plugin_name: str = "my_plugin") -> dict:
                     "x": {
                         "dtype": "float32",
                         "shape": [-1, -1, -1, -1],
+                        "variadic": True,
                     }
                 },
                 "output_specs": {
-                    "y": [
-                        {"dtype": "float32", "shape": [-1, -1, -1, -1]},
-                    ]
+                    "y": {"dtype": "float32", "shape": [-1, -1, -1, -1]},
                 },
                 "doc_summary": "Does a thing.",
             }
@@ -50,33 +46,49 @@ def test_catalog_plugin_entry_validates_full_payload():
     assert len(entry.nodes) == 1
 
     node = entry.nodes[0]
-    assert node.class_name == "MyNode"
-    assert node.full_path == "my_plugin.node.MyNode"
+    assert node.class_name == "my_plugin.node.MyNode"
     assert node.category == "transform"
     assert node.tags == ["image"]
     assert node.icon_svg == "<svg></svg>"
     assert node.doc_summary == "Does a thing."
 
     assert list(node.input_specs.keys()) == ["x"]
-    spec = node.input_specs["x"][0]
+    spec = node.input_specs["x"]
     assert isinstance(spec, CatalogPortSpec)
     assert spec.dtype == "float32"
     assert spec.shape == [-1, -1, -1, -1]
+    assert spec.variadic is True
+    assert node.output_specs["y"].variadic is False
 
 
-def test_single_spec_dict_is_coerced_to_list():
+def test_port_spec_is_a_single_spec_not_a_list():
+    """Each port maps to exactly one CatalogPortSpec; variadic is a flag."""
+    entry = CatalogPluginEntry.model_validate(_minimal_payload())
+    node = entry.nodes[0]
+    assert isinstance(node.input_specs["x"], CatalogPortSpec)
+    assert isinstance(node.output_specs["y"], CatalogPortSpec)
+
+
+def test_class_name_is_the_fqcn():
+    """`class_name` carries the fully-qualified path; there is no `full_path`."""
+    node = CatalogPluginEntry.model_validate(_minimal_payload()).nodes[0]
+    assert node.class_name == "my_plugin.node.MyNode"
+    assert not hasattr(node, "full_path")
+
+
+def test_full_path_is_rejected_as_extra_field():
+    """The removed `full_path` field is now an unknown key (extra='forbid')."""
     payload = _minimal_payload()
-    # Already exercised by `input_specs`; assert the list is built.
-    entry = CatalogPluginEntry.model_validate(payload)
-    assert isinstance(entry.nodes[0].input_specs["x"], list)
-    assert len(entry.nodes[0].input_specs["x"]) == 1
+    payload["nodes"][0]["full_path"] = "my_plugin.node.MyNode"
+    with pytest.raises(ValueError, match="full_path"):
+        CatalogPluginEntry.model_validate(payload)
 
 
-def test_full_path_defaults_to_class_name():
+def test_schema_version_defaults_when_absent():
     payload = _minimal_payload()
-    payload["nodes"][0].pop("full_path")
+    del payload["schema_version"]
     entry = CatalogPluginEntry.model_validate(payload)
-    assert entry.nodes[0].full_path == "MyNode"
+    assert entry.schema_version == SUPPORTED_SCHEMA_VERSIONS[-1]
 
 
 def test_schema_version_must_be_supported():
@@ -101,7 +113,7 @@ def test_empty_dtype_is_allowed_for_generic_tensor_markers():
     del payload["nodes"][0]["input_specs"]["x"]["dtype"]
 
     entry = CatalogPluginEntry.model_validate(payload)
-    assert entry.nodes[0].input_specs["x"][0].dtype == ""
+    assert entry.nodes[0].input_specs["x"].dtype == ""
 
 
 def test_non_int_shape_fails_validation():
@@ -120,19 +132,32 @@ def test_extra_field_is_rejected():
         CatalogPluginEntry.model_validate(payload)
 
 
-def test_from_metadata_file_round_trip(tmp_path):
-    metadata_path = tmp_path / "metadata.json"
-    metadata_path.write_text(json.dumps(_minimal_payload()), encoding="utf-8")
-
-    entry = CatalogPluginEntry.from_metadata_file(metadata_path)
+def test_from_manifest_entry_builds_catalog_from_provides():
+    """The manifest entry's `provides` list IS the node catalog."""
+    config_dict = {
+        "repo": "https://github.com/user/repo.git",
+        "tag": "v1.0.0",
+        "provides": [
+            {
+                "class_name": "my_plugin.node.MyNode",
+                "category": "model",
+                "tags": ["rgb"],
+            }
+        ],
+    }
+    entry = CatalogPluginEntry.from_manifest_entry("my_plugin", config_dict)
+    assert entry is not None
     assert entry.plugin_name == "my_plugin"
-    assert entry.nodes[0].class_name == "MyNode"
+    assert entry.schema_version == SUPPORTED_SCHEMA_VERSIONS[-1]
+    assert len(entry.nodes) == 1
+    assert entry.nodes[0].class_name == "my_plugin.node.MyNode"
+    assert entry.nodes[0].category == "model"
 
 
-def test_from_metadata_file_raises_when_missing(tmp_path):
-    missing = tmp_path / "absent.json"
-    with pytest.raises(FileNotFoundError):
-        CatalogPluginEntry.from_metadata_file(missing)
+def test_from_manifest_entry_returns_none_without_provides():
+    """No provided nodes → no palette entry."""
+    assert CatalogPluginEntry.from_manifest_entry("p", {}) is None
+    assert CatalogPluginEntry.from_manifest_entry("p", {"provides": []}) is None
 
 
 def test_supported_versions_constant_is_tuple_of_int():
@@ -150,7 +175,7 @@ def test_models_are_frozen():
     with pytest.raises((ValueError, TypeError)):
         node.class_name = "tampered"
 
-    spec = node.input_specs["x"][0]
+    spec = node.input_specs["x"]
     with pytest.raises((ValueError, TypeError)):
         spec.dtype = "tampered"
 

@@ -5,7 +5,7 @@ import grpc
 from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2 as cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2
 
 
-class CuvisAIServiceStub(object):
+class CuvisAIServiceStub:
     """============================================================================
     Service Definition
     ============================================================================
@@ -160,7 +160,7 @@ class CuvisAIServiceStub(object):
                 _registered_method=True)
 
 
-class CuvisAIServiceServicer(object):
+class CuvisAIServiceServicer:
     """============================================================================
     Service Definition
     ============================================================================
@@ -505,7 +505,7 @@ def add_CuvisAIServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class CuvisAIService(object):
+class CuvisAIService:
     """============================================================================
     Service Definition
     ============================================================================
@@ -1269,7 +1269,7 @@ class CuvisAIService(object):
             _registered_method=True)
 
 
-class RunRuntimeStub(object):
+class RunRuntimeStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -1360,7 +1360,7 @@ class RunRuntimeStub(object):
                 _registered_method=True)
 
 
-class RunRuntimeServicer(object):
+class RunRuntimeServicer:
     """Missing associated documentation comment in .proto file."""
 
     def InitializeSession(self, request, context):
@@ -1557,7 +1557,7 @@ def add_RunRuntimeServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class RunRuntime(object):
+class RunRuntime:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod

@@ -7,6 +7,7 @@ from pathlib import Path
 from pydantic import Field, field_validator
 
 from cuvis_ai_schemas.base import BaseSchemaModel
+from cuvis_ai_schemas.catalog import CatalogNodeEntry
 
 
 class _BasePluginConfig(BaseSchemaModel):
@@ -16,19 +17,23 @@ class _BasePluginConfig(BaseSchemaModel):
     consistent validation and error handling.
     """
 
-    provides: list[str] = Field(
-        description="List of fully-qualified class paths this plugin provides",
+    provides: list[CatalogNodeEntry] = Field(
+        description=(
+            "Node catalog this plugin provides. Each entry is one node: an FQCN "
+            "'class_name' (the install + import target) plus optional palette "
+            "metadata (category, tags, icon_svg, input/output specs, doc_summary)."
+        ),
         min_length=1,  # At least one class required
     )
 
     @field_validator("provides")
     @classmethod
-    def _validate_class_paths(cls, value: list[str]) -> list[str]:
-        """Ensure class paths are well-formed."""
-        for class_path in value:
-            if not class_path or "." not in class_path:
+    def _validate_class_paths(cls, value: list[CatalogNodeEntry]) -> list[CatalogNodeEntry]:
+        """Ensure each provided node's class_name is a fully-qualified path."""
+        for node in value:
+            if "." not in node.class_name:
                 msg = (
-                    f"Invalid class path '{class_path}'. "
+                    f"Invalid class path '{node.class_name}'. "
                     "Must be fully-qualified (e.g., 'package.module.ClassName')"
                 )
                 raise ValueError(msg)

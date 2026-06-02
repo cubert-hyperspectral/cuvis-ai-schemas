@@ -77,12 +77,18 @@ class DimensionResolver:
 
 @dataclass
 class PortSpec:
-    """Specification for a node input or output port."""
+    """Specification for a node input or output port.
+
+    ``variadic`` marks an **input** port that accepts fan-in from multiple
+    upstream connections (each conforming to this one spec); the node then
+    receives a list of values for that port. It is meaningless on outputs.
+    """
 
     dtype: Any
     shape: tuple[int | str, ...]
     description: str = ""
     optional: bool = False
+    variadic: bool = False
 
     def resolve_shape(self, node: Any) -> tuple[int, ...]:
         """Resolve symbolic dimensions in shape using node attributes.
@@ -105,7 +111,7 @@ class PortSpec:
 
     def is_compatible_with(
         self,
-        other: PortSpec | list[PortSpec],
+        other: PortSpec,
         source_node: Any | None,
         target_node: Any | None,
     ) -> tuple[bool, str]:
@@ -113,8 +119,8 @@ class PortSpec:
 
         Parameters
         ----------
-        other : PortSpec | list[PortSpec]
-            Target port spec. If a list, it's a variadic port - extract the spec.
+        other : PortSpec
+            Target port spec (a single spec; variadic is a flag, not a list).
         source_node : Any | None
             Source node for dimension resolution
         target_node : Any | None
@@ -157,13 +163,6 @@ class PortSpec:
                 True if dtype is torch.Tensor or a torch.dtype instance.
             """
             return dtype is torch.Tensor or isinstance(dtype, torch.dtype)
-
-        # Handle variadic ports (list-based specs)
-        if isinstance(other, list):
-            if not other:
-                return False, "Variadic port has empty spec list"
-            # Extract the actual PortSpec from the list
-            other = other[0]
 
         # Check dtype compatibility with smart tensor handling
         source_is_tensor = _is_tensor_related(self.dtype)

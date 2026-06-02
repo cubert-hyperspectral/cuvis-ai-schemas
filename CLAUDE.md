@@ -2,7 +2,7 @@
 
 The dependency-light **schema/contract layer** of the Cuvis.AI ecosystem. Pure Pydantic v2
 models that define the wire and disk formats every other repo speaks: `PipelineConfig`,
-`NodeConfig`, `PortSpec`, `PluginRef`, `TrainerConfig`, and the execution types
+`NodeConfig`, `PortSpec`, `PluginManifest`, `TrainerConfig`, and the execution types
 (`Context`, `Artifact`, `Metric`), plus enums and the generated gRPC v1 stubs. Because
 `cuvis-ai-core` and `cuvis-ai` both depend on this package, **changes here ripple the
 widest** — treat schema edits as breaking-by-default and check downstream consumers.
@@ -18,7 +18,8 @@ plugin; `dev-docs` holds internal ticket docs.
 
 - `cuvis_ai_schemas/base.py` — `BaseSchemaModel`, the root of every schema.
 - `cuvis_ai_schemas/pipeline/` — `PipelineConfig`, `NodeConfig`, `PortSpec`, ports, connections.
-- `cuvis_ai_schemas/plugin/` — `PluginRef` family (catalog / inline-git / inline-local).
+- `cuvis_ai_schemas/plugin/` — `GitPluginConfig`, `LocalPluginConfig`, `PluginManifest` (the
+  plugin-manifest format). Pipelines reference plugins by bare name string (`plugins: [name, ...]`).
 - `cuvis_ai_schemas/training/` — `TrainerConfig`, optimizer/scheduler/data/callbacks configs.
 - `cuvis_ai_schemas/execution/` — `Context`, `Artifact`, `Metric`, `InputStream`.
 - `cuvis_ai_schemas/enums/` — `NodeCategory`, `NodeTag`, `ExecutionStage`.
@@ -48,7 +49,7 @@ plugin; `dev-docs` holds internal ticket docs.
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **cuvis-ai-schemas** (980 symbols, 1568 relationships, 1 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **cuvis-ai-schemas** (982 symbols, 1559 relationships, 1 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

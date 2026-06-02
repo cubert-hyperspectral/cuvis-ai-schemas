@@ -1,22 +1,21 @@
-"""Static node catalog — schema for per-plugin ``metadata.json``.
+"""Static node catalog — schema for the inline plugin manifest catalog.
 
-Plugins emit ``metadata.json`` at release time to describe their node
-classes (port specs, category, tags, icon, doc summary). The cuvis-ai
-server reads that JSON to answer the node-palette RPC without ever
-importing the plugin's Python modules.
+Each plugin manifest entry's ``provides`` list *is* its node catalog:
+every item is a :class:`CatalogNodeEntry` (an FQCN ``class_name`` plus
+optional palette metadata — port specs, category, tags, icon, doc
+summary). The cuvis-ai server reads that inline catalog to answer the
+node-palette RPC without ever importing the plugin's Python modules.
 
-This module defines the wire shape of that JSON. Plugin repos import
-these models in their CI emit scripts; the server-side loader in
-cuvis-ai-core's ``orchestrator.catalog`` validates JSON against the
-same models.
+This module defines the wire shape of those entries. Release tooling
+emits them into the manifest; the server-side loader in cuvis-ai-core's
+``orchestrator.catalog`` validates them against the same models.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any, ClassVar
 
-from pydantic import ConfigDict, Field, field_validator, model_validator
+from pydantic import ConfigDict, Field, field_validator
 
 from cuvis_ai_schemas.base import BaseSchemaModel
 
@@ -24,7 +23,7 @@ SUPPORTED_SCHEMA_VERSIONS: tuple[int, ...] = (1,)
 
 
 class CatalogPortSpec(BaseSchemaModel):
-    """One port spec as recorded in metadata.json."""
+    """One port spec in a node's inline catalog entry."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, validate_assignment=True)
 
@@ -42,6 +41,13 @@ class CatalogPortSpec(BaseSchemaModel):
     )
     optional: bool = False
     description: str = ""
+    variadic: bool = Field(
+        default=False,
+        description=(
+            "Input ports only: the port accepts fan-in from multiple upstream "
+            "connections. Always false for outputs."
+        ),
+    )
 
 
 class CatalogNodeEntry(BaseSchemaModel):
@@ -49,10 +55,9 @@ class CatalogNodeEntry(BaseSchemaModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True, validate_assignment=True)
 
-    class_name: str = Field(min_length=1)
-    full_path: str = Field(
-        default="",
-        description="Fully-qualified class path; falls back to class_name if empty.",
+    class_name: str = Field(
+        min_length=1,
+        description="Fully-qualified class path, e.g. 'pkg.module.MyNode'.",
     )
     category: str = Field(
         default="unspecified",
@@ -63,35 +68,9 @@ class CatalogNodeEntry(BaseSchemaModel):
         default="",
         description="Raw SVG XML for the node's palette icon; empty for default.",
     )
-    input_specs: dict[str, list[CatalogPortSpec]] = Field(default_factory=dict)
-    output_specs: dict[str, list[CatalogPortSpec]] = Field(default_factory=dict)
+    input_specs: dict[str, CatalogPortSpec] = Field(default_factory=dict)
+    output_specs: dict[str, CatalogPortSpec] = Field(default_factory=dict)
     doc_summary: str = ""
-
-    @field_validator("input_specs", "output_specs", mode="before")
-    @classmethod
-    def _coerce_single_spec_to_list(cls, value: Any) -> Any:
-        """Allow `{port: {...spec}}` as shorthand for `{port: [{...spec}]}`.
-
-        Authors frequently write single-spec ports as a bare dict; the
-        wire form is always a list so variadic ports compose naturally.
-        """
-        if not isinstance(value, dict):
-            return value
-        out: dict[str, Any] = {}
-        for port_name, specs in value.items():
-            if isinstance(specs, dict):
-                out[port_name] = [specs]
-            else:
-                out[port_name] = specs
-        return out
-
-    @model_validator(mode="after")
-    def _default_full_path(self) -> CatalogNodeEntry:
-        """When full_path is empty, populate it from class_name."""
-        if not self.full_path:
-            # frozen=True blocks direct assignment; rebuild via object.__setattr__
-            object.__setattr__(self, "full_path", self.class_name)
-        return self
 
 
 class CatalogPluginEntry(BaseSchemaModel):
@@ -102,6 +81,7 @@ class CatalogPluginEntry(BaseSchemaModel):
     SUPPORTED_VERSIONS: ClassVar[tuple[int, ...]] = SUPPORTED_SCHEMA_VERSIONS
 
     schema_version: int = Field(
+        default=SUPPORTED_SCHEMA_VERSIONS[-1],
         description="Catalog schema version; current writer must use the latest.",
     )
     plugin_name: str = Field(min_length=1)
@@ -118,12 +98,25 @@ class CatalogPluginEntry(BaseSchemaModel):
         return value
 
     @classmethod
-    def from_metadata_file(cls, path: Path | str) -> CatalogPluginEntry:
-        """Load and validate a metadata.json from disk."""
-        json_path = Path(path)
-        if not json_path.exists():
-            raise FileNotFoundError(f"Metadata file not found: {json_path}")
-        return cls.model_validate_json(json_path.read_text(encoding="utf-8"))
+    def from_manifest_entry(
+        cls, plugin_name: str, config_dict: dict[str, Any]
+    ) -> CatalogPluginEntry | None:
+        """Build a plugin's node catalog from its inline manifest entry.
+
+        The manifest entry's ``provides`` list *is* the node catalog — each
+        item is a :class:`CatalogNodeEntry` (FQCN ``class_name`` plus optional
+        palette metadata). Returns ``None`` when the entry provides no nodes,
+        so the caller surfaces nothing in the palette for it.
+        """
+        provides = config_dict.get("provides") or []
+        if not provides:
+            return None
+        return cls(
+            schema_version=config_dict.get("schema_version") or SUPPORTED_SCHEMA_VERSIONS[-1],
+            plugin_name=plugin_name,
+            plugin_version=config_dict.get("plugin_version", ""),
+            nodes=provides,
+        )
 
 
 __all__ = [

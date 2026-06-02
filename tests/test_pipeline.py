@@ -4,10 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from cuvis_ai_schemas.pipeline import (
-    CatalogPluginRef,
     ConnectionConfig,
-    InlineGitPluginRef,
-    InlineLocalPluginRef,
     NodeConfig,
     PipelineConfig,
     PipelineMetadata,
@@ -193,7 +190,7 @@ def test_pipeline_config_plugins_default_none():
 
 
 def test_pipeline_config_plugins_bare_names():
-    """Bare-string plugin names parse as PluginRef str entries."""
+    """Bare-string plugin names parse as a plain list of strings."""
     pipeline = PipelineConfig.from_dict(
         {
             "metadata": {"name": "p"},
@@ -205,113 +202,92 @@ def test_pipeline_config_plugins_bare_names():
     assert pipeline.plugins == ["cuvis_ai_builtin", "adaclip"]
 
 
-def test_pipeline_config_plugins_catalog_ref_with_tag_override():
-    """{name, tag} entries parse as CatalogPluginRef with override."""
-    pipeline = PipelineConfig.from_dict(
-        {
-            "plugins": [{"name": "adaclip", "tag": "v0.2.0"}],
-            "nodes": [],
-            "connections": [],
-        }
-    )
-    assert isinstance(pipeline.plugins[0], CatalogPluginRef)
-    assert pipeline.plugins[0].name == "adaclip"
-    assert pipeline.plugins[0].tag == "v0.2.0"
-
-
-def test_pipeline_config_plugins_inline_git():
-    """{name, repo, tag, provides} entries parse as InlineGitPluginRef."""
-    pipeline = PipelineConfig.from_dict(
-        {
-            "plugins": [
-                {
-                    "name": "private_plugin",
-                    "repo": "https://github.com/example/plugin.git",
-                    "tag": "v0.0.1",
-                    "provides": ["example.node.Foo"],
-                }
-            ],
-            "nodes": [],
-            "connections": [],
-        }
-    )
-    entry = pipeline.plugins[0]
-    assert isinstance(entry, InlineGitPluginRef)
-    assert entry.name == "private_plugin"
-    assert entry.repo == "https://github.com/example/plugin.git"
-    assert entry.tag == "v0.0.1"
-    assert entry.provides == ["example.node.Foo"]
-
-
-def test_pipeline_config_plugins_inline_local():
-    """{name, path, provides} entries parse as InlineLocalPluginRef."""
-    pipeline = PipelineConfig.from_dict(
-        {
-            "plugins": [
-                {
-                    "name": "dev_plugin",
-                    "path": "../my-plugin",
-                    "provides": ["my.module.Node"],
-                }
-            ],
-            "nodes": [],
-            "connections": [],
-        }
-    )
-    entry = pipeline.plugins[0]
-    assert isinstance(entry, InlineLocalPluginRef)
-    assert entry.name == "dev_plugin"
-    assert entry.path == "../my-plugin"
-
-
-def test_pipeline_config_plugins_mixed_forms():
-    """Bare + catalog-ref + inline can coexist in the same plugins list."""
-    pipeline = PipelineConfig.from_dict(
-        {
-            "plugins": [
-                "cuvis_ai_builtin",
-                {"name": "adaclip", "tag": "v0.2.0"},
-                {
-                    "name": "dev_plugin",
-                    "path": "../my-plugin",
-                    "provides": ["my.module.Node"],
-                },
-            ],
-            "nodes": [],
-            "connections": [],
-        }
-    )
-    assert len(pipeline.plugins) == 3
-    assert pipeline.plugins[0] == "cuvis_ai_builtin"
-    assert isinstance(pipeline.plugins[1], CatalogPluginRef)
-    assert isinstance(pipeline.plugins[2], InlineLocalPluginRef)
-
-
-def test_pipeline_config_plugins_invalid_name():
-    """Non-identifier names raise ValidationError."""
+def test_pipeline_config_plugins_rejects_catalog_ref_with_tag():
+    """{name, tag} (former CatalogPluginRef) is no longer accepted."""
     with pytest.raises(ValidationError):
         PipelineConfig.from_dict(
-            {"plugins": [{"name": "has spaces"}], "nodes": [], "connections": []}
+            {
+                "plugins": [{"name": "adaclip", "tag": "v0.2.0"}],
+                "nodes": [],
+                "connections": [],
+            }
         )
 
 
+def test_pipeline_config_plugins_rejects_inline_git():
+    """{name, repo, tag, provides} (former InlineGitPluginRef) is rejected."""
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict(
+            {
+                "plugins": [
+                    {
+                        "name": "private_plugin",
+                        "repo": "https://github.com/example/plugin.git",
+                        "tag": "v0.0.1",
+                        "provides": [{"class_name": "example.node.Foo"}],
+                    }
+                ],
+                "nodes": [],
+                "connections": [],
+            }
+        )
+
+
+def test_pipeline_config_plugins_rejects_inline_local():
+    """{name, path, provides} (former InlineLocalPluginRef) is rejected."""
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict(
+            {
+                "plugins": [
+                    {
+                        "name": "dev_plugin",
+                        "path": "../my-plugin",
+                        "provides": [{"class_name": "my.module.Node"}],
+                    }
+                ],
+                "nodes": [],
+                "connections": [],
+            }
+        )
+
+
+def test_pipeline_config_plugins_mixed_forms():
+    """A list of bare names parses; any object entry rejects the whole list."""
+    pipeline = PipelineConfig.from_dict(
+        {
+            "plugins": ["cuvis_ai_builtin", "adaclip", "dev_plugin"],
+            "nodes": [],
+            "connections": [],
+        }
+    )
+    assert pipeline.plugins == ["cuvis_ai_builtin", "adaclip", "dev_plugin"]
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict(
+            {
+                "plugins": ["cuvis_ai_builtin", {"name": "adaclip", "tag": "v0.2.0"}],
+                "nodes": [],
+                "connections": [],
+            }
+        )
+
+
+def test_pipeline_config_plugins_invalid_name():
+    """Non-identifier bare names raise ValidationError."""
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict({"plugins": ["has spaces"], "nodes": [], "connections": []})
+
+
 def test_pipeline_config_plugins_round_trip():
-    """plugins survives dict round-trip."""
+    """plugins (bare names) survives a dict round-trip."""
     original = {
         "metadata": {"name": "rt"},
-        "plugins": [
-            "cuvis_ai_builtin",
-            {"name": "adaclip", "tag": "v0.2.0"},
-        ],
+        "plugins": ["cuvis_ai_builtin", "adaclip"],
         "nodes": [],
         "connections": [],
     }
     pipeline = PipelineConfig.from_dict(original)
     reloaded = PipelineConfig.from_dict(pipeline.to_dict())
-    assert reloaded.plugins[0] == "cuvis_ai_builtin"
-    assert isinstance(reloaded.plugins[1], CatalogPluginRef)
-    assert reloaded.plugins[1].name == "adaclip"
-    assert reloaded.plugins[1].tag == "v0.2.0"
+    assert reloaded.plugins == ["cuvis_ai_builtin", "adaclip"]
 
 
 def test_model_dump_uses_field_names():
