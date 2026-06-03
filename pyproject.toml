@@ -28,8 +28,8 @@ keywords = [
 
 # Minimal core dependencies
 dependencies = [
-    "pydantic>=2.0.0,<3.0.0",
-    "pyyaml>=6.0",
+    "pydantic>=2.12.5,<3.0.0",
+    "pyyaml>=6.0.3",
 ]
 
 classifiers = [
