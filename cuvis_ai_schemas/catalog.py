@@ -51,7 +51,7 @@ class CatalogPortSpec(BaseSchemaModel):
 
 
 class CatalogNodeEntry(BaseSchemaModel):
-    """One node class as recorded in metadata.json."""
+    """One node class as recorded in a plugin's inline manifest catalog."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, validate_assignment=True)
 
@@ -74,7 +74,7 @@ class CatalogNodeEntry(BaseSchemaModel):
 
 
 class CatalogPluginEntry(BaseSchemaModel):
-    """A plugin's complete static node catalog (the metadata.json root)."""
+    """A plugin's complete static node catalog (the manifest ``provides`` block)."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, validate_assignment=True)
 
