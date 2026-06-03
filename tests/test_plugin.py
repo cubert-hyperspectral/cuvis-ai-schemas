@@ -3,7 +3,12 @@
 import pytest
 from pydantic import ValidationError
 
-from cuvis_ai_schemas.plugin import GitPluginConfig, LocalPluginConfig, PluginManifest
+from cuvis_ai_schemas.plugin import (
+    GitPluginConfig,
+    LocalPluginConfig,
+    PluginConfig,
+    PluginManifest,
+)
 
 
 def test_git_plugin_config():
@@ -164,3 +169,44 @@ def test_manifest_to_dict_round_trip():
     assert set(restored.plugins.keys()) == set(manifest.plugins.keys())
     assert restored.plugins["git_plugin"].repo == "https://github.com/user/repo.git"
     assert restored.plugins["local_plugin"].path == "/path/to/plugin"
+
+
+def test_package_name_optional_override():
+    """`package_name` is an optional author override: defaults to None and round-trips."""
+    git_plugin = GitPluginConfig(
+        repo="https://github.com/user/repo.git",
+        tag="v1.0.0",
+        provides=[{"class_name": "my.package.MyNode"}],
+    )
+    assert git_plugin.package_name is None
+
+    named = LocalPluginConfig(
+        path="/opt/plugins/sam3",
+        package_name="cuvis-ai-sam3",
+        provides=[{"class_name": "cuvis_ai_sam3.node.Sam3"}],
+    )
+    assert named.package_name == "cuvis-ai-sam3"
+    assert LocalPluginConfig.from_dict(named.to_dict()).package_name == "cuvis-ai-sam3"
+
+
+def test_plugin_config_rejects_unknown_key():
+    """extra='forbid' carries over from BaseSchemaModel — stray keys are rejected."""
+    with pytest.raises(ValidationError):
+        GitPluginConfig(
+            repo="https://github.com/user/repo.git",
+            tag="v1.0.0",
+            provides=[{"class_name": "my.package.MyNode"}],
+            bogus_field="nope",
+        )
+
+
+def test_plugin_config_union_export():
+    """The PluginConfig union alias is exported for consumers that need the type."""
+    git = GitPluginConfig(
+        repo="https://github.com/user/repo.git",
+        tag="v1.0.0",
+        provides=[{"class_name": "my.package.MyNode"}],
+    )
+    local = LocalPluginConfig(path="/p", provides=[{"class_name": "my.package.MyNode"}])
+    assert isinstance(git, PluginConfig)
+    assert isinstance(local, PluginConfig)

@@ -26,6 +26,19 @@ class _BasePluginConfig(BaseSchemaModel):
         min_length=1,  # At least one class required
     )
 
+    package_name: str | None = Field(
+        default=None,
+        description=(
+            "Optional PyPI-style package name (the value of [project].name in the "
+            "plugin's pyproject.toml). The manifest YAML key is a logical grouping "
+            "label (e.g. 'sam3'); when it differs from the actual package name "
+            "(e.g. 'cuvis-ai-sam3') the composer needs the real name so uv's "
+            "metadata check passes. Local plugins may omit it (the composer reads "
+            "[project].name from pyproject.toml); git plugins default it to the "
+            "manifest key."
+        ),
+    )
+
     @field_validator("provides")
     @classmethod
     def _validate_class_paths(cls, value: list[CatalogNodeEntry]) -> list[CatalogNodeEntry]:
@@ -119,3 +132,7 @@ class LocalPluginConfig(_BasePluginConfig):
         if not plugin_path.is_absolute():
             plugin_path = (manifest_dir / plugin_path).resolve()
         return plugin_path
+
+
+PluginConfig = GitPluginConfig | LocalPluginConfig
+"""A single plugin source: either a git (repo + tag) or local (path) config."""
