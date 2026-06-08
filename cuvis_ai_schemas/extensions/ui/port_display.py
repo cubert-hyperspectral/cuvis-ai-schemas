@@ -156,4 +156,7 @@ class PortDisplaySpec:
         if self.port_spec.optional:
             lines.append("[Optional]")
 
+        if getattr(self.port_spec, "variadic", False):
+            lines.append("[Variadic]")
+
         return "\\n".join(lines)

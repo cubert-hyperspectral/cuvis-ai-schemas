@@ -92,6 +92,16 @@ def test_connection_config_validation():
         ConnectionConfig(source="node.outputs.port", target="model.outputs.data")
 
 
+def test_connection_config_rejects_empty_segments():
+    """Empty node or port segments are rejected, not just the wrong-arity case."""
+    for bad_source in [".outputs.port", "node.outputs.", "..port"]:
+        with pytest.raises(ValidationError, match="Invalid source"):
+            ConnectionConfig(source=bad_source, target="model.inputs.data")
+    for bad_target in [".inputs.port", "node.inputs.", "..port"]:
+        with pytest.raises(ValidationError, match="Invalid target"):
+            ConnectionConfig(source="node.outputs.port", target=bad_target)
+
+
 def test_pipeline_config():
     """Test PipelineConfig with typed nodes and connections."""
     pipeline = PipelineConfig(
@@ -181,6 +191,125 @@ def test_pipeline_config_rejects_top_level_name():
                 "connections": [],
             }
         )
+
+
+def test_pipeline_config_plugins_default_none():
+    """Plugins field is optional and defaults to None."""
+    pipeline = PipelineConfig(nodes=[], connections=[])
+    assert pipeline.plugins is None
+
+
+def test_pipeline_config_plugins_bare_names():
+    """Bare-string plugin names parse as a plain list of strings."""
+    pipeline = PipelineConfig.from_dict(
+        {
+            "metadata": {"name": "p"},
+            "plugins": ["cuvis_ai_builtin", "adaclip"],
+            "nodes": [],
+            "connections": [],
+        }
+    )
+    assert pipeline.plugins == ["cuvis_ai_builtin", "adaclip"]
+
+
+def test_pipeline_config_plugins_rejects_catalog_ref_with_tag():
+    """{name, tag} (former CatalogPluginRef) is no longer accepted."""
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict(
+            {
+                "plugins": [{"name": "adaclip", "tag": "v0.2.0"}],
+                "nodes": [],
+                "connections": [],
+            }
+        )
+
+
+def test_pipeline_config_plugins_rejects_inline_git():
+    """{name, repo, tag, provides} (former InlineGitPluginRef) is rejected."""
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict(
+            {
+                "plugins": [
+                    {
+                        "name": "private_plugin",
+                        "repo": "https://github.com/example/plugin.git",
+                        "tag": "v0.0.1",
+                        "provides": [{"class_name": "example.node.Foo"}],
+                    }
+                ],
+                "nodes": [],
+                "connections": [],
+            }
+        )
+
+
+def test_pipeline_config_plugins_rejects_inline_local():
+    """{name, path, provides} (former InlineLocalPluginRef) is rejected."""
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict(
+            {
+                "plugins": [
+                    {
+                        "name": "dev_plugin",
+                        "path": "../my-plugin",
+                        "provides": [{"class_name": "my.module.Node"}],
+                    }
+                ],
+                "nodes": [],
+                "connections": [],
+            }
+        )
+
+
+def test_pipeline_config_plugins_mixed_forms():
+    """A list of bare names parses; any object entry rejects the whole list."""
+    pipeline = PipelineConfig.from_dict(
+        {
+            "plugins": ["cuvis_ai_builtin", "adaclip", "dev_plugin"],
+            "nodes": [],
+            "connections": [],
+        }
+    )
+    assert pipeline.plugins == ["cuvis_ai_builtin", "adaclip", "dev_plugin"]
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict(
+            {
+                "plugins": ["cuvis_ai_builtin", {"name": "adaclip", "tag": "v0.2.0"}],
+                "nodes": [],
+                "connections": [],
+            }
+        )
+
+
+def test_pipeline_config_plugins_invalid_name():
+    """Non-identifier bare names raise ValidationError."""
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict({"plugins": ["has spaces"], "nodes": [], "connections": []})
+
+
+def test_pipeline_config_plugins_rejects_non_list():
+    """A non-list 'plugins' value (e.g. a bare string) is rejected."""
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict({"plugins": "adaclip", "nodes": [], "connections": []})
+
+
+def test_pipeline_config_plugins_rejects_non_string_entry():
+    """A non-string, non-mapping entry (e.g. an int) is rejected."""
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict({"plugins": [123], "nodes": [], "connections": []})
+
+
+def test_pipeline_config_plugins_round_trip():
+    """plugins (bare names) survives a dict round-trip."""
+    original = {
+        "metadata": {"name": "rt"},
+        "plugins": ["cuvis_ai_builtin", "adaclip"],
+        "nodes": [],
+        "connections": [],
+    }
+    pipeline = PipelineConfig.from_dict(original)
+    reloaded = PipelineConfig.from_dict(pipeline.to_dict())
+    assert reloaded.plugins == ["cuvis_ai_builtin", "adaclip"]
 
 
 def test_model_dump_uses_field_names():

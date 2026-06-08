@@ -1,6 +1,18 @@
 # Changelog
 
-## [Unreleased]
+## 0.5.0 - 2026-06-08
+
+- Added `PipelineConfig.plugins`: an optional `list[str]` of **bare plugin names**. The `_validate_plugins` validator rejects object / inline / tag-override entries and non-identifier names: a plugin is declared by name and resolves to a manifest yaml in the plugins directory.
+- Added catalog models in new `cuvis_ai_schemas/catalog.py`: `CatalogPortSpec`, `CatalogNodeEntry` (fully-qualified `class_name`), and `CatalogPluginEntry` (`from_manifest_entry`): the static node catalog the server reads to populate the palette without importing any plugin Python. `dtype` is permissive (empty string = generic-tensor marker, mapped to `D_TYPE_UNSPECIFIED`); `category` / `tags` are plain strings so newer readers degrade gracefully. `CatalogNodeEntry.class_name` is validated as a fully-qualified dotted path of Python identifiers, so malformed forms such as `pkg.`, `.Node`, or `pkg..Node` are rejected on both the authoring and server-load paths.
+- Added the plugin-config contract here so schemas is the single source of truth (cuvis-ai-core drops its fork): `_BasePluginConfig` gains an optional `package_name` author override, and `PluginConfig = GitPluginConfig | LocalPluginConfig` is exported. `provides` carries `CatalogNodeEntry` items directly, so the install list and the node catalog are the same list.
+- **Breaking (proto):** renamed `LoadPluginsResponse.loaded_plugins` → `registered_plugins` (wire tag 1 retained). Reflects register-only `LoadPlugins` in cuvis-ai-core: entries are registered as catalog metadata, not installed; materialisation moves to `LoadPipeline` via the pipeline's `plugins:` field. Regenerated the Python stubs.
+- Added an internal `RunRuntime` service section to `cuvis_ai.proto` (parent ↔ child runtime). Private `InitializeSession` hands the child its parent-owned session id, search paths, the resolved plugin dict, and FS paths; the parent forwards `LoadPipeline` / `LoadPipelineWeights` / `RestoreTrainRun` / `Inference` / `Train` / `CloseSession`, the persistence + introspection RPCs (`SavePipeline`, `SaveTrainRun`, `GetPipelineInputs` / `GetPipelineOutputs` / `GetPipelineVisualization`, `SetTrainRunConfig`, `GetTrainStatus`), `StopRun` (graceful cancel with a grace window), and `HealthCheck`. Reuses the public message types; the public `CuvisAIService` surface is untouched. Regenerated stubs via `buf generate`.
+- **Breaking (proto):** a node port now maps to exactly one `PortSpec`. Added `bool variadic` to the `PortSpec` message, removed the `PortSpecList` message, and changed `NodeInfo.input_specs` / `NodeInfo.output_specs` from `map<string, PortSpecList>` to `map<string, PortSpec>`. Regenerated the Python stubs.
+- Added `PortSpec.variadic` (default `False`) to the dataclass and `CatalogPortSpec.variadic`; `variadic` marks an *input* port for fan-in (the node receives a list) and is honored for input ports only. `extensions/ui/port_display.py` surfaces a `[Variadic]` tooltip tag.
+- Changed `PortSpec.is_compatible_with` to take a single `PortSpec` (dropped the `PortSpec | list[PortSpec]` overload) and `CatalogNodeEntry.input_specs` / `output_specs` to `dict[str, CatalogPortSpec]`; removed the single-spec→list coercion.
+- Collapsed plugin manifests so `provides` carries the node list directly (`class_name` = fully-qualified class), and restricted pipeline `plugins:` to bare manifest names.
+- Tightened `ConnectionConfig` `source` / `target` validation to reject empty node or port segments (e.g. `.outputs.port` or `node.outputs.`), not just the wrong-arity case.
+- Pinned dependency floors (`pydantic>=2.12.5`, `pyyaml>=6.0.3`; `uv.lock` in sync) and added a `dep_compat` workflow that audits the floors against the shared cuvis-ai-core audit script.
 
 ## 0.4.1 - 2026-05-04
 

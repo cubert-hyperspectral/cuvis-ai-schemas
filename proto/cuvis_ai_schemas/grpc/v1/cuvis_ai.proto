@@ -586,11 +586,7 @@ message PortSpec {
   repeated int64 shape = 3;  // -1 for dynamic dimensions
   bool optional = 4;          // For inputs: optional, for outputs: conditional
   string description = 5;
-}
-
-// List of port specs for variadic ports
-message PortSpecList {
-  repeated PortSpec specs = 1;  // Variadic ports carry multiple specs
+  bool variadic = 6;          // Input ports only: accepts fan-in from multiple connections
 }
 
 // Node information with port specifications
@@ -599,8 +595,8 @@ message NodeInfo {
   string full_path = 2;
   string source = 3;  // "builtin", "plugin", or "custom"
   string plugin_name = 4;  // If from plugin
-  map<string, PortSpecList> input_specs = 5;   // Input port specifications
-  map<string, PortSpecList> output_specs = 6;  // Output port specifications
+  map<string, PortSpec> input_specs = 5;   // Input port specifications (one spec per port)
+  map<string, PortSpec> output_specs = 6;  // Output port specifications (one spec per port)
   bytes        icon_svg = 7;        // SVG payload (empty when no icon resolves)
   NodeCategory category = 8;        // Primary graph role / execution contract
   repeated NodeTag tags = 9;        // Orthogonal axes (modality/task/lifecycle/properties/backend)
@@ -613,8 +609,11 @@ message LoadPluginsRequest {
 }
 
 message LoadPluginsResponse {
-  repeated string loaded_plugins = 1;
-  map<string, string> failed_plugins = 2;  // name → error message
+  // Plugin names that were registered into the session's catalog.
+  // Semantics: names registered as catalog metadata, NOT installed —
+  // materialisation happens lazily via LoadPipeline.
+  repeated string registered_plugins = 1;
+  map<string, string> failed_plugins = 2;  // name → error message (Pydantic validation failure)
 }
 
 message ListLoadedPluginsRequest {
@@ -732,6 +731,15 @@ service CuvisAIService {
   rpc Inference(InferenceRequest) returns (InferenceResponse);
 
   // Plugin Management
+  //
+  // LoadPlugins registers manifest entries as catalog metadata in the
+  // session. It does NOT install or import — that happens lazily via
+  // LoadPipeline when a pipeline's `plugins:` field references the
+  // registered entry. Callers that expected eager install must migrate
+  // to the two-step register-then-pipeline flow. `ListLoadedPlugins`
+  // reports the catalog (registered set); `ListAvailableNodes` reports
+  // the materialised set (what's actually importable in this session
+  // right now).
   rpc LoadPlugins(LoadPluginsRequest) returns (LoadPluginsResponse);
   rpc ListLoadedPlugins(ListLoadedPluginsRequest) returns (ListLoadedPluginsResponse);
   rpc GetPluginInfo(GetPluginInfoRequest) returns (GetPluginInfoResponse);
@@ -743,3 +751,90 @@ service CuvisAIService {
   rpc GetProfilingSummary(GetProfilingSummaryRequest) returns (GetProfilingSummaryResponse);
 }
 
+// ============================================================================
+// Run Runtime (internal: parent <-> child runtime, not part of the public API)
+// ============================================================================
+//
+// RunRuntime is the contract between the orchestrator (server) and the child
+// runtime service it spawns inside a per-pipeline composed venv. The parent
+// always initiates calls; events (logs, metrics, frames) ride out on existing
+// server-streaming RPCs (e.g. TrainResponse), not on a reverse callback. The
+// child mirrors the subset of CuvisAIService RPCs that touch pipeline
+// materialisation and execution; it does NOT host the full public surface.
+
+message InitializeSessionRequest {
+  // Parent-owned session id the child must adopt. The parent has already
+  // returned this id to its public caller via CreateSession; the child
+  // creates an internal SessionState with this exact id so subsequent
+  // proxied requests (LoadPipeline, Inference, Train, ...) carry the same
+  // session_id end-to-end.
+  string session_id = 1;
+  // Search paths the parent's SessionState already knows about. Copied into
+  // the child once at init; later SetSessionSearchPaths calls against the
+  // public surface are rejected (composed env is keyed to this set).
+  repeated string search_paths = 2;
+  // Resolved plugin dict (dict[name, GitPluginConfig | LocalPluginConfig])
+  // serialised as JSON. The child imports each plugin's `provides` class
+  // paths directly from the installed packages in its venv.
+  bytes resolved_plugins_json = 3;
+  // Declared FS paths the child is allowed to read / write. A future
+  // sandbox layer (item 06) bind-mounts these and nothing else.
+  string output_dir = 4;
+  string scratch_dir = 5;
+}
+
+message InitializeSessionResponse {
+  bool ok = 1;
+}
+
+message StopRunRequest {
+  string session_id = 1;
+  // Graceful-cancel window before the spawner hard-kills the child.
+  int32 grace_seconds = 2;
+}
+
+message StopRunResponse {
+  bool ok = 1;
+}
+
+message HealthCheckRequest {
+}
+
+message HealthCheckResponse {
+  enum ServingStatus {
+    SERVING_STATUS_UNSPECIFIED = 0;
+    SERVING_STATUS_SERVING = 1;
+    SERVING_STATUS_NOT_SERVING = 2;
+  }
+  ServingStatus status = 1;
+}
+
+service RunRuntime {
+  // Private init from the parent; never exposed to public clients.
+  rpc InitializeSession(InitializeSessionRequest) returns (InitializeSessionResponse);
+
+  // Pipeline-materialising RPCs the parent proxies unmodified.
+  rpc LoadPipeline(LoadPipelineRequest) returns (LoadPipelineResponse);
+  rpc LoadPipelineWeights(LoadPipelineWeightsRequest) returns (LoadPipelineWeightsResponse);
+  rpc RestoreTrainRun(RestoreTrainRunRequest) returns (RestoreTrainRunResponse);
+
+  // Pipeline persistence + introspection — every RPC that touches the live
+  // pipeline must be proxied to the child, since the parent never holds a
+  // pipeline instance in the orchestrator-only world.
+  rpc SavePipeline(SavePipelineRequest) returns (SavePipelineResponse);
+  rpc SaveTrainRun(SaveTrainRunRequest) returns (SaveTrainRunResponse);
+  rpc GetPipelineInputs(GetPipelineInputsRequest) returns (GetPipelineInputsResponse);
+  rpc GetPipelineOutputs(GetPipelineOutputsRequest) returns (GetPipelineOutputsResponse);
+  rpc GetPipelineVisualization(GetPipelineVisualizationRequest) returns (GetPipelineVisualizationResponse);
+  rpc SetTrainRunConfig(SetTrainRunConfigRequest) returns (SetTrainRunConfigResponse);
+
+  // Execution.
+  rpc Inference(InferenceRequest) returns (InferenceResponse);
+  rpc Train(TrainRequest) returns (stream TrainResponse);
+  rpc GetTrainStatus(GetTrainStatusRequest) returns (GetTrainStatusResponse);
+
+  // Lifecycle.
+  rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
+  rpc StopRun(StopRunRequest) returns (StopRunResponse);
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}

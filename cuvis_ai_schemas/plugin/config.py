@@ -7,6 +7,7 @@ from pathlib import Path
 from pydantic import Field, field_validator
 
 from cuvis_ai_schemas.base import BaseSchemaModel
+from cuvis_ai_schemas.catalog import CatalogNodeEntry
 
 
 class _BasePluginConfig(BaseSchemaModel):
@@ -16,23 +17,27 @@ class _BasePluginConfig(BaseSchemaModel):
     consistent validation and error handling.
     """
 
-    provides: list[str] = Field(
-        description="List of fully-qualified class paths this plugin provides",
+    provides: list[CatalogNodeEntry] = Field(
+        description=(
+            "Node catalog this plugin provides. Each entry is one node: an FQCN "
+            "'class_name' (the install + import target) plus optional palette "
+            "metadata (category, tags, icon_svg, input/output specs, doc_summary)."
+        ),
         min_length=1,  # At least one class required
     )
 
-    @field_validator("provides")
-    @classmethod
-    def _validate_class_paths(cls, value: list[str]) -> list[str]:
-        """Ensure class paths are well-formed."""
-        for class_path in value:
-            if not class_path or "." not in class_path:
-                msg = (
-                    f"Invalid class path '{class_path}'. "
-                    "Must be fully-qualified (e.g., 'package.module.ClassName')"
-                )
-                raise ValueError(msg)
-        return value
+    package_name: str | None = Field(
+        default=None,
+        description=(
+            "Optional PyPI-style package name (the value of [project].name in the "
+            "plugin's pyproject.toml). The manifest YAML key is a logical grouping "
+            "label (e.g. 'sam3'); when it differs from the actual package name "
+            "(e.g. 'cuvis-ai-sam3') the composer needs the real name so uv's "
+            "metadata check passes. Local plugins may omit it (the composer reads "
+            "[project].name from pyproject.toml); git plugins default it to the "
+            "manifest key."
+        ),
+    )
 
 
 class GitPluginConfig(_BasePluginConfig):
@@ -114,3 +119,7 @@ class LocalPluginConfig(_BasePluginConfig):
         if not plugin_path.is_absolute():
             plugin_path = (manifest_dir / plugin_path).resolve()
         return plugin_path
+
+
+PluginConfig = GitPluginConfig | LocalPluginConfig
+"""A single plugin source: either a git (repo + tag) or local (path) config."""

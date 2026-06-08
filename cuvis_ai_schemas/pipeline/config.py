@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import yaml
@@ -99,7 +100,7 @@ class ConnectionConfig(BaseSchemaModel):
     @classmethod
     def _validate_source(cls, v: str) -> str:
         parts = v.split(".")
-        if len(parts) != 3 or parts[1] != "outputs":
+        if len(parts) != 3 or parts[1] != "outputs" or not parts[0] or not parts[2]:
             raise ValueError(f"Invalid source: '{v}'. Expected: 'node.outputs.port'")
         return v
 
@@ -107,7 +108,7 @@ class ConnectionConfig(BaseSchemaModel):
     @classmethod
     def _validate_target(cls, v: str) -> str:
         parts = v.split(".")
-        if len(parts) != 3 or parts[1] != "inputs":
+        if len(parts) != 3 or parts[1] != "inputs" or not parts[0] or not parts[2]:
             raise ValueError(f"Invalid target: '{v}'. Expected: 'node.inputs.port'")
         return v
 
@@ -137,6 +138,11 @@ class PipelineConfig(BaseSchemaModel):
 
     Attributes
     ----------
+    plugins : list[str] | None
+        Declaration of the plugin set this pipeline depends on. Each entry is a
+        bare plugin name that must resolve to a manifest yaml in the plugins
+        directory. Mandatory in the loader: a pipeline that omits this field is
+        rejected with a fix-it hint pointing at the ``suggest-plugins-fix`` CLI.
     nodes : list[NodeConfig]
         Node definitions
     connections : list[ConnectionConfig]
@@ -147,11 +153,51 @@ class PipelineConfig(BaseSchemaModel):
 
     __proto_message__: ClassVar[str] = "PipelineConfig"
 
+    plugins: list[str] | None = Field(
+        default=None,
+        description=(
+            "Plugin set this pipeline depends on. Each entry is a bare plugin "
+            "name (string) that must resolve to a manifest yaml in the plugins "
+            "directory. Auto-resolved from class_name if omitted."
+        ),
+    )
     nodes: list[NodeConfig] = Field(default_factory=list, description="Node definitions")
     connections: list[ConnectionConfig] = Field(default_factory=list, description="Connections")
     metadata: PipelineMetadata | None = Field(
         default=None, description="Optional pipeline metadata"
     )
+
+    @field_validator("plugins", mode="before")
+    @classmethod
+    def _validate_plugins(cls, value: object) -> object:
+        """Accept only bare plugin-name strings.
+
+        Inline (``{name, repo, tag, provides}`` / ``{name, path, provides}``) and
+        tag-override (``{name, tag}``) entries are no longer supported: a plugin
+        must be declared by name and resolve to a manifest yaml in the plugins
+        directory. Each name must be a valid Python identifier.
+        """
+        if value is None:
+            return value
+        if not isinstance(value, list):
+            msg = "'plugins' must be a list of bare plugin-name strings."
+            raise ValueError(msg)
+        for entry in value:
+            if isinstance(entry, Mapping):
+                msg = (
+                    "Inline and tag-override plugin entries are no longer supported. "
+                    "Each 'plugins' entry must be a bare plugin name (string) that "
+                    "resolves to a manifest yaml in the plugins directory. "
+                    f"Got object entry: {dict(entry)!r}."
+                )
+                raise ValueError(msg)
+            if not isinstance(entry, str):
+                msg = f"'plugins' entries must be strings, got {type(entry).__name__}."
+                raise ValueError(msg)
+            if not entry.isidentifier():
+                msg = f"Invalid plugin name '{entry}'. Must be a valid Python identifier."
+                raise ValueError(msg)
+        return value
 
     def save_to_file(self, path: str | Path) -> None:
         """Save pipeline configuration to YAML file.
