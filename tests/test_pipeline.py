@@ -277,6 +277,18 @@ def test_pipeline_config_plugins_invalid_name():
         PipelineConfig.from_dict({"plugins": ["has spaces"], "nodes": [], "connections": []})
 
 
+def test_pipeline_config_plugins_rejects_non_list():
+    """A non-list 'plugins' value (e.g. a bare string) is rejected."""
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict({"plugins": "adaclip", "nodes": [], "connections": []})
+
+
+def test_pipeline_config_plugins_rejects_non_string_entry():
+    """A non-string, non-mapping entry (e.g. an int) is rejected."""
+    with pytest.raises(ValidationError):
+        PipelineConfig.from_dict({"plugins": [123], "nodes": [], "connections": []})
+
+
 def test_pipeline_config_plugins_round_trip():
     """plugins (bare names) survives a dict round-trip."""
     original = {
