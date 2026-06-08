@@ -78,6 +78,24 @@ def test_provides_is_node_list():
         )
 
 
+@pytest.mark.parametrize(
+    "bad_class_name",
+    ["NotDotted", "pkg.", ".Node", "pkg..Node", "pkg.1Node", "pkg. Node"],
+)
+def test_provides_rejects_malformed_class_path(bad_class_name):
+    """A class_name with empty or non-identifier segments is rejected.
+
+    Containing a '.' is not enough: every dot-separated segment must be a valid
+    Python identifier, so 'pkg.', '.Node', and 'pkg..Node' are all invalid.
+    """
+    with pytest.raises(ValueError, match="Invalid class path"):
+        GitPluginConfig(
+            repo="https://github.com/user/repo.git",
+            tag="v1.0.0",
+            provides=[{"class_name": bad_class_name}],
+        )
+
+
 def test_local_plugin_config():
     """Test LocalPluginConfig."""
     plugin = LocalPluginConfig(
