@@ -92,6 +92,16 @@ def test_connection_config_validation():
         ConnectionConfig(source="node.outputs.port", target="model.outputs.data")
 
 
+def test_connection_config_rejects_empty_segments():
+    """Empty node or port segments are rejected, not just the wrong-arity case."""
+    for bad_source in [".outputs.port", "node.outputs.", "..port"]:
+        with pytest.raises(ValidationError, match="Invalid source"):
+            ConnectionConfig(source=bad_source, target="model.inputs.data")
+    for bad_target in [".inputs.port", "node.inputs.", "..port"]:
+        with pytest.raises(ValidationError, match="Invalid target"):
+            ConnectionConfig(source="node.outputs.port", target=bad_target)
+
+
 def test_pipeline_config():
     """Test PipelineConfig with typed nodes and connections."""
     pipeline = PipelineConfig(

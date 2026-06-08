@@ -39,26 +39,6 @@ class _BasePluginConfig(BaseSchemaModel):
         ),
     )
 
-    @field_validator("provides")
-    @classmethod
-    def _validate_class_paths(cls, value: list[CatalogNodeEntry]) -> list[CatalogNodeEntry]:
-        """Ensure each provided node's class_name is a fully-qualified import path.
-
-        The path must split into at least two dot-separated segments, each a
-        valid Python identifier, so malformed forms like ``pkg.``, ``.Node``,
-        ``pkg..Node``, or ``pkg.1Node`` are rejected (not just the no-dot case).
-        """
-        for node in value:
-            parts = node.class_name.split(".")
-            if len(parts) < 2 or not all(part.isidentifier() for part in parts):
-                msg = (
-                    f"Invalid class path '{node.class_name}'. "
-                    "Must be a fully-qualified dotted path of Python identifiers "
-                    "(e.g., 'package.module.ClassName')."
-                )
-                raise ValueError(msg)
-        return value
-
 
 class GitPluginConfig(_BasePluginConfig):
     """Git repository plugin configuration.

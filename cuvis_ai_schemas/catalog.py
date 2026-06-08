@@ -72,6 +72,26 @@ class CatalogNodeEntry(BaseSchemaModel):
     output_specs: dict[str, CatalogPortSpec] = Field(default_factory=dict)
     doc_summary: str = ""
 
+    @field_validator("class_name")
+    @classmethod
+    def _validate_class_name(cls, value: str) -> str:
+        """Require a fully-qualified dotted path of Python identifiers.
+
+        ``class_name`` is the import target the server uses, so it must split
+        into at least two dot-separated segments, each a valid Python
+        identifier. Malformed forms such as ``pkg.``, ``.Node``, ``pkg..Node``,
+        or ``pkg.1Node`` are rejected (not just the no-dot case).
+        """
+        parts = value.split(".")
+        if len(parts) < 2 or not all(part.isidentifier() for part in parts):
+            msg = (
+                f"Invalid class path '{value}'. "
+                "Must be a fully-qualified dotted path of Python identifiers "
+                "(e.g., 'package.module.ClassName')."
+            )
+            raise ValueError(msg)
+        return value
+
 
 class CatalogPluginEntry(BaseSchemaModel):
     """A plugin's complete static node catalog (the manifest ``provides`` block)."""

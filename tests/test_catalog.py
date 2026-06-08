@@ -84,6 +84,23 @@ def test_full_path_is_rejected_as_extra_field():
         CatalogPluginEntry.model_validate(payload)
 
 
+@pytest.mark.parametrize(
+    "bad_class_name",
+    ["NotDotted", "pkg.", ".Node", "pkg..Node", "pkg.1Node", "pkg. Node"],
+)
+def test_class_name_rejects_malformed_path(bad_class_name):
+    """class_name must be a dotted path of Python identifiers (no empty segments).
+
+    The check lives on CatalogNodeEntry, so it also guards the server-side
+    catalog-load path (CatalogPluginEntry / from_manifest_entry), not only the
+    plugin-config `provides` list.
+    """
+    payload = _minimal_payload()
+    payload["nodes"][0]["class_name"] = bad_class_name
+    with pytest.raises(ValueError, match="Invalid class path"):
+        CatalogPluginEntry.model_validate(payload)
+
+
 def test_schema_version_defaults_when_absent():
     payload = _minimal_payload()
     del payload["schema_version"]

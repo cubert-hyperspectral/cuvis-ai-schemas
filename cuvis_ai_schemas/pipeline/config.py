@@ -100,7 +100,7 @@ class ConnectionConfig(BaseSchemaModel):
     @classmethod
     def _validate_source(cls, v: str) -> str:
         parts = v.split(".")
-        if len(parts) != 3 or parts[1] != "outputs":
+        if len(parts) != 3 or parts[1] != "outputs" or not parts[0] or not parts[2]:
             raise ValueError(f"Invalid source: '{v}'. Expected: 'node.outputs.port'")
         return v
 
@@ -108,7 +108,7 @@ class ConnectionConfig(BaseSchemaModel):
     @classmethod
     def _validate_target(cls, v: str) -> str:
         parts = v.split(".")
-        if len(parts) != 3 or parts[1] != "inputs":
+        if len(parts) != 3 or parts[1] != "inputs" or not parts[0] or not parts[2]:
             raise ValueError(f"Invalid target: '{v}'. Expected: 'node.inputs.port'")
         return v
 
