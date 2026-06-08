@@ -25,7 +25,7 @@ if _version_not_supported:
     )
 
 
-class CuvisAIServiceStub:
+class CuvisAIServiceStub(object):
     """============================================================================
     Service Definition
     ============================================================================
@@ -180,7 +180,7 @@ class CuvisAIServiceStub:
                 _registered_method=True)
 
 
-class CuvisAIServiceServicer:
+class CuvisAIServiceServicer(object):
     """============================================================================
     Service Definition
     ============================================================================
@@ -524,7 +524,7 @@ def add_CuvisAIServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class CuvisAIService:
+class CuvisAIService(object):
     """============================================================================
     Service Definition
     ============================================================================
@@ -1288,7 +1288,7 @@ class CuvisAIService:
             _registered_method=True)
 
 
-class RunRuntimeStub:
+class RunRuntimeStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -1379,7 +1379,7 @@ class RunRuntimeStub:
                 _registered_method=True)
 
 
-class RunRuntimeServicer:
+class RunRuntimeServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def InitializeSession(self, request, context):
@@ -1576,7 +1576,7 @@ def add_RunRuntimeServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class RunRuntime:
+class RunRuntime(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
