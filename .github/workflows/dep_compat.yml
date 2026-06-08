@@ -14,9 +14,11 @@ permissions:
   contents: read
 
 env:
-  # cuvis-ai-core ref to fetch the shared audit script from. Pin to a release
-  # tag once the audit ships in a tagged cuvis-ai-core release.
-  AUDIT_REF: main
+  # cuvis-ai-core ref to fetch the shared audit script from. The script does
+  # not yet exist on cuvis-ai-core's main (nor in a published tag); it lands
+  # with the matching cuvis-ai-core branch. Flip this back to `main` (or pin to
+  # a release tag) once that script is available on cuvis-ai-core's main.
+  AUDIT_REF: features/nima/plugin-refactoring
 
 jobs:
   dep-compat:
