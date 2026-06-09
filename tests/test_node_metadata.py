@@ -111,7 +111,7 @@ def test_is_plugin_only_flags_registered_plugin_classes():
     class BuiltinNode:
         pass
 
-    registry = SimpleNamespace(plugin_registry={"PluginNode": object()})
+    registry = SimpleNamespace(loaded_plugin_nodes={"PluginNode": object()})
 
     assert is_plugin(PluginNode(), registry)
     assert not is_plugin(BuiltinNode(), registry)
