@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1 - 2026-06-09
+
+- `extensions/ui/node_display.is_plugin` now reads the registry's `loaded_plugin_nodes` attribute (was `plugin_registry`), matching cuvis-ai-core's renamed node-class map. The plugin pill is still driven purely by class-name membership; only the attribute name changed. Pairs with cuvis-ai-core's matching rename (core floors `cuvis-ai-schemas[proto]>=0.5.1`).
+
 ## 0.5.0 - 2026-06-08
 
 - Added `PipelineConfig.plugins`: an optional `list[str]` of **bare plugin names**. The `_validate_plugins` validator rejects object / inline / tag-override entries and non-identifier names: a plugin is declared by name and resolves to a manifest yaml in the plugins directory.

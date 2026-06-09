@@ -117,10 +117,10 @@ def is_plugin(node: Any, registry: Any | None = None) -> bool:
     """Return True only when the node class comes from a plugin.
 
     If ``registry`` is supplied, returns ``True`` iff the class name is listed
-    in its ``plugin_registry``. Otherwise returns ``False``. Builtins and
+    in its ``loaded_plugin_nodes``. Otherwise returns ``False``. Builtins and
     shipped catalog repos are not flagged — the pill is reserved for genuinely
     external plugin classes.
     """
     if registry is None:
         return False
-    return node.__class__.__name__ in getattr(registry, "plugin_registry", {})
+    return node.__class__.__name__ in getattr(registry, "loaded_plugin_nodes", {})
