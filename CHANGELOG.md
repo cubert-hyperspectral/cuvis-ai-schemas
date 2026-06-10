@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.2 - 2026-06-10
+
+- The `dep_compat` workflow now fetches the shared cuvis-ai-core audit script from `main` instead of a feature branch (since merged). The script ships on cuvis-ai-core's `main` and in every release tag from v0.7.0 onward, so the audit gate runs against a live, maintained ref and the latest floor rules. CI-only change; no package or schema changes.
+
 ## 0.5.1 - 2026-06-09
 
 - `extensions/ui/node_display.is_plugin` now reads the registry's `loaded_plugin_nodes` attribute (was `plugin_registry`), matching cuvis-ai-core's renamed node-class map. The plugin pill is still driven purely by class-name membership; only the attribute name changed. Pairs with cuvis-ai-core's matching rename (core floors `cuvis-ai-schemas[proto]>=0.5.1`).
