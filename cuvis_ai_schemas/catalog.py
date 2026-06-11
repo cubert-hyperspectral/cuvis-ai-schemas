@@ -13,9 +13,9 @@ emits them into the manifest; the server-side loader in cuvis-ai-core's
 
 from __future__ import annotations
 
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
-from pydantic import ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, field_validator, model_validator
 
 from cuvis_ai_schemas.base import BaseSchemaModel
 
@@ -59,6 +59,24 @@ class CatalogNodeEntry(BaseSchemaModel):
         min_length=1,
         description="Fully-qualified class path, e.g. 'pkg.module.MyNode'.",
     )
+    kind: Literal["node", "data_module"] = Field(
+        default="node",
+        description="Which registry bucket this entry registers into.",
+    )
+    data_module_name: str = Field(
+        default="",
+        description=(
+            "The DataModule's unique runtime name (its DATA_MODULE_NAME); "
+            "empty for nodes. Globally unique across loaded plugins."
+        ),
+    )
+    extras: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Pip extras gating this module's heavy deps (e.g. ['cu3s']); "
+            "consumed by the orchestrator child-env composer. Empty for nodes."
+        ),
+    )
     category: str = Field(
         default="unspecified",
         description="NodeCategory enum value, e.g. 'transform', 'source', 'sink'.",
@@ -71,6 +89,21 @@ class CatalogNodeEntry(BaseSchemaModel):
     input_specs: dict[str, CatalogPortSpec] = Field(default_factory=dict)
     output_specs: dict[str, CatalogPortSpec] = Field(default_factory=dict)
     doc_summary: str = ""
+
+    @model_validator(mode="after")
+    def _check_kind_invariant(self) -> CatalogNodeEntry:
+        """Reconcile ``kind`` with ``data_module_name`` / ``extras``.
+
+        A ``node`` entry must carry neither a ``data_module_name`` nor ``extras``
+        (so a misclassified module cannot silently leak into the node palette);
+        a ``data_module`` entry must declare a non-empty ``data_module_name``.
+        """
+        if self.kind == "node":
+            if self.data_module_name or self.extras:
+                raise ValueError("kind='node' entries must not set 'data_module_name' or 'extras'.")
+        elif not self.data_module_name:
+            raise ValueError(f"kind={self.kind!r} requires a non-empty 'data_module_name'.")
+        return self
 
     @field_validator("class_name")
     @classmethod

@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+- **`DataConfig` is now module-agnostic.** Replaced the cu3s-specific top-level fields (`cu3s_file_path`, `annotation_json_path`, `train_ids`/`val_ids`/`test_ids`, `train_split`/`val_split`, `shuffle`, `processing_mode`) with `{data_module, splits, batch_size, num_workers, params}`. `data_module` selects a registered DataModule by its `DATA_MODULE_NAME`; module-specific arguments ride in `params`. Hard cut, no shim: in-repo configs and out-of-tree trainruns in the old shape must be re-exported. `DataConfig` still crosses the wire as JSON-in-bytes (`config_bytes`), so the proto message is unchanged and no regen is needed for it.
+- **Added `DataSplitConfig`** (`training/data.py`): a universal split schema with `train_ids`/`val_ids`/`test_ids`/`predict_ids`, each a list of sample *selectors* (`int` positional/measurement index or `str` key such as a TIFF filename stem). Empty `predict_ids` means predict over all samples. A module whose splits cannot be a flat list leaves `DataConfig.splits = None` and owns its split logic.
+- **`CatalogNodeEntry` gains `kind` / `data_module_name` / `extras`** with an invariant validator. `kind: Literal["node","data_module"] = "node"`; a `data_module` entry must declare a non-empty `data_module_name` (globally unique) and may list pip `extras` that gate its heavy deps; a `node` entry must set neither. Existing manifests omit all three and default to nodes. `extras` is consumed by the orchestrator child-env composer.
+- **Added `LoadPipelineRequest.data` (proto, additive).** Optional `DataConfig data = 3`, mirroring `TrainRequest.data`, so the orchestrator can resolve a data-module plugin's extras at compose time (it builds the child env at `LoadPipeline`, before `DataConfig` would otherwise arrive at `Train`). Regenerated the Python stubs with `buf generate`.
+
 ## 0.5.2 - 2026-06-10
 
 - The `dep_compat` workflow now fetches the shared cuvis-ai-core audit script from `main` instead of a feature branch (since merged). The script ships on cuvis-ai-core's `main` and in every release tag from v0.7.0 onward, so the audit gate runs against a live, maintained ref and the latest floor rules. CI-only change; no package or schema changes.

@@ -478,6 +478,7 @@ message SavePipelineResponse {
 message LoadPipelineRequest {
   string session_id = 1;
   PipelineConfig pipeline = 2;  // JSON-serialized pipeline config (from ResolveConfig)
+  DataConfig data = 3;          // Optional: data selection, so the composer can resolve the data-module plugin's extras at compose time
 }
 
 message LoadPipelineResponse {

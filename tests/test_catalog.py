@@ -6,6 +6,7 @@ import pytest
 
 from cuvis_ai_schemas.catalog import (
     SUPPORTED_SCHEMA_VERSIONS,
+    CatalogNodeEntry,
     CatalogPluginEntry,
     CatalogPortSpec,
 )
@@ -82,6 +83,64 @@ def test_full_path_is_rejected_as_extra_field():
     payload["nodes"][0]["full_path"] = "my_plugin.node.MyNode"
     with pytest.raises(ValueError, match="full_path"):
         CatalogPluginEntry.model_validate(payload)
+
+
+def test_node_entry_defaults_to_node_kind():
+    """An entry with no `kind` defaults to a node with empty data_module_name/extras."""
+    node = CatalogNodeEntry(class_name="my_plugin.node.MyNode")
+    assert node.kind == "node"
+    assert node.data_module_name == ""
+    assert node.extras == []
+
+
+def test_data_module_entry_is_valid():
+    """A data_module entry carries a unique name + extras and a real class FQCN."""
+    node = CatalogNodeEntry(
+        class_name="cuvis_ai_dataloader.data.datamodule_cu3s.Cu3sDataModule",
+        kind="data_module",
+        data_module_name="cu3s",
+        extras=["cu3s", "coco"],
+    )
+    assert node.kind == "data_module"
+    assert node.data_module_name == "cu3s"
+    assert node.extras == ["cu3s", "coco"]
+
+
+def test_data_module_entry_requires_a_name():
+    """kind='data_module' without data_module_name fails the invariant."""
+    with pytest.raises(ValueError, match="requires a non-empty 'data_module_name'"):
+        CatalogNodeEntry(
+            class_name="pkg.module.SomeModule",
+            kind="data_module",
+        )
+
+
+def test_node_kind_rejects_data_module_fields():
+    """A node entry must not carry data_module_name or extras."""
+    with pytest.raises(ValueError, match="must not set 'data_module_name' or 'extras'"):
+        CatalogNodeEntry(class_name="pkg.module.MyNode", data_module_name="cu3s")
+    with pytest.raises(ValueError, match="must not set 'data_module_name' or 'extras'"):
+        CatalogNodeEntry(class_name="pkg.module.MyNode", extras=["cu3s"])
+
+
+def test_data_module_entry_round_trips_through_manifest():
+    """data_module entries flow through CatalogPluginEntry.from_manifest_entry."""
+    config_dict = {
+        "provides": [
+            {"class_name": "my_plugin.node.MyNode", "category": "transform"},
+            {
+                "class_name": "cuvis_ai_dataloader.data.datamodule_cu3s.Cu3sDataModule",
+                "kind": "data_module",
+                "data_module_name": "cu3s",
+                "extras": ["cu3s", "coco"],
+            },
+        ],
+    }
+    entry = CatalogPluginEntry.from_manifest_entry("cuvis_ai_dataloader", config_dict)
+    assert entry is not None
+    dm = [n for n in entry.nodes if n.kind == "data_module"]
+    assert len(dm) == 1
+    assert dm[0].data_module_name == "cu3s"
 
 
 @pytest.mark.parametrize(

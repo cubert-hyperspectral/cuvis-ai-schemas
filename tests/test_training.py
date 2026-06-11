@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from cuvis_ai_schemas.training import (
     DataConfig,
+    DataSplitConfig,
     OptimizerConfig,
     SchedulerConfig,
     TrainerConfig,
@@ -123,17 +124,36 @@ def test_training_config_from_dict_config():
 
 
 def test_data_config():
-    """Test DataConfig."""
+    """Test DataConfig: module selection + splits + module-specific params."""
     data = DataConfig(
-        cu3s_file_path="/path/to/data.cu3s",
-        train_split=0.8,
-        val_split=0.1,
+        data_module="cu3s",
+        splits=DataSplitConfig(train_ids=[0, 2, 3], val_ids=[1], test_ids=[1]),
         batch_size=16,
-        processing_mode="Reflectance",
+        num_workers=2,
+        params={"cu3s_file_path": "/path/to/data.cu3s", "processing_mode": "Reflectance"},
     )
-    assert data.cu3s_file_path == "/path/to/data.cu3s"
-    assert data.train_split == 0.8
+    assert data.data_module == "cu3s"
+    assert data.splits is not None
+    assert data.splits.train_ids == [0, 2, 3]
     assert data.batch_size == 16
+    assert data.num_workers == 2
+    assert data.params["cu3s_file_path"] == "/path/to/data.cu3s"
+
+
+def test_data_config_defaults():
+    """DataConfig is constructible with defaults (no required module-specific fields)."""
+    data = DataConfig()
+    assert data.data_module == "cu3s"
+    assert data.splits is None
+    assert data.batch_size == 1
+    assert data.params == {}
+
+
+def test_data_split_config_accepts_str_selectors():
+    """Split selectors may be str keys (e.g. TIFF stems) as well as ints."""
+    splits = DataSplitConfig(train_ids=["scrap_01", "scrap_07"], predict_ids=[0, 1])
+    assert splits.train_ids == ["scrap_01", "scrap_07"]
+    assert splits.predict_ids == [0, 1]
 
 
 def test_create_callbacks_from_config_none():
@@ -178,10 +198,11 @@ def test_trainrun_save_and_load(tmp_path):
     """Test TrainRunConfig save_to_file and load_from_file round-trip."""
     config = TrainRunConfig(
         name="test_run",
-        data=DataConfig(cu3s_file_path="/data/test.cu3s"),
+        data=DataConfig(data_module="cu3s", params={"cu3s_file_path": "/data/test.cu3s"}),
     )
     path = tmp_path / "trainrun.yaml"
     config.save_to_file(path)
     loaded = TrainRunConfig.load_from_file(path)
     assert loaded.name == "test_run"
-    assert loaded.data.cu3s_file_path == "/data/test.cu3s"
+    assert loaded.data.data_module == "cu3s"
+    assert loaded.data.params["cu3s_file_path"] == "/data/test.cu3s"
