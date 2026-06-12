@@ -54,4 +54,30 @@ class DataConfig(BaseSchemaModel):
     params: dict[str, Any] = Field(default_factory=dict, description="Module-specific arguments")
 
 
-__all__ = ["DataConfig", "DataSplitConfig"]
+class SplitsResolveConfig(BaseSchemaModel):
+    """Request payload for the ``ResolveSplits`` RPC (workspace split resolution).
+
+    Carried as JSON in ``ResolveSplitsRequest.config_bytes``. ``data_module``
+    names the registered DataModule whose ``resolve_splits`` classmethod owns the
+    strategy semantics (e.g. ``cu3s_workspace``: anomaly-aware random/stratified
+    with train = normal frames only), so future task types plug in without a
+    proto change. ``seed=None`` defers to the workspace default seed.
+    """
+
+    workspace_path: str = Field(description="Workspace folder (holds workspace.json)")
+    data_module: str = Field(
+        default="cu3s_workspace", description="DataModule that resolves the splits"
+    )
+    strategy: str = Field(
+        default="random", pattern="^(random|stratified)$", description="Split strategy"
+    )
+    train_ratio: float = Field(default=0.70, gt=0.0, lt=1.0, description="Train share")
+    val_ratio: float = Field(default=0.15, ge=0.0, lt=1.0, description="Val share")
+    seed: int | None = Field(default=None, description="RNG seed; None -> workspace default")
+    selected_files: list[str] | None = Field(
+        default=None, description="Member subset to resolve; None -> all members"
+    )
+    write: bool = Field(default=True, description="Write splits.json into the workspace")
+
+
+__all__ = ["DataConfig", "DataSplitConfig", "SplitsResolveConfig"]

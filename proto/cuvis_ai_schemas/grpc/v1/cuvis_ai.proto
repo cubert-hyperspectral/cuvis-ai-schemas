@@ -376,6 +376,18 @@ message ResolveConfigResponse {
   bytes config_bytes = 1;  // Fully resolved JSON config
 }
 
+// Resolve train/val/test/predict splits for a workspace and write its
+// splits.json (config_bytes = JSON-serialized SplitsResolveConfig).
+message ResolveSplitsRequest {
+  string session_id = 1;
+  bytes config_bytes = 2;
+}
+
+message ResolveSplitsResponse {
+  bytes splits_bytes = 1;  // Resolved splits.json content (JSON)
+  string splits_path = 2;  // Server path written to ("" when write=false)
+}
+
 // ============================================================================
 // Schema Introspection and Validation
 // ============================================================================
@@ -714,6 +726,9 @@ service CuvisAIService {
   rpc Train(TrainRequest) returns (stream TrainResponse);
   rpc GetTrainStatus(GetTrainStatusRequest) returns (GetTrainStatusResponse);
   rpc GetTrainingCapabilities(GetTrainingCapabilitiesRequest) returns (GetTrainingCapabilitiesResponse);
+
+  // Workspace split resolution (anomaly-aware; writes splits.json)
+  rpc ResolveSplits(ResolveSplitsRequest) returns (ResolveSplitsResponse);
 
   // Pipeline Management (Model Deployment)
   rpc SavePipeline(SavePipelineRequest) returns (SavePipelineResponse);

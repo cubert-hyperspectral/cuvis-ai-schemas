@@ -542,6 +542,22 @@ class ResolveConfigResponse(_message.Message):
     config_bytes: bytes
     def __init__(self, config_bytes: _Optional[bytes] = ...) -> None: ...
 
+class ResolveSplitsRequest(_message.Message):
+    __slots__ = ("session_id", "config_bytes")
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
+    CONFIG_BYTES_FIELD_NUMBER: _ClassVar[int]
+    session_id: str
+    config_bytes: bytes
+    def __init__(self, session_id: _Optional[str] = ..., config_bytes: _Optional[bytes] = ...) -> None: ...
+
+class ResolveSplitsResponse(_message.Message):
+    __slots__ = ("splits_bytes", "splits_path")
+    SPLITS_BYTES_FIELD_NUMBER: _ClassVar[int]
+    SPLITS_PATH_FIELD_NUMBER: _ClassVar[int]
+    splits_bytes: bytes
+    splits_path: str
+    def __init__(self, splits_bytes: _Optional[bytes] = ..., splits_path: _Optional[str] = ...) -> None: ...
+
 class GetParameterSchemaRequest(_message.Message):
     __slots__ = ("config_type",)
     CONFIG_TYPE_FIELD_NUMBER: _ClassVar[int]
