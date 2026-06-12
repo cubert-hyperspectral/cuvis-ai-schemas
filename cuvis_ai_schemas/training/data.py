@@ -13,7 +13,9 @@ class DataSplitConfig(BaseSchemaModel):
     """Universal split assignment, validated for every DataModule.
 
     Each entry is a sample *selector*: an ``int`` (positional / measurement
-    index, e.g. cu3s) or a ``str`` key (e.g. a TIFF filename stem). The
+    index, e.g. cu3s), a ``str`` key (e.g. a TIFF filename stem), or an inclusive
+    range string ``"start-stop[:step]"`` (e.g. ``"0-100"`` or ``"0-10:2"``) that
+    the base expands to integer selectors before ``build_dataset(ids)``. The
     DataModule resolves selectors to samples in ``build_dataset(ids)``. A module
     whose split assignment cannot be expressed as a flat selector list (e.g. a
     CSV-encoded multi-file split) leaves ``DataConfig.splits`` as ``None`` and
