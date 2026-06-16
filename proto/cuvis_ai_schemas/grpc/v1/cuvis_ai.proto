@@ -478,7 +478,7 @@ message SavePipelineResponse {
 message LoadPipelineRequest {
   string session_id = 1;
   PipelineConfig pipeline = 2;  // JSON-serialized pipeline config (from ResolveConfig)
-  DataConfig data = 3;          // Optional: data selection, so the composer can resolve the data-module plugin's extras at compose time
+  string data_module = 3;       // Optional: data-module name (e.g. "cu3s"). The composer resolves its providing plugin from the manifests and unions it into the frozen child env. Not part of the pipeline; only a pipeline run needs a data module.
 }
 
 message LoadPipelineResponse {

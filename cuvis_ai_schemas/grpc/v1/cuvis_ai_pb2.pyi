@@ -671,14 +671,14 @@ class SavePipelineResponse(_message.Message):
     def __init__(self, success: bool = ..., pipeline_path: _Optional[str] = ..., weights_path: _Optional[str] = ...) -> None: ...
 
 class LoadPipelineRequest(_message.Message):
-    __slots__ = ("session_id", "pipeline", "data")
+    __slots__ = ("session_id", "pipeline", "data_module")
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     PIPELINE_FIELD_NUMBER: _ClassVar[int]
-    DATA_FIELD_NUMBER: _ClassVar[int]
+    DATA_MODULE_FIELD_NUMBER: _ClassVar[int]
     session_id: str
     pipeline: PipelineConfig
-    data: DataConfig
-    def __init__(self, session_id: _Optional[str] = ..., pipeline: _Optional[_Union[PipelineConfig, _Mapping]] = ..., data: _Optional[_Union[DataConfig, _Mapping]] = ...) -> None: ...
+    data_module: str
+    def __init__(self, session_id: _Optional[str] = ..., pipeline: _Optional[_Union[PipelineConfig, _Mapping]] = ..., data_module: _Optional[str] = ...) -> None: ...
 
 class LoadPipelineResponse(_message.Message):
     __slots__ = ("success", "metadata")

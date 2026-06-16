@@ -15,7 +15,7 @@
   `train_ids/val_ids/test_ids/predict_ids` id-list (hard cut; in-repo configs migrated). `DataConfig`
   keeps its name and JSON-in-bytes proto.
 - **`CatalogNodeEntry` gains `kind` / `data_module_name` / `extras`** with an invariant validator. `kind: Literal["node","data_module"] = "node"`; a `data_module` entry must declare a non-empty `data_module_name` (globally unique) and may list pip `extras` that gate its heavy deps; a `node` entry must set neither. Existing manifests omit all three and default to nodes. `extras` is consumed by the orchestrator child-env composer.
-- **Added `LoadPipelineRequest.data` (proto, additive).** Optional `DataConfig data = 3`, mirroring `TrainRequest.data`, so the orchestrator can resolve a data-module plugin's extras at compose time (it builds the child env at `LoadPipeline`, before `DataConfig` would otherwise arrive at `Train`). Regenerated the Python stubs with `buf generate`.
+- **Added `LoadPipelineRequest.data_module` (proto, additive).** Optional `string data_module = 3`: the data-module name (e.g. `cu3s`) so the orchestrator can resolve that module's providing plugin and pip extras when it composes the child env at `LoadPipeline` (before the data module is otherwise needed at `Train`). It carries only the name, not a full `DataConfig`: the data module is not part of the pipeline (only a pipeline *run* needs one), and the server maps the name to its plugin from the manifests, so the client needs no manifest knowledge. Regenerated the Python stubs with `buf generate`.
 
 ## 0.5.2 - 2026-06-10
 
