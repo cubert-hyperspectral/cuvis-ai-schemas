@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **`TrainRunConfig.pipeline` is now a reference, not an inline config.** Changed the field from `PipelineConfig | None` to `str | None`: a path to the pipeline YAML this run trains, resolved relative to the trainrun file's directory (a bare name or short path also resolves against the pipeline search path). A `_reject_inline_pipeline` validator rejects an inline mapping (the legacy embedded `PipelineConfig` shape, or a Hydra `@pipeline` group composition) with a fix-it hint. Pipelines are authored once and referenced, never inlined. `TrainRunConfig` still crosses the wire as JSON-in-bytes (`config_bytes`), so the proto message is unchanged and no regen is needed.
 - **`DataConfig` is now module-agnostic.** Replaced the cu3s-specific top-level fields (`cu3s_file_path`, `annotation_json_path`, `train_ids`/`val_ids`/`test_ids`, `train_split`/`val_split`, `shuffle`, `processing_mode`) with `{data_module, splits, batch_size, num_workers, params}`. `data_module` selects a registered DataModule by its `DATA_MODULE_NAME`; module-specific arguments ride in `params`. Hard cut, no shim: in-repo configs and out-of-tree trainruns in the old shape must be re-exported. `DataConfig` still crosses the wire as JSON-in-bytes (`config_bytes`), so the proto message is unchanged and no regen is needed for it.
 - **Composable selector splits + an attributed sample universe.** `DataSplitConfig` is now
   `{splits_path, leakage_check, universe_hash, train/val/test/predict: list[Selector]}`. Added

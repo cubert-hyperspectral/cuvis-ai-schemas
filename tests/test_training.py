@@ -279,3 +279,24 @@ def test_trainrun_save_and_load(tmp_path):
     assert loaded.name == "test_run"
     assert loaded.data.data_module == "cu3s"
     assert loaded.data.params["cu3s_file_path"] == "/data/test.cu3s"
+
+
+def test_trainrun_pipeline_is_a_reference():
+    """``pipeline`` is a path-string reference to a pipeline YAML, round-tripped verbatim."""
+    config = TrainRunConfig(
+        name="ref_run",
+        pipeline="../pipeline/anomaly/adaclip/adaclip_baseline.yaml",
+        data=DataConfig(data_module="cu3s"),
+    )
+    assert config.pipeline == "../pipeline/anomaly/adaclip/adaclip_baseline.yaml"
+    assert TrainRunConfig.from_dict(config.to_dict()).pipeline == config.pipeline
+
+
+def test_trainrun_rejects_inline_pipeline():
+    """An inline pipeline mapping is rejected with a fix-it hint pointing at the reference."""
+    with pytest.raises(ValueError, match="no longer supported"):
+        TrainRunConfig(
+            name="inline_run",
+            pipeline={"nodes": [], "connections": []},
+            data=DataConfig(data_module="cu3s"),
+        )

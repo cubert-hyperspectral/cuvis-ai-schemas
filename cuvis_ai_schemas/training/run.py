@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import ClassVar
 
 import yaml
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from cuvis_ai_schemas.base import BaseSchemaModel
-from cuvis_ai_schemas.pipeline.config import PipelineConfig
 from cuvis_ai_schemas.training.config import TrainingConfig
 from cuvis_ai_schemas.training.data import DataConfig
 
@@ -20,8 +20,14 @@ class TrainRunConfig(BaseSchemaModel):
     __proto_message__: ClassVar[str] = "TrainRunConfig"
 
     name: str = Field(description="Train run identifier")
-    pipeline: PipelineConfig | None = Field(
-        default=None, description="Pipeline configuration (optional if already built)"
+    pipeline: str | None = Field(
+        default=None,
+        description=(
+            "Reference to the pipeline YAML this run trains. A path resolved "
+            "relative to the trainrun file's directory (a bare name or short "
+            "path also resolves against the pipeline search path). The pipeline "
+            "is authored once and referenced here, never inlined."
+        ),
     )
     data: DataConfig = Field(description="Data configuration")
 
@@ -60,6 +66,31 @@ class TrainRunConfig(BaseSchemaModel):
         with Path(path).open("r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
         return cls.from_dict(data)
+
+    @field_validator("pipeline", mode="before")
+    @classmethod
+    def _reject_inline_pipeline(cls, value: object) -> object:
+        """Reject an inline pipeline mapping; ``pipeline`` is a reference, not a config.
+
+        A trainrun references its pipeline by path; the pipeline's ``nodes`` /
+        ``connections`` are authored in a separate pipeline YAML. An inline
+        mapping (the legacy embedded ``PipelineConfig`` shape, or a Hydra
+        ``@pipeline`` group composition) is rejected with a fix-it hint.
+        """
+        if value is None or isinstance(value, str):
+            return value
+        if isinstance(value, Mapping):
+            msg = (
+                "Inline pipelines are no longer supported in a trainrun. Save the "
+                "pipeline to its own YAML and set 'pipeline:' to its path "
+                "(resolved relative to the trainrun file). Got an inline mapping "
+                f"with keys {sorted(value)!r}."
+            )
+            raise ValueError(msg)
+        raise ValueError(
+            "'pipeline' must be a path string referencing a pipeline YAML, "
+            f"got {type(value).__name__}."
+        )
 
     @model_validator(mode="after")
     def _validate_training_config(self) -> TrainRunConfig:
