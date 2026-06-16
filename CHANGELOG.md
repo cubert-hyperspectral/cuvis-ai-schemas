@@ -3,7 +3,16 @@
 ## [Unreleased]
 
 - **`DataConfig` is now module-agnostic.** Replaced the cu3s-specific top-level fields (`cu3s_file_path`, `annotation_json_path`, `train_ids`/`val_ids`/`test_ids`, `train_split`/`val_split`, `shuffle`, `processing_mode`) with `{data_module, splits, batch_size, num_workers, params}`. `data_module` selects a registered DataModule by its `DATA_MODULE_NAME`; module-specific arguments ride in `params`. Hard cut, no shim: in-repo configs and out-of-tree trainruns in the old shape must be re-exported. `DataConfig` still crosses the wire as JSON-in-bytes (`config_bytes`), so the proto message is unchanged and no regen is needed for it.
-- **Added `DataSplitConfig`** (`training/data.py`): a universal split schema with `train_ids`/`val_ids`/`test_ids`/`predict_ids`, each a list of sample *selectors* (`int` positional/measurement index or `str` key such as a TIFF filename stem). Empty `predict_ids` means predict over all samples. A module whose splits cannot be a flat list leaves `DataConfig.splits = None` and owns its split logic.
+- **Composable selector splits + an attributed sample universe.** `DataSplitConfig` is now
+  `{splits_path, leakage_check, universe_hash, train/val/test/predict: list[Selector]}`. Added
+  `SampleRef` (the attributed universe element, with a content-derived `uid` identity), `SelectorKind`
+  (StrEnum: `files/file_indices/dir_indices/stems/glob/tag/categories/all/union/except/intersect`),
+  and `Selector` with a structure-only validator (`file_indices` requires `source`; category/tag
+  *names* are validated at setup, not parse). Each stage is a list of selectors, unioned in order;
+  empty `predict` means all samples. `leakage_check` (`error` default / `warn` / `off`) controls the
+  setup-time train/val/test disjointness guard. Replaces the flat
+  `train_ids/val_ids/test_ids/predict_ids` id-list (hard cut; in-repo configs migrated). `DataConfig`
+  keeps its name and JSON-in-bytes proto.
 - **`CatalogNodeEntry` gains `kind` / `data_module_name` / `extras`** with an invariant validator. `kind: Literal["node","data_module"] = "node"`; a `data_module` entry must declare a non-empty `data_module_name` (globally unique) and may list pip `extras` that gate its heavy deps; a `node` entry must set neither. Existing manifests omit all three and default to nodes. `extras` is consumed by the orchestrator child-env composer.
 - **Added `LoadPipelineRequest.data` (proto, additive).** Optional `DataConfig data = 3`, mirroring `TrainRequest.data`, so the orchestrator can resolve a data-module plugin's extras at compose time (it builds the child env at `LoadPipeline`, before `DataConfig` would otherwise arrive at `Train`). Regenerated the Python stubs with `buf generate`.
 

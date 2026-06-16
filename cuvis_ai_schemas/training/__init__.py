@@ -9,7 +9,13 @@ from cuvis_ai_schemas.training.callbacks import (
     create_callbacks_from_config,
 )
 from cuvis_ai_schemas.training.config import TrainingConfig
-from cuvis_ai_schemas.training.data import DataConfig, DataSplitConfig
+from cuvis_ai_schemas.training.data import (
+    DataConfig,
+    DataSplitConfig,
+    SampleRef,
+    Selector,
+    SelectorKind,
+)
 from cuvis_ai_schemas.training.optimizer import OptimizerConfig
 from cuvis_ai_schemas.training.run import TrainRunConfig
 from cuvis_ai_schemas.training.scheduler import SchedulerConfig
@@ -27,6 +33,9 @@ __all__ = [
     # Data
     "DataConfig",
     "DataSplitConfig",
+    "SampleRef",
+    "Selector",
+    "SelectorKind",
     # Optimizer
     "OptimizerConfig",
     # Scheduler

@@ -9,7 +9,10 @@ from cuvis_ai_schemas.training import (
     DataConfig,
     DataSplitConfig,
     OptimizerConfig,
+    SampleRef,
     SchedulerConfig,
+    Selector,
+    SelectorKind,
     TrainerConfig,
     TrainingConfig,
     create_callbacks_from_config,
@@ -124,17 +127,23 @@ def test_training_config_from_dict_config():
 
 
 def test_data_config():
-    """Test DataConfig: module selection + splits + module-specific params."""
+    """Test DataConfig: module selection + selector splits + module-specific params."""
     data = DataConfig(
         data_module="cu3s",
-        splits=DataSplitConfig(train_ids=[0, 2, 3], val_ids=[1], test_ids=[1]),
+        splits=DataSplitConfig(
+            train=[Selector(kind=SelectorKind.FILE_INDICES, source="a.cu3s", ids=[0, 2, 3])],
+            val=[Selector(kind=SelectorKind.FILE_INDICES, source="a.cu3s", ids=[1])],
+            test=[Selector(kind=SelectorKind.CATEGORIES, any_of=["scrap"])],
+        ),
         batch_size=16,
         num_workers=2,
         params={"cu3s_file_path": "/path/to/data.cu3s", "processing_mode": "Reflectance"},
     )
     assert data.data_module == "cu3s"
     assert data.splits is not None
-    assert data.splits.train_ids == [0, 2, 3]
+    assert data.splits.train[0].source == "a.cu3s"
+    assert data.splits.train[0].ids == [0, 2, 3]
+    assert data.splits.leakage_check == "error"
     assert data.batch_size == 16
     assert data.num_workers == 2
     assert data.params["cu3s_file_path"] == "/path/to/data.cu3s"
@@ -149,11 +158,75 @@ def test_data_config_defaults():
     assert data.params == {}
 
 
-def test_data_split_config_accepts_str_selectors():
-    """Split selectors may be str keys (e.g. TIFF stems) as well as ints."""
-    splits = DataSplitConfig(train_ids=["scrap_01", "scrap_07"], predict_ids=[0, 1])
-    assert splits.train_ids == ["scrap_01", "scrap_07"]
-    assert splits.predict_ids == [0, 1]
+def test_sample_ref_uid_content_derived():
+    """SampleRef derives a stable content uid + group + stem when not supplied."""
+    r = SampleRef(source="/data/a.cu3s", index=3)
+    assert r.uid == "/data/a.cu3s#3"
+    assert r.group == "/data/a.cu3s"
+    assert r.stem == "a"
+    # a distinct COCO id appends to the uid
+    r2 = SampleRef(source="/data/a.cu3s", index=3, label_id=5)
+    assert r2.uid == "/data/a.cu3s#3#5"
+    # whole-file sample (no measurement index)
+    r3 = SampleRef(source="/data/a.cu3s")
+    assert r3.uid == "/data/a.cu3s"
+    # an explicit uid is respected
+    r4 = SampleRef(source="/data/a.cu3s", index=0, uid="row-7")
+    assert r4.uid == "row-7"
+
+
+def test_selector_file_indices_requires_source():
+    """file_indices must carry an explicit source and non-empty ids."""
+    Selector(kind=SelectorKind.FILE_INDICES, source="a.cu3s", ids=[0, "1-3"])
+    with pytest.raises(ValidationError):
+        Selector(kind=SelectorKind.FILE_INDICES, ids=[0, 1])  # no source
+    with pytest.raises(ValidationError):
+        Selector(kind=SelectorKind.FILE_INDICES, source="a.cu3s")  # no ids
+
+
+def test_selector_dir_indices_forbids_source():
+    """dir_indices addresses the file list; it must not set source."""
+    Selector(kind=SelectorKind.DIR_INDICES, ids=[0, 2])
+    with pytest.raises(ValidationError):
+        Selector(kind=SelectorKind.DIR_INDICES, source="a.cu3s", ids=[0])
+
+
+def test_selector_rejects_wrong_field_for_kind():
+    """A selector may only set the fields valid for its kind (structure-only)."""
+    with pytest.raises(ValidationError):
+        Selector(kind=SelectorKind.STEMS, stems=["x"], pattern="y*")  # pattern not for stems
+    with pytest.raises(ValidationError):
+        Selector(kind=SelectorKind.ALL, paths=["a"])  # all takes nothing
+
+
+def test_selector_kinds_construct():
+    """The simple kinds construct with their own field."""
+    Selector(kind=SelectorKind.FILES, paths=["a.cu3s", "b.cu3s"])
+    Selector(kind=SelectorKind.STEMS, stems=["scrap_01"])
+    Selector(kind=SelectorKind.GLOB, pattern="scrap_*")
+    Selector(kind=SelectorKind.TAG, any_of=["normal"])
+    Selector(kind=SelectorKind.ALL)
+
+
+def test_selector_set_ops():
+    """union/except/intersect compose nested selectors; except/intersect need >= 2."""
+    inner = [
+        Selector(kind=SelectorKind.TAG, any_of=["normal"]),
+        Selector(kind=SelectorKind.FILES, paths=["a.cu3s"]),
+    ]
+    Selector(kind=SelectorKind.UNION, of=inner)
+    Selector(kind=SelectorKind.EXCEPT, of=inner)
+    with pytest.raises(ValidationError):
+        Selector(kind=SelectorKind.INTERSECT, of=inner[:1])  # needs >= 2
+
+
+def test_data_split_config_defaults_and_old_shape_rejected():
+    """Defaults: leakage_check=error, empty predict; the old flat shape is rejected."""
+    s = DataSplitConfig()
+    assert s.leakage_check == "error"
+    assert s.predict == []
+    with pytest.raises(ValidationError):
+        DataSplitConfig(train_ids=[0, 1])  # extra=forbid: the flat field is gone
 
 
 def test_create_callbacks_from_config_none():
