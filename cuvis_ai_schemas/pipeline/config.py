@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import yaml
@@ -14,6 +15,14 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
+
+
+@lru_cache(maxsize=1)
+def _schemas_version() -> str:
+    """Installed cuvis-ai-schemas version, stamped into freshly created metadata."""
+    from cuvis_ai_schemas import __version__
+
+    return __version__
 
 
 class PipelineMetadata(BaseSchemaModel):
@@ -32,7 +41,9 @@ class PipelineMetadata(BaseSchemaModel):
     author : str
         Author name or email
     cuvis_ai_version : str
-        Version of cuvis-ai-schemas used
+        cuvis-ai-schemas version that created the pipeline (auto-stamped from the
+        installed package; an explicitly recorded value, e.g. from an older
+        snapshot, is preserved on load)
     """
 
     name: str
@@ -40,7 +51,7 @@ class PipelineMetadata(BaseSchemaModel):
     created: str = ""
     tags: list[str] = Field(default_factory=list)
     author: str = ""
-    cuvis_ai_version: str = "0.1.0"
+    cuvis_ai_version: str = Field(default_factory=_schemas_version)
 
     def to_proto(self) -> cuvis_ai_pb2.PipelineMetadata:
         """Convert to proto message.
