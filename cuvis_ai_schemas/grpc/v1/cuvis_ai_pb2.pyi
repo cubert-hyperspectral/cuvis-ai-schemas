@@ -825,18 +825,18 @@ class PluginManifest(_message.Message):
     def __init__(self, config_bytes: _Optional[bytes] = ...) -> None: ...
 
 class PluginInfo(_message.Message):
-    __slots__ = ("name", "type", "source", "tag", "provides")
+    __slots__ = ("name", "type", "source", "tag", "capabilities")
     NAME_FIELD_NUMBER: _ClassVar[int]
     TYPE_FIELD_NUMBER: _ClassVar[int]
     SOURCE_FIELD_NUMBER: _ClassVar[int]
     TAG_FIELD_NUMBER: _ClassVar[int]
-    PROVIDES_FIELD_NUMBER: _ClassVar[int]
+    CAPABILITIES_FIELD_NUMBER: _ClassVar[int]
     name: str
     type: str
     source: str
     tag: str
-    provides: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, name: _Optional[str] = ..., type: _Optional[str] = ..., source: _Optional[str] = ..., tag: _Optional[str] = ..., provides: _Optional[_Iterable[str]] = ...) -> None: ...
+    capabilities: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, name: _Optional[str] = ..., type: _Optional[str] = ..., source: _Optional[str] = ..., tag: _Optional[str] = ..., capabilities: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class PortSpec(_message.Message):
     __slots__ = ("name", "dtype", "shape", "optional", "description", "variadic")

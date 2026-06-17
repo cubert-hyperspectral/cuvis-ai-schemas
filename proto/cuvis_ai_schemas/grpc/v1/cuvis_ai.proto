@@ -566,7 +566,8 @@ message InferenceResponse {
 // ============================================================================
 
 // Configuration message using JSON transport.
-// The config_bytes field contains JSON-serialized PluginManifest (Pydantic schema)
+// config_bytes is a JSON list of single-plugin manifests (each a Pydantic
+// PluginManifest schema: name + source + capabilities). One file = one plugin.
 message PluginManifest {
   bytes config_bytes = 1;
 }
@@ -577,7 +578,7 @@ message PluginInfo {
   string type = 2;  // "git" or "local"
   string source = 3;  // repo URL or filesystem path
   string tag = 4;  // Git tag (if applicable)
-  repeated string provides = 5;  // Class paths provided
+  repeated string capabilities = 5;  // Class paths the plugin provides
 }
 
 // Port specification for node inputs/outputs
@@ -774,8 +775,8 @@ message InitializeSessionRequest {
   // the child once at init; later SetSessionSearchPaths calls against the
   // public surface are rejected (composed env is keyed to this set).
   repeated string search_paths = 2;
-  // Resolved plugin dict (dict[name, GitPluginConfig | LocalPluginConfig])
-  // serialised as JSON. The child imports each plugin's `provides` class
+  // Resolved plugin list (list of GitPluginManifest | LocalPluginManifest)
+  // serialised as JSON. The child imports each plugin's `capabilities` class
   // paths directly from the installed packages in its venv.
   bytes resolved_plugins_json = 3;
   // Declared FS paths the child is allowed to read / write. A future
