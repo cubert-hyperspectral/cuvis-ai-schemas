@@ -38,3 +38,26 @@ def test_format_tooltip_includes_optional():
     """An optional port spec surfaces the [Optional] tag in the tooltip."""
     display = PortDisplaySpec(PortSpec(dtype="torch.Tensor", shape=(-1,), optional=True))
     assert "[Optional]" in display.format_tooltip()
+
+
+def test_color_via_typename():
+    """A type dtype whose __name__ is a known key resolves by typename."""
+    display = PortDisplaySpec(PortSpec(dtype=float, shape=(-1,)))
+    assert display.color == DTYPE_COLORS["float"]
+
+
+def test_color_via_tensor_substring():
+    """An unmapped dtype string containing 'Tensor' falls back to the tensor color."""
+    display = PortDisplaySpec(PortSpec(dtype="MyTensorThing", shape=(-1,)))
+    assert display.color == DTYPE_COLORS["torch.Tensor"]
+
+
+def test_display_name_uses_typename():
+    """display_name uses a type dtype's __name__."""
+    assert PortDisplaySpec(PortSpec(dtype=float, shape=(-1,))).display_name == "float"
+
+
+def test_format_tooltip_includes_description():
+    """A description is appended to the tooltip."""
+    display = PortDisplaySpec(PortSpec(dtype="torch.Tensor", shape=(-1,), description="a cube"))
+    assert "a cube" in display.format_tooltip()

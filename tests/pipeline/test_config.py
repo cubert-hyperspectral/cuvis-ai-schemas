@@ -38,6 +38,19 @@ def test_pipeline_metadata():
     assert loaded.name == metadata.name
 
 
+def test_pipeline_metadata_auto_stamps_installed_version():
+    """cuvis_ai_version defaults to the installed schemas version, not a static literal."""
+    from cuvis_ai_schemas import __version__
+
+    fresh = PipelineMetadata(name="versioned")
+    assert fresh.cuvis_ai_version == __version__
+    assert fresh.cuvis_ai_version != "0.1.0"  # the old hardcoded default is gone
+
+    # A version recorded by an older snapshot is preserved, not overwritten on load.
+    loaded = PipelineMetadata.from_dict({"name": "old", "cuvis_ai_version": "0.1.3"})
+    assert loaded.cuvis_ai_version == "0.1.3"
+
+
 def test_node_config():
     """Test NodeConfig with direct field names (no aliases)."""
     node = NodeConfig(name="normalizer", class_name="module.Normalizer", hparams={"min": 0})

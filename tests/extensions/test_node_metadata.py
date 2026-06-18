@@ -128,7 +128,7 @@ def test_grpc_init_handles_missing_proto_helpers(monkeypatch):
         return original_import(name, globals_, locals_, fromlist, level)
 
     monkeypatch.setattr(builtins, "__import__", import_without_conversions)
-    grpc_init = Path(__file__).parents[1] / "cuvis_ai_schemas" / "grpc" / "__init__.py"
+    grpc_init = Path(str(files("cuvis_ai_schemas"))) / "grpc" / "__init__.py"
 
     namespace = runpy.run_path(str(grpc_init))
 

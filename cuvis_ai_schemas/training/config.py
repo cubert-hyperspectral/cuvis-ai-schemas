@@ -43,31 +43,28 @@ class TrainingConfig(BaseSchemaModel):
 
     @model_validator(mode="after")
     def _sync_trainer_fields(self) -> TrainingConfig:
-        """Keep top-level hyperparameters in sync with trainer config."""
+        """Keep overlapping top-level hyperparameters in sync with the trainer.
+
+        One uniform rule per overlapping field: an explicitly-set top-level
+        value (including ``None``) is authoritative and pushed down to the
+        trainer; otherwise a non-``None`` trainer value is pulled up. This
+        treats all three fields identically (the previous code special-cased
+        ``gradient_clip_val`` so an explicit top-level ``None`` did not clear a
+        stale trainer value).
+        """
         fields_set: set[str] = getattr(self, "model_fields_set", set())
 
-        # max_epochs: prefer explicit trainer value when top-level not provided
-        if "max_epochs" not in fields_set and self.trainer.max_epochs is not None:
-            self.max_epochs = self.trainer.max_epochs
-        else:
-            self.trainer.max_epochs = self.max_epochs
+        def _sync(top_name: str, trainer_name: str) -> None:
+            """Sync one overlapping field; explicit top-level value wins."""
+            if top_name not in fields_set and getattr(self.trainer, trainer_name) is not None:
+                setattr(self, top_name, getattr(self.trainer, trainer_name))
+            else:
+                setattr(self.trainer, trainer_name, getattr(self, top_name))
 
-        # gradient_clip_val
-        if "gradient_clip_val" not in fields_set and self.trainer.gradient_clip_val is not None:
-            self.gradient_clip_val = self.trainer.gradient_clip_val
-        elif self.gradient_clip_val is not None:
-            self.trainer.gradient_clip_val = self.gradient_clip_val
+        _sync("max_epochs", "max_epochs")
+        _sync("gradient_clip_val", "gradient_clip_val")
+        _sync("accumulate_grad_batches", "accumulate_grad_batches")
 
-        # accumulate_grad_batches
-        if (
-            "accumulate_grad_batches" not in fields_set
-            and self.trainer.accumulate_grad_batches is not None
-        ):
-            self.accumulate_grad_batches = self.trainer.accumulate_grad_batches
-        else:
-            self.trainer.accumulate_grad_batches = self.accumulate_grad_batches
-
-        # callbacks
         if self.callbacks is not None:
             self.trainer.callbacks = self.callbacks
         return self

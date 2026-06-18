@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from pydantic import ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field
 
 from cuvis_ai_schemas.base import BaseSchemaModel
 
@@ -52,24 +52,6 @@ class OptimizerConfig(BaseSchemaModel):
             ]
         },
     )
-
-    @field_validator("betas")
-    @classmethod
-    def _validate_betas(cls, value: tuple[float, float] | None) -> tuple[float, float] | None:
-        """Validate that betas is a tuple of exactly 2 floats."""
-        if value is None:
-            return value
-        if len(value) != 2:
-            raise ValueError("betas must be a tuple of length 2")
-        return value
-
-    @field_validator("lr")
-    @classmethod
-    def _validate_lr(cls, value: float) -> float:
-        """Validate that learning rate is non-zero."""
-        if value == 0:
-            raise ValueError("Learning rate must be non-zero")
-        return value
 
 
 __all__ = ["OptimizerConfig"]

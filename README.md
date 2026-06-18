@@ -15,7 +15,7 @@ Lightweight schema definitions for the cuvis-ai ecosystem.
 Key points:
 - Minimal deps (pydantic + pyyaml)
 - Full Pydantic validation
-- Optional extras for proto, torch, numpy, lightning
+- Optional extras for proto, torch, numpy, lightning, testing
 
 ## Installation
 
@@ -30,6 +30,7 @@ Extras:
 - `torch`: PyTorch dtype handling (validation only)
 - `numpy`: NumPy array support
 - `lightning`: PyTorch Lightning training configs
+- `testing`: Hypothesis strategies + round-trip assertions (`cuvis_ai_schemas.testing`)
 - `full`: All features
 - `dev`: Development dependencies
 
@@ -39,7 +40,7 @@ Extras:
 from cuvis_ai_schemas.pipeline import PipelineConfig, NodeConfig
 
 pipeline = PipelineConfig(
-    nodes=[NodeConfig(id="node_1", class_name="DataLoader", params={"batch_size": 32})],
+    nodes=[NodeConfig(name="node_1", class_name="my_pkg.DataLoader", hparams={"batch_size": 32})],
     connections=[],
 )
 
@@ -50,7 +51,7 @@ pipeline = PipelineConfig.from_json(pipeline_json)
 ## Development
 
 ```bash
-uv sync --extra dev
+uv sync --all-extras --dev
 uv run pytest tests/ -v
 uv run ruff check cuvis_ai_schemas/ tests/
 uv run ruff format cuvis_ai_schemas/ tests/

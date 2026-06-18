@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import yaml
@@ -14,6 +15,44 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
+
+
+@lru_cache(maxsize=1)
+def _schemas_version() -> str:
+    """Installed cuvis-ai-schemas version, stamped into freshly created metadata."""
+    from cuvis_ai_schemas import __version__
+
+    return __version__
+
+
+def _validate_endpoint(value: str, role: str, expected_middle: str) -> str:
+    """Validate a ``node.{outputs,inputs}.port`` connection endpoint string.
+
+    Parameters
+    ----------
+    value : str
+        The endpoint string to validate.
+    role : str
+        ``"source"`` or ``"target"`` (used in the error message).
+    expected_middle : str
+        The required middle segment: ``"outputs"`` for a source, ``"inputs"``
+        for a target.
+
+    Returns
+    -------
+    str
+        ``value`` unchanged when valid.
+    """
+    parts = value.split(".")
+    if len(parts) != 3 or parts[1] != expected_middle or not parts[0] or not parts[2]:
+        raise ValueError(f"Invalid {role}: '{value}'. Expected: 'node.{expected_middle}.port'")
+    return value
+
+
+def _endpoint_parts(value: str) -> tuple[str, str]:
+    """Return ``(node, port)`` from a validated endpoint string."""
+    parts = value.split(".")
+    return parts[0], parts[2]
 
 
 class PipelineMetadata(BaseSchemaModel):
@@ -32,7 +71,9 @@ class PipelineMetadata(BaseSchemaModel):
     author : str
         Author name or email
     cuvis_ai_version : str
-        Version of cuvis-ai-schemas used
+        cuvis-ai-schemas version that created the pipeline (auto-stamped from the
+        installed package; an explicitly recorded value, e.g. from an older
+        snapshot, is preserved on load)
     """
 
     name: str
@@ -40,7 +81,7 @@ class PipelineMetadata(BaseSchemaModel):
     created: str = ""
     tags: list[str] = Field(default_factory=list)
     author: str = ""
-    cuvis_ai_version: str = "0.1.0"
+    cuvis_ai_version: str = Field(default_factory=_schemas_version)
 
     def to_proto(self) -> cuvis_ai_pb2.PipelineMetadata:
         """Convert to proto message.
@@ -48,13 +89,10 @@ class PipelineMetadata(BaseSchemaModel):
         Uses field-by-field mapping (not config_bytes) because the proto
         message has typed fields that gRPC services access directly.
         """
-        try:
-            from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
-        except ImportError as exc:
-            msg = "Proto support not installed. Install with: pip install cuvis-ai-schemas[proto]"
-            raise ImportError(msg) from exc
+        from cuvis_ai_schemas.base import _get_pb2
 
-        return cuvis_ai_pb2.PipelineMetadata(
+        pb2 = _get_pb2()
+        return pb2.PipelineMetadata(
             name=self.name,
             description=self.description,
             created=self.created,
@@ -99,38 +137,32 @@ class ConnectionConfig(BaseSchemaModel):
     @field_validator("source")
     @classmethod
     def _validate_source(cls, v: str) -> str:
-        parts = v.split(".")
-        if len(parts) != 3 or parts[1] != "outputs" or not parts[0] or not parts[2]:
-            raise ValueError(f"Invalid source: '{v}'. Expected: 'node.outputs.port'")
-        return v
+        return _validate_endpoint(v, "source", "outputs")
 
     @field_validator("target")
     @classmethod
     def _validate_target(cls, v: str) -> str:
-        parts = v.split(".")
-        if len(parts) != 3 or parts[1] != "inputs" or not parts[0] or not parts[2]:
-            raise ValueError(f"Invalid target: '{v}'. Expected: 'node.inputs.port'")
-        return v
+        return _validate_endpoint(v, "target", "inputs")
 
     @property
     def from_node(self) -> str:
         """Source node name."""
-        return self.source.split(".")[0]
+        return _endpoint_parts(self.source)[0]
 
     @property
     def from_port(self) -> str:
         """Source port name."""
-        return self.source.split(".")[2]
+        return _endpoint_parts(self.source)[1]
 
     @property
     def to_node(self) -> str:
         """Target node name."""
-        return self.target.split(".")[0]
+        return _endpoint_parts(self.target)[0]
 
     @property
     def to_port(self) -> str:
         """Target port name."""
-        return self.target.split(".")[2]
+        return _endpoint_parts(self.target)[1]
 
 
 class PipelineConfig(BaseSchemaModel):

@@ -478,6 +478,7 @@ message SavePipelineResponse {
 message LoadPipelineRequest {
   string session_id = 1;
   PipelineConfig pipeline = 2;  // JSON-serialized pipeline config (from ResolveConfig)
+  string data_module = 3;       // Optional: data-module name (e.g. "cu3s"). The composer resolves its providing plugin from the manifests and unions it into the frozen child env. Not part of the pipeline; only a pipeline run needs a data module.
 }
 
 message LoadPipelineResponse {
@@ -565,7 +566,9 @@ message InferenceResponse {
 // ============================================================================
 
 // Configuration message using JSON transport.
-// The config_bytes field contains JSON-serialized PluginManifest (Pydantic schema)
+// config_bytes is a single plugin manifest serialised as JSON (a Pydantic
+// PluginManifest schema: name + source + capabilities). One file = one plugin;
+// LoadPlugin registers exactly one, so callers loop to register several.
 message PluginManifest {
   bytes config_bytes = 1;
 }
@@ -576,7 +579,7 @@ message PluginInfo {
   string type = 2;  // "git" or "local"
   string source = 3;  // repo URL or filesystem path
   string tag = 4;  // Git tag (if applicable)
-  repeated string provides = 5;  // Class paths provided
+  repeated string capabilities = 5;  // Class paths the plugin provides
 }
 
 // Port specification for node inputs/outputs
@@ -603,17 +606,17 @@ message NodeInfo {
 }
 
 // Request/Response messages
-message LoadPluginsRequest {
+message LoadPluginRequest {
   string session_id = 1;
   PluginManifest manifest = 2;
 }
 
-message LoadPluginsResponse {
-  // Plugin names that were registered into the session's catalog.
-  // Semantics: names registered as catalog metadata, NOT installed —
+message LoadPluginResponse {
+  // Name of the plugin registered into the session's catalog (empty on failure).
+  // Semantics: registered as catalog metadata, NOT installed —
   // materialisation happens lazily via LoadPipeline.
-  repeated string registered_plugins = 1;
-  map<string, string> failed_plugins = 2;  // name → error message (Pydantic validation failure)
+  string registered_plugin = 1;
+  string error = 2;  // Pydantic validation / precondition failure; empty on success.
 }
 
 message ListLoadedPluginsRequest {
@@ -732,15 +735,14 @@ service CuvisAIService {
 
   // Plugin Management
   //
-  // LoadPlugins registers manifest entries as catalog metadata in the
-  // session. It does NOT install or import — that happens lazily via
-  // LoadPipeline when a pipeline's `plugins:` field references the
-  // registered entry. Callers that expected eager install must migrate
-  // to the two-step register-then-pipeline flow. `ListLoadedPlugins`
-  // reports the catalog (registered set); `ListAvailableNodes` reports
-  // the materialised set (what's actually importable in this session
-  // right now).
-  rpc LoadPlugins(LoadPluginsRequest) returns (LoadPluginsResponse);
+  // LoadPlugin registers ONE plugin manifest as catalog metadata in the
+  // session; callers loop to register several. It does NOT install or
+  // import — that happens lazily via LoadPipeline when a pipeline's
+  // `plugins:` field references the registered entry, so every plugin a
+  // pipeline needs must be registered first. `ListLoadedPlugins` reports
+  // the catalog (registered set); `ListAvailableNodes` reports the
+  // materialised set (what's actually importable in this session right now).
+  rpc LoadPlugin(LoadPluginRequest) returns (LoadPluginResponse);
   rpc ListLoadedPlugins(ListLoadedPluginsRequest) returns (ListLoadedPluginsResponse);
   rpc GetPluginInfo(GetPluginInfoRequest) returns (GetPluginInfoResponse);
   rpc ListAvailableNodes(ListAvailableNodesRequest) returns (ListAvailableNodesResponse);
@@ -773,8 +775,8 @@ message InitializeSessionRequest {
   // the child once at init; later SetSessionSearchPaths calls against the
   // public surface are rejected (composed env is keyed to this set).
   repeated string search_paths = 2;
-  // Resolved plugin dict (dict[name, GitPluginConfig | LocalPluginConfig])
-  // serialised as JSON. The child imports each plugin's `provides` class
+  // Resolved plugin list (list of GitPluginSource | LocalPluginSource)
+  // serialised as JSON. The child imports each plugin's `capabilities` class
   // paths directly from the installed packages in its venv.
   bytes resolved_plugins_json = 3;
   // Declared FS paths the child is allowed to read / write. A future

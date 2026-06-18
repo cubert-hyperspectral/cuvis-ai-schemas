@@ -11,11 +11,29 @@ This module provides:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import ModuleType
 from typing import Any
 
-import torch
-
 from cuvis_ai_schemas.pipeline.exceptions import PortCompatibilityError
+
+
+def _require_torch() -> ModuleType:
+    """Import torch lazily, with a clear error when the optional extra is absent.
+
+    ``torch`` is only needed for the dtype comparison in
+    :meth:`PortSpec.is_compatible_with`; importing it lazily keeps the rest of
+    the schemas package (the config models, dimension resolution) importable
+    without the optional ``[torch]`` extra installed.
+    """
+    try:
+        import torch
+    except ImportError as exc:
+        msg = (
+            "Port compatibility checks require PyTorch. "
+            "Install it with: pip install cuvis-ai-schemas[torch]"
+        )
+        raise ImportError(msg) from exc
+    return torch
 
 
 class DimensionResolver:
@@ -131,6 +149,7 @@ class PortSpec:
         tuple[bool, str]
             (is_compatible, error_message)
         """
+        torch = _require_torch()
 
         def _format_dtype(value: Any) -> str:
             """Format a dtype value for display in error messages.

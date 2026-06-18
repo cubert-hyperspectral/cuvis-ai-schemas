@@ -25,12 +25,17 @@ def test_get_pb2_import_error():
 
 
 def test_to_proto_round_trip():
-    """Test to_proto -> from_proto round-trip for DataConfig."""
-    original = DataConfig(cu3s_file_path="/data/test.cu3s", batch_size=16)
+    """Test to_proto -> from_proto round-trip for DataConfig (JSON-in-bytes)."""
+    original = DataConfig(
+        data_module="cu3s",
+        batch_size=16,
+        params={"cu3s_file_path": "/data/test.cu3s"},
+    )
     proto = original.to_proto()
     restored = DataConfig.from_proto(proto)
-    assert restored.cu3s_file_path == "/data/test.cu3s"
+    assert restored.data_module == "cu3s"
     assert restored.batch_size == 16
+    assert restored.params["cu3s_file_path"] == "/data/test.cu3s"
 
 
 def test_to_proto_not_implemented():
