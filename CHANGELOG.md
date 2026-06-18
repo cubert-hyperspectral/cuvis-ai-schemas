@@ -1,7 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## 0.6.0 - 2026-06-18
 
+- Changed `torch` to a lazy, guarded import so the pure-pydantic surface imports without it: importing `PipelineConfig` (or anything from `cuvis_ai_schemas.pipeline`) no longer pulls in `torch`, restoring the minimal core-dependency promise. `PortSpec.is_compatible_with` imports `torch` on first call and raises a clear `cuvis-ai-schemas[torch]` install hint when the extra is absent; the public `PortSpec` / `DimensionResolver` / `InputPort` / `OutputPort` surface is unchanged.
+- Added `cuvis_ai_schemas.testing` (new `[testing]` extra): a shipped home for Hypothesis strategies (`model_strategy`, the per-model factories, and the `MODEL_STRATEGIES` registry over `BaseSchemaModel` subclasses) and dependency-free round-trip assertions (`assert_dict_roundtrip` / `assert_json_roundtrip` / `assert_dict_json_roundtrip`), so downstream repos reuse one set of property-test helpers instead of reinventing them. Importing it without the extra raises a clear install hint.
+- Changed `TrainingConfig` trainer-field syncing so the three overlapping fields (`max_epochs`, `gradient_clip_val`, `accumulate_grad_batches`) follow one uniform rule: an explicitly-set top-level value wins, including an explicit `gradient_clip_val=None`, which now clears a stale `trainer.gradient_clip_val` (previously the asymmetric special-case left it in place).
 - Changed the plugin manifest schema to a "capabilities" family (breaking): collapsed `catalog.py` / `plugin/config.py` / `plugin/manifest.py` into `plugin/manifest_capabilities.py`; renamed `CatalogPortSpec` → `NodePortSpec`, `CatalogNodeEntry` → `PluginCapabilityEntry`, `CatalogPluginEntry` → `PluginCapabilities`, `PluginConfig` → `PluginManifest` (source variants `GitPluginSource` / `LocalPluginSource`), and `provides` → `capabilities`. A manifest is now one bare plugin with a required explicit `name` (never the filename), not a `{plugins: {<name>: ...}}` map; old-shape manifests fail validation. Module loaders are `load_plugin_manifest` + `write_plugin_manifest` (plural loader removed).
 - Added `kind` / `data_module_name` / `extras` to `PluginCapabilityEntry`: `kind: node | data_module` (default `node`); a `data_module` entry declares a globally-unique `data_module_name` and may list pip `extras`, a `node` entry sets neither.
 - Changed proto `LoadPlugins` → singular `LoadPlugin` and `PluginInfo.provides` → `capabilities` (breaking, regenerated stubs): one `LoadPlugin` registers one plugin (`config_bytes` is a single manifest, not a list); the response is singular (`registered_plugin` + `error`). `InitializeSession.resolved_plugins_json` stays a JSON list.
@@ -10,6 +13,7 @@
 - Changed `TrainRunConfig.pipeline` to a path reference, not an inline config (breaking): `PipelineConfig | None` → `str | None`, resolved relative to the trainrun file (a bare name resolves on the pipeline search path). Inline mappings and Hydra `@pipeline` compositions are rejected with a fix-it hint.
 - Added `LoadPipelineRequest.data_module` (proto, additive): optional `string data_module = 3`, the data-module name, so the orchestrator resolves that module's plugin and pip extras when it composes the child env at `LoadPipeline`. Carries only the name, not a `DataConfig`.
 - Changed `PipelineMetadata.cuvis_ai_version` to auto-stamp the installed version: it was a hardcoded `"0.1.0"`; `__version__` now derives from the installed distribution (`importlib.metadata` / setuptools-scm) and the field's `default_factory` stamps it, preserving an already-recorded value on load.
+- Hardened internals with no public-API change: dropped two unreachable `OptimizerConfig` validators, de-duplicated the `ConnectionConfig` endpoint parsing, the `Selector` structure validator (now table-driven), and the manifest empty-string checks, and reorganised the test suite to mirror the package layout (run with `--import-mode=importlib`).
 
 ## 0.5.2 - 2026-06-10
 
