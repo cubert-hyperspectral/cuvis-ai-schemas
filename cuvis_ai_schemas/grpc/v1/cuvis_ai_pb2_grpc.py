@@ -323,7 +323,7 @@ class CuvisAIServiceServicer(object):
 
     def LoadPlugin(self, request, context):
         """Plugin Management
-        
+
         LoadPlugin registers ONE plugin manifest as catalog metadata in the
         session; callers loop to register several. It does NOT install or
         import — that happens lazily via LoadPipeline when a pipeline's
