@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from cuvis_ai_schemas.plugin import (
-    SUPPORTED_SCHEMA_VERSIONS,
     NodePortSpec,
     PluginCapabilities,
     PluginCapabilityEntry,
@@ -14,7 +13,6 @@ from cuvis_ai_schemas.plugin import (
 
 def _minimal_payload(*, plugin_name: str = "my_plugin") -> dict:
     return {
-        "schema_version": 1,
         "plugin_name": plugin_name,
         "plugin_version": "0.1.0",
         "capabilities": [
@@ -43,7 +41,6 @@ def test_plugin_capabilities_validates_full_payload():
     entry = PluginCapabilities.model_validate(_minimal_payload())
     assert entry.plugin_name == "my_plugin"
     assert entry.plugin_version == "0.1.0"
-    assert entry.schema_version == 1
     assert len(entry.capabilities) == 1
 
     node = entry.capabilities[0]
@@ -139,21 +136,6 @@ def test_class_name_rejects_malformed_path(bad_class_name):
         PluginCapabilities.model_validate(payload)
 
 
-def test_schema_version_defaults_when_absent():
-    payload = _minimal_payload()
-    del payload["schema_version"]
-    entry = PluginCapabilities.model_validate(payload)
-    assert entry.schema_version == SUPPORTED_SCHEMA_VERSIONS[-1]
-
-
-def test_schema_version_must_be_supported():
-    payload = _minimal_payload()
-    payload["schema_version"] = 999
-
-    with pytest.raises(ValueError, match="unsupported schema_version"):
-        PluginCapabilities.model_validate(payload)
-
-
 def test_missing_plugin_name_fails_validation():
     payload = _minimal_payload()
     del payload["plugin_name"]
@@ -185,12 +167,6 @@ def test_extra_field_is_rejected():
 
     with pytest.raises(ValueError, match="surprise"):
         PluginCapabilities.model_validate(payload)
-
-
-def test_supported_versions_constant_is_tuple_of_int():
-    assert isinstance(SUPPORTED_SCHEMA_VERSIONS, tuple)
-    assert all(isinstance(v, int) for v in SUPPORTED_SCHEMA_VERSIONS)
-    assert 1 in SUPPORTED_SCHEMA_VERSIONS
 
 
 def test_models_are_frozen():

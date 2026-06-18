@@ -1,7 +1,6 @@
 """Plugin system schemas."""
 
 from cuvis_ai_schemas.plugin.manifest_capabilities import (
-    SUPPORTED_SCHEMA_VERSIONS,
     GitPluginSource,
     LocalPluginSource,
     NodePortSpec,
@@ -14,7 +13,6 @@ from cuvis_ai_schemas.plugin.manifest_capabilities import (
 )
 
 __all__ = [
-    "SUPPORTED_SCHEMA_VERSIONS",
     "GitPluginSource",
     "LocalPluginSource",
     "NodePortSpec",

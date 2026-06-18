@@ -21,14 +21,12 @@ That is why :meth:`PluginCapabilities.from_manifest` can be fully typed against
 from __future__ import annotations
 
 from pathlib import Path
-from typing import ClassVar, Literal
+from typing import Literal
 
 import yaml
 from pydantic import ConfigDict, Field, TypeAdapter, field_validator, model_validator
 
 from cuvis_ai_schemas.base import BaseSchemaModel
-
-SUPPORTED_SCHEMA_VERSIONS: tuple[int, ...] = (1,)
 
 
 # ---------------------------------------------------------------------------
@@ -304,25 +302,9 @@ class PluginCapabilities(BaseSchemaModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True, validate_assignment=True)
 
-    SUPPORTED_VERSIONS: ClassVar[tuple[int, ...]] = SUPPORTED_SCHEMA_VERSIONS
-
-    schema_version: int = Field(
-        default=SUPPORTED_SCHEMA_VERSIONS[-1],
-        description="Capabilities schema version; current writer must use the latest.",
-    )
     plugin_name: str = Field(min_length=1)
     plugin_version: str = ""
     capabilities: list[PluginCapabilityEntry] = Field(default_factory=list)
-
-    @field_validator("schema_version")
-    @classmethod
-    def _check_schema_version(cls, value: int) -> int:
-        """Reject a schema_version this build does not understand."""
-        if value not in SUPPORTED_SCHEMA_VERSIONS:
-            raise ValueError(
-                f"unsupported schema_version={value!r}; supported: {SUPPORTED_SCHEMA_VERSIONS}"
-            )
-        return value
 
     @classmethod
     def from_manifest(cls, manifest: PluginManifest) -> PluginCapabilities | None:
@@ -423,7 +405,6 @@ __all__ = [
     "LocalPluginSource",
     "PluginManifest",
     "PluginCapabilities",
-    "SUPPORTED_SCHEMA_VERSIONS",
     "parse_plugin_manifest",
     "load_plugin_manifest",
     "write_plugin_manifest",
