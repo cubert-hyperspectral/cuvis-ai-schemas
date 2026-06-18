@@ -87,6 +87,12 @@ lightning = [
     "pytorch-lightning>=2.0.0",
 ]
 
+# Property-based testing helpers (cuvis_ai_schemas.testing); importable by
+# downstream repos that reuse the shared model strategies.
+testing = [
+    "hypothesis>=6.0.0",
+]
+
 # Full feature set
 full = [
     "cuvis-ai-schemas[proto,torch,numpy,lightning]",
@@ -97,6 +103,8 @@ dev = [
     "ruff",
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "cuvis-ai-schemas[testing]",
+    "omegaconf>=2.3.0",
     "mypy>=1.8.0",
     "types-protobuf",
     "types-grpcio",
@@ -133,7 +141,7 @@ local_scheme = "node-and-date"
 # Users can install PyTorch with their preferred CUDA version or CPU-only
 
 [tool.pytest.ini_options]
-addopts = "-ra --showlocals"
+addopts = "-ra --showlocals --import-mode=importlib"
 testpaths = ["tests"]
 xfail_strict = true
 filterwarnings = [

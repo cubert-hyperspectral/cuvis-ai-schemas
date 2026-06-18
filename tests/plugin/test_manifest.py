@@ -12,6 +12,7 @@ from cuvis_ai_schemas.plugin import (
     PluginCapabilities,
     PluginManifest,
     load_plugin_manifest,
+    parse_plugin_manifest,
     write_plugin_manifest,
 )
 
@@ -262,6 +263,48 @@ def test_write_then_load_round_trip(tmp_path):
     assert raw["name"] == "rt"
     restored = load_plugin_manifest(path)
     assert restored == manifest
+
+
+def test_git_tag_whitespace_only_rejected():
+    """A whitespace-only tag passes min_length but fails the non-empty check."""
+    with pytest.raises(ValueError, match="Git tag cannot be empty"):
+        GitPluginSource(
+            name="my_plugin",
+            repo="https://github.com/user/repo.git",
+            tag="   ",
+            capabilities=[{"class_name": "my.package.MyNode"}],
+        )
+
+
+def test_local_path_whitespace_only_rejected():
+    """A whitespace-only path passes min_length but fails the non-empty check."""
+    with pytest.raises(ValueError, match="Path cannot be empty"):
+        LocalPluginSource(
+            name="my_plugin",
+            path="   ",
+            capabilities=[{"class_name": "my.package.MyNode"}],
+        )
+
+
+def test_parse_plugin_manifest_happy_and_invalid():
+    """parse_plugin_manifest validates an in-memory dict into the union."""
+    manifest = parse_plugin_manifest(
+        {
+            "name": "sam3",
+            "repo": "https://github.com/user/repo.git",
+            "tag": "v1.0.0",
+            "capabilities": [{"class_name": "pkg.mod.Node"}],
+        }
+    )
+    assert isinstance(manifest, GitPluginSource)
+    with pytest.raises(ValueError):
+        parse_plugin_manifest({"repo": "https://github.com/user/repo.git", "tag": "v1.0.0"})
+
+
+def test_load_plugin_manifest_missing_file_raises(tmp_path):
+    """Loading a non-existent manifest path raises FileNotFoundError."""
+    with pytest.raises(FileNotFoundError, match="not found"):
+        load_plugin_manifest(tmp_path / "does_not_exist.yaml")
 
 
 def test_from_manifest_builds_capabilities():

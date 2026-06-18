@@ -29,6 +29,14 @@ from pydantic import ConfigDict, Field, TypeAdapter, field_validator, model_vali
 from cuvis_ai_schemas.base import BaseSchemaModel
 
 
+def _require_non_empty(value: str, label: str) -> str:
+    """Return ``value`` stripped, raising when it is empty after stripping."""
+    stripped = value.strip()
+    if not stripped:
+        raise ValueError(f"{label} cannot be empty")
+    return stripped
+
+
 # ---------------------------------------------------------------------------
 # 1. NodePortSpec — serialized spec of a single node port (leaf, no deps)
 # ---------------------------------------------------------------------------
@@ -239,10 +247,7 @@ class GitPluginSource(_BasePluginManifest):
     @classmethod
     def _validate_tag(cls, value: str) -> str:
         """Validate Git tag is not empty."""
-        if not value.strip():
-            msg = "Git tag cannot be empty"
-            raise ValueError(msg)
-        return value.strip()
+        return _require_non_empty(value, "Git tag")
 
 
 class LocalPluginSource(_BasePluginManifest):
@@ -263,10 +268,7 @@ class LocalPluginSource(_BasePluginManifest):
     @classmethod
     def _validate_path(cls, value: str) -> str:
         """Validate path is not empty."""
-        if not value.strip():
-            msg = "Path cannot be empty"
-            raise ValueError(msg)
-        return value.strip()
+        return _require_non_empty(value, "Path")
 
     def resolve_path(self, manifest_dir: Path) -> Path:
         """Resolve a relative ``path`` to an absolute path.

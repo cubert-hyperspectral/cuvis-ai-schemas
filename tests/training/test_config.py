@@ -1,5 +1,6 @@
 """Tests for training schemas."""
 
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -110,12 +111,61 @@ def test_training_config_callbacks_synced_to_trainer():
     assert config.trainer.callbacks is cb
 
 
-def test_training_config_to_dict_config_fallback():
-    """Test to_dict_config falls back to model_dump when omegaconf unavailable."""
+def test_sync_matrix_explicit_top_level_wins():
+    """An explicitly-set top-level value is pushed to the trainer, for all 3 fields."""
+    config = TrainingConfig(
+        max_epochs=50,
+        gradient_clip_val=1.0,
+        accumulate_grad_batches=4,
+        trainer=TrainerConfig(max_epochs=7, gradient_clip_val=2.0, accumulate_grad_batches=2),
+    )
+    assert (config.max_epochs, config.trainer.max_epochs) == (50, 50)
+    assert (config.gradient_clip_val, config.trainer.gradient_clip_val) == (1.0, 1.0)
+    assert (config.accumulate_grad_batches, config.trainer.accumulate_grad_batches) == (4, 4)
+
+
+def test_sync_matrix_trainer_value_pulled_up_when_top_unset():
+    """A non-None trainer value is pulled up when the top-level field is unset."""
+    config = TrainingConfig(
+        trainer=TrainerConfig(max_epochs=7, gradient_clip_val=2.0, accumulate_grad_batches=2),
+    )
+    assert config.max_epochs == 7
+    assert config.gradient_clip_val == 2.0
+    assert config.accumulate_grad_batches == 2
+
+
+def test_sync_matrix_explicit_none_clears_trainer_gradient_clip():
+    """Explicit top-level gradient_clip_val=None now clears a stale trainer value.
+
+    This is the unified-semantics fix: previously the trainer kept its value
+    because an explicit top-level None was not pushed down.
+    """
+    config = TrainingConfig(
+        gradient_clip_val=None,
+        trainer=TrainerConfig(gradient_clip_val=2.0),
+    )
+    assert config.gradient_clip_val is None
+    assert config.trainer.gradient_clip_val is None
+
+
+def test_to_dict_config_without_omegaconf_returns_plain_dict():
+    """Without omegaconf importable, to_dict_config falls back to a plain dict."""
     config = TrainingConfig(max_epochs=10)
-    result = config.to_dict_config()
+    with patch.dict(sys.modules, {"omegaconf": None}):
+        result = config.to_dict_config()
     assert isinstance(result, dict)
     assert result["max_epochs"] == 10
+
+
+def test_to_dict_config_with_omegaconf_returns_dictconfig():
+    """With omegaconf installed, to_dict_config returns a DictConfig (core's path)."""
+    omegaconf = pytest.importorskip("omegaconf")
+    config = TrainingConfig(max_epochs=10)
+    result = config.to_dict_config()
+    assert omegaconf.OmegaConf.is_config(result)
+    assert not isinstance(result, dict)
+    assert result["max_epochs"] == 10
+    assert omegaconf.OmegaConf.to_container(result)["max_epochs"] == 10
 
 
 def test_training_config_from_dict_config():
@@ -124,6 +174,24 @@ def test_training_config_from_dict_config():
     config = TrainingConfig.from_dict_config(data)
     assert config.seed == 123
     assert config.max_epochs == 25
+
+
+def test_from_dict_config_with_dictconfig():
+    """from_dict_config converts an OmegaConf DictConfig before validating."""
+    omegaconf = pytest.importorskip("omegaconf")
+    dict_config = omegaconf.OmegaConf.create({"seed": 7, "max_epochs": 11})
+    config = TrainingConfig.from_dict_config(dict_config)
+    assert config.seed == 7
+    assert config.max_epochs == 11
+
+
+def test_from_dict_config_with_non_dict_mapping():
+    """from_dict_config coerces a non-dict mapping into a dict before validating."""
+    from types import MappingProxyType
+
+    config = TrainingConfig.from_dict_config(MappingProxyType({"seed": 9, "batch_size": 4}))
+    assert config.seed == 9
+    assert config.batch_size == 4
 
 
 def test_data_config():
@@ -220,6 +288,26 @@ def test_selector_set_ops():
         Selector(kind=SelectorKind.INTERSECT, of=inner[:1])  # needs >= 2
 
 
+@pytest.mark.parametrize(
+    "kind",
+    [
+        SelectorKind.DIR_INDICES,
+        SelectorKind.FILES,
+        SelectorKind.STEMS,
+        SelectorKind.GLOB,
+        SelectorKind.TAG,
+        SelectorKind.CATEGORIES,
+        SelectorKind.UNION,
+        SelectorKind.EXCEPT,
+        SelectorKind.INTERSECT,
+    ],
+)
+def test_selector_kind_requires_its_field(kind):
+    """Each non-ALL kind rejects construction without its required field."""
+    with pytest.raises(ValidationError):
+        Selector(kind=kind)
+
+
 def test_data_split_config_defaults_and_old_shape_rejected():
     """Defaults: leakage_check=error, empty predict; the old flat shape is rejected."""
     s = DataSplitConfig()
@@ -300,3 +388,9 @@ def test_trainrun_rejects_inline_pipeline():
             pipeline={"nodes": [], "connections": []},
             data=DataConfig(data_module="cu3s"),
         )
+
+
+def test_trainrun_rejects_non_string_pipeline():
+    """A non-string, non-mapping pipeline value is rejected as not a path reference."""
+    with pytest.raises(ValueError, match="must be a path string"):
+        TrainRunConfig(name="bad", pipeline=123, data=DataConfig())

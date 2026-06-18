@@ -74,8 +74,6 @@ class SelectorKind(StrEnum):
     INTERSECT = "intersect"
 
 
-_SET_OPS = {SelectorKind.UNION, SelectorKind.EXCEPT, SelectorKind.INTERSECT}
-
 #: Which ``Selector`` fields each kind may set; everything else must stay default.
 _ALLOWED_FIELDS: dict[SelectorKind, set[str]] = {
     SelectorKind.FILES: {"paths"},
@@ -90,6 +88,30 @@ _ALLOWED_FIELDS: dict[SelectorKind, set[str]] = {
     SelectorKind.EXCEPT: {"of"},
     SelectorKind.INTERSECT: {"of"},
 }
+
+#: Fields each kind requires (ordered for stable error messages). For every
+#: kind this equals its allowed set: a selector must set exactly the fields
+#: valid for its kind, no more and no fewer.
+_REQUIRED_FIELDS: dict[SelectorKind, tuple[str, ...]] = {
+    SelectorKind.FILES: ("paths",),
+    SelectorKind.FILE_INDICES: ("source", "ids"),
+    SelectorKind.DIR_INDICES: ("ids",),
+    SelectorKind.STEMS: ("stems",),
+    SelectorKind.GLOB: ("pattern",),
+    SelectorKind.TAG: ("any_of",),
+    SelectorKind.CATEGORIES: ("any_of",),
+    SelectorKind.ALL: (),
+    SelectorKind.UNION: ("of",),
+    SelectorKind.EXCEPT: ("of",),
+    SelectorKind.INTERSECT: ("of",),
+}
+
+#: Scalar (single-value) fields; their absence reads "requires 'x'" rather than
+#: "requires non-empty 'x'" (which suits the list-valued fields).
+_SCALAR_FIELDS = {"source", "pattern"}
+
+#: Set operations that need at least two operands.
+_BINARY_SET_OPS = {SelectorKind.EXCEPT, SelectorKind.INTERSECT}
 
 
 class Selector(BaseSchemaModel):
@@ -119,7 +141,7 @@ class Selector(BaseSchemaModel):
 
     @model_validator(mode="after")
     def _validate_structure(self) -> Selector:
-        set_fields = {
+        present = {
             "paths": bool(self.paths),
             "source": self.source is not None,
             "ids": bool(self.ids),
@@ -128,32 +150,22 @@ class Selector(BaseSchemaModel):
             "any_of": bool(self.any_of),
             "of": bool(self.of),
         }
-        allowed = _ALLOWED_FIELDS[self.kind]
-        for name, is_set in set_fields.items():
-            if is_set and name not in allowed:
-                raise ValueError(f"selector kind '{self.kind.value}' must not set field '{name}'")
-        if self.kind == SelectorKind.FILE_INDICES:
-            if self.source is None:
-                raise ValueError("selector kind 'file_indices' requires 'source'")
-            if not self.ids:
-                raise ValueError("selector kind 'file_indices' requires non-empty 'ids'")
-        elif self.kind == SelectorKind.DIR_INDICES and not self.ids:
-            raise ValueError("selector kind 'dir_indices' requires non-empty 'ids'")
-        elif self.kind == SelectorKind.FILES and not self.paths:
-            raise ValueError("selector kind 'files' requires non-empty 'paths'")
-        elif self.kind == SelectorKind.STEMS and not self.stems:
-            raise ValueError("selector kind 'stems' requires non-empty 'stems'")
-        elif self.kind == SelectorKind.GLOB and not self.pattern:
-            raise ValueError("selector kind 'glob' requires 'pattern'")
-        elif self.kind in {SelectorKind.TAG, SelectorKind.CATEGORIES} and not self.any_of:
-            raise ValueError(f"selector kind '{self.kind.value}' requires non-empty 'any_of'")
-        elif self.kind in _SET_OPS:
-            if not self.of:
-                raise ValueError(f"selector kind '{self.kind.value}' requires non-empty 'of'")
-            if self.kind in {SelectorKind.EXCEPT, SelectorKind.INTERSECT} and len(self.of) < 2:
-                raise ValueError(
-                    f"selector kind '{self.kind.value}' requires at least 2 operands in 'of'"
-                )
+        kind = self.kind.value
+
+        # Only the fields valid for this kind may be set.
+        for name, is_set in present.items():
+            if is_set and name not in _ALLOWED_FIELDS[self.kind]:
+                raise ValueError(f"selector kind '{kind}' must not set field '{name}'")
+
+        # Every field required by this kind must be present.
+        for field in _REQUIRED_FIELDS[self.kind]:
+            if not present[field]:
+                qualifier = "" if field in _SCALAR_FIELDS else "non-empty "
+                raise ValueError(f"selector kind '{kind}' requires {qualifier}'{field}'")
+
+        # except / intersect need at least two operands.
+        if self.kind in _BINARY_SET_OPS and len(self.of) < 2:
+            raise ValueError(f"selector kind '{kind}' requires at least 2 operands in 'of'")
         return self
 
 

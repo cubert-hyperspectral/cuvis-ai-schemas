@@ -29,8 +29,17 @@ plugin; `dev-docs` holds internal ticket docs.
 ## Build & test
 
 - Install (dev): `uv sync --all-extras --dev`. Extras: `[proto]`, `[torch]`, `[numpy]`,
-  `[lightning]`, `[full]`. Use `uv`, never bare `pip`.
+  `[lightning]`, `[testing]` (hypothesis), `[full]`. Use `uv`, never bare `pip`.
+  **Gotcha:** `uv sync --extra dev` alone *uninstalls* the other extras (torch/proto/…) and
+  breaks test collection — always sync with `--all-extras`.
 - Tests: `uv run pytest tests/ -v` (`xfail_strict=true` — an unexpected pass is a failure).
+  `tests/` mirrors the package layout (`pipeline/`, `training/`, …) and runs with
+  `--import-mode=importlib` (duplicate basenames like two `test_config.py`); no
+  `__init__.py`/conftest needed.
+- Property-based tests use the shipped `cuvis_ai_schemas.testing` module (importable
+  Hypothesis strategies + round-trip assertions), behind `[testing]`, reusable downstream.
+- Cross-repo check: `cuvis-ai-core` resolves schemas as a local editable in dev, so
+  `cd ../../cuvis-ai-core && uv run pytest` exercises local schema edits before landing.
 
 ## Key abstraction
 
@@ -40,7 +49,12 @@ plugin; `dev-docs` holds internal ticket docs.
 
 ## Conventions
 
-- ruff line length **100**, double quotes; interrogate docstring coverage **95%** (strict).
+- ruff line length **100**, double quotes; interrogate docstring coverage **95%** (strict,
+  `ignore-nested-functions=false` — nested helper functions need docstrings too).
+- `torch` is lazy-imported inside `PortSpec.is_compatible_with` only; importing pipeline
+  configs needs no torch (the `[torch]` extra stays optional).
+- `TrainingConfig.to_dict_config()` returns an OmegaConf `DictConfig` when omegaconf is
+  installed, else a plain dict — patch `sys.modules` to test either branch deterministically.
 - `grpc/v1/*_pb2*` are **generated — never hand-edit**; regenerate from the proto source.
 - A `.githooks` pre-commit runs `ruff format` + `ruff check --fix`.
 - No Jira IDs / "Phase N" / migration tags in shipped code, comments, or docstrings.
@@ -49,7 +63,7 @@ plugin; `dev-docs` holds internal ticket docs.
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **cuvis-ai-schemas** (982 symbols, 1559 relationships, 1 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **cuvis-ai-schemas** (1008 symbols, 1602 relationships, 1 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
