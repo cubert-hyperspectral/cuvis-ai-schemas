@@ -204,7 +204,7 @@ class _BasePluginManifest(BaseSchemaModel):
 # ---------------------------------------------------------------------------
 # 4. Concrete manifests + the PluginManifest union
 # ---------------------------------------------------------------------------
-class GitPluginManifest(_BasePluginManifest):
+class GitPluginSource(_BasePluginManifest):
     """A plugin sourced from a git repository at a fixed tag.
 
     Supports:
@@ -247,7 +247,7 @@ class GitPluginManifest(_BasePluginManifest):
         return value.strip()
 
 
-class LocalPluginManifest(_BasePluginManifest):
+class LocalPluginSource(_BasePluginManifest):
     """A plugin sourced from a local filesystem path.
 
     Supports:
@@ -285,7 +285,7 @@ class LocalPluginManifest(_BasePluginManifest):
         return plugin_path
 
 
-PluginManifest = GitPluginManifest | LocalPluginManifest
+PluginManifest = GitPluginSource | LocalPluginSource
 """A single plugin manifest: either a git (repo + tag) or local (path) source."""
 
 _MANIFEST_ADAPTER: TypeAdapter[PluginManifest] = TypeAdapter(PluginManifest)
@@ -362,7 +362,7 @@ def parse_plugin_manifest(data: dict[str, object]) -> PluginManifest:
 def load_plugin_manifest(yaml_path: Path) -> PluginManifest:
     """Load and validate a single bare plugin manifest from a YAML file.
 
-    One file is one plugin. A :class:`LocalPluginManifest`'s relative ``path``
+    One file is one plugin. A :class:`LocalPluginSource`'s relative ``path``
     is resolved to an absolute path against the manifest file's parent
     directory, so downstream consumers never need manifest-dir context.
 
@@ -392,48 +392,11 @@ def load_plugin_manifest(yaml_path: Path) -> PluginManifest:
         raise ValueError(msg)
 
     manifest = _MANIFEST_ADAPTER.validate_python(data)
-    if isinstance(manifest, LocalPluginManifest):
+    if isinstance(manifest, LocalPluginSource):
         manifest = manifest.model_copy(
             update={"path": str(manifest.resolve_path(yaml_path.parent))}
         )
     return manifest
-
-
-def load_plugin_manifests(plugins_dirs: list[Path]) -> list[PluginManifest]:
-    """Load every bare plugin manifest across one or more directories.
-
-    Scans and parses **every** ``*.yaml`` in each existing directory, builds a
-    ``name -> source path`` index, and **errors on a duplicate name anywhere in
-    the whole set** (rather than letting a later directory silently win). Local
-    paths are resolved to absolute (see :func:`load_plugin_manifest`).
-    Non-existent directories are skipped.
-
-    Args:
-        plugins_dirs: Candidate plugins directories, in precedence order.
-
-    Returns:
-        The validated manifests, in directory then filename order.
-
-    Raises:
-        ValueError: two manifests declare the same ``name``.
-    """
-    manifests: list[PluginManifest] = []
-    name_to_path: dict[str, Path] = {}
-    for plugins_dir in plugins_dirs:
-        if not plugins_dir.exists() or not plugins_dir.is_dir():
-            continue
-        for manifest_path in sorted(plugins_dir.glob("*.yaml")):
-            manifest = load_plugin_manifest(manifest_path)
-            if manifest.name in name_to_path:
-                msg = (
-                    f"Duplicate plugin name '{manifest.name}' declared by "
-                    f"{manifest_path} and {name_to_path[manifest.name]}. Plugin "
-                    "names must be unique across all plugins directories."
-                )
-                raise ValueError(msg)
-            name_to_path[manifest.name] = manifest_path
-            manifests.append(manifest)
-    return manifests
 
 
 def write_plugin_manifest(manifest: PluginManifest, yaml_path: Path) -> None:
@@ -456,13 +419,12 @@ def write_plugin_manifest(manifest: PluginManifest, yaml_path: Path) -> None:
 __all__ = [
     "NodePortSpec",
     "PluginCapabilityEntry",
-    "GitPluginManifest",
-    "LocalPluginManifest",
+    "GitPluginSource",
+    "LocalPluginSource",
     "PluginManifest",
     "PluginCapabilities",
     "SUPPORTED_SCHEMA_VERSIONS",
     "parse_plugin_manifest",
     "load_plugin_manifest",
-    "load_plugin_manifests",
     "write_plugin_manifest",
 ]

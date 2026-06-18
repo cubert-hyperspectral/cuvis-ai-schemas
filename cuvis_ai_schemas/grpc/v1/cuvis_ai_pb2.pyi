@@ -890,7 +890,7 @@ class NodeInfo(_message.Message):
     tags: _containers.RepeatedScalarFieldContainer[NodeTag]
     def __init__(self, class_name: _Optional[str] = ..., full_path: _Optional[str] = ..., source: _Optional[str] = ..., plugin_name: _Optional[str] = ..., input_specs: _Optional[_Mapping[str, PortSpec]] = ..., output_specs: _Optional[_Mapping[str, PortSpec]] = ..., icon_svg: _Optional[bytes] = ..., category: _Optional[_Union[NodeCategory, str]] = ..., tags: _Optional[_Iterable[_Union[NodeTag, str]]] = ...) -> None: ...
 
-class LoadPluginsRequest(_message.Message):
+class LoadPluginRequest(_message.Message):
     __slots__ = ("session_id", "manifest")
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     MANIFEST_FIELD_NUMBER: _ClassVar[int]
@@ -898,20 +898,13 @@ class LoadPluginsRequest(_message.Message):
     manifest: PluginManifest
     def __init__(self, session_id: _Optional[str] = ..., manifest: _Optional[_Union[PluginManifest, _Mapping]] = ...) -> None: ...
 
-class LoadPluginsResponse(_message.Message):
-    __slots__ = ("registered_plugins", "failed_plugins")
-    class FailedPluginsEntry(_message.Message):
-        __slots__ = ("key", "value")
-        KEY_FIELD_NUMBER: _ClassVar[int]
-        VALUE_FIELD_NUMBER: _ClassVar[int]
-        key: str
-        value: str
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
-    REGISTERED_PLUGINS_FIELD_NUMBER: _ClassVar[int]
-    FAILED_PLUGINS_FIELD_NUMBER: _ClassVar[int]
-    registered_plugins: _containers.RepeatedScalarFieldContainer[str]
-    failed_plugins: _containers.ScalarMap[str, str]
-    def __init__(self, registered_plugins: _Optional[_Iterable[str]] = ..., failed_plugins: _Optional[_Mapping[str, str]] = ...) -> None: ...
+class LoadPluginResponse(_message.Message):
+    __slots__ = ("registered_plugin", "error")
+    REGISTERED_PLUGIN_FIELD_NUMBER: _ClassVar[int]
+    ERROR_FIELD_NUMBER: _ClassVar[int]
+    registered_plugin: str
+    error: str
+    def __init__(self, registered_plugin: _Optional[str] = ..., error: _Optional[str] = ...) -> None: ...
 
 class ListLoadedPluginsRequest(_message.Message):
     __slots__ = ("session_id",)

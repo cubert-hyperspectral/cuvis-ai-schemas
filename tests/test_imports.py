@@ -21,24 +21,22 @@ def test_execution_schemas_import():
 def test_plugin_schemas_import():
     """Test that plugin schemas can be imported."""
     from cuvis_ai_schemas.plugin import (
-        GitPluginManifest,
-        LocalPluginManifest,
+        GitPluginSource,
+        LocalPluginSource,
         NodePortSpec,
         PluginCapabilities,
         PluginCapabilityEntry,
         PluginManifest,
         load_plugin_manifest,
-        load_plugin_manifests,
     )
 
-    assert GitPluginManifest is not None
-    assert LocalPluginManifest is not None
+    assert GitPluginSource is not None
+    assert LocalPluginSource is not None
     assert NodePortSpec is not None
     assert PluginCapabilities is not None
     assert PluginCapabilityEntry is not None
     assert PluginManifest is not None
     assert load_plugin_manifest is not None
-    assert load_plugin_manifests is not None
 
 
 def test_pipeline_schemas_import():
