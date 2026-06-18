@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import dataclasses
+from typing import Any
 
 import pytest
 
 from cuvis_ai_schemas.pipeline.profiling import NodeProfilingStats
 
 
-def _stats(**overrides: object) -> NodeProfilingStats:
-    defaults = {
+def _stats(**overrides: Any) -> NodeProfilingStats:
+    defaults: dict[str, Any] = {
         "node_name": "DoubleNode",
         "stage": "inference",
         "count": 10,

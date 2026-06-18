@@ -14,16 +14,29 @@ pytest.importorskip("hypothesis")
 
 from hypothesis import given, settings  # noqa: E402
 
+from cuvis_ai_schemas.base import BaseSchemaModel  # noqa: E402
 from cuvis_ai_schemas.testing import (  # noqa: E402
     MODEL_STRATEGIES,
     assert_dict_json_roundtrip,
 )
 
 
+def _by_name(model_cls: type[BaseSchemaModel]) -> str:
+    """Sort/id key: the model class name."""
+    return model_cls.__name__
+
+
+# A typed list + in-place sort, rather than sorted(), so mypy keeps the element
+# type (type[BaseSchemaModel]) instead of widening the sort key's argument to
+# object during sorted()'s joint type-variable inference.
+_MODELS: list[type[BaseSchemaModel]] = list(MODEL_STRATEGIES)
+_MODELS.sort(key=_by_name)
+
+
 @pytest.mark.parametrize(
     "model_cls",
-    sorted(MODEL_STRATEGIES, key=lambda c: c.__name__),
-    ids=lambda c: c.__name__,
+    _MODELS,
+    ids=_by_name,
 )
 def test_model_dict_json_roundtrip(model_cls):
     """model_validate(model_dump(x)) == x for both dict and JSON paths."""

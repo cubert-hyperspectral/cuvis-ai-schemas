@@ -25,7 +25,7 @@ def _git(name: str) -> GitPluginSource:
         name=name,
         repo="https://github.com/user/repo.git",
         tag="v1.0.0",
-        capabilities=[{"class_name": "pkg.mod.Node"}],
+        capabilities=[PluginCapabilityEntry(class_name="pkg.mod.Node")],
     )
 
 
