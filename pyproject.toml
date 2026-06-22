@@ -65,9 +65,9 @@ classifiers = [
 [project.optional-dependencies]
 # Proto generation and gRPC support
 proto = [
-    "grpcio>=1.56.0",
+    "grpcio>=1.76.0",
     "protobuf>=6.33.5,<8",
-    "grpcio-tools>=1.56.0",
+    "grpcio-tools>=1.76.0",
 ]
 
 # PyTorch integration (for PortSpec dtype handling only - no GPU operations)
