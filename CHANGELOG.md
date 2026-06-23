@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0 - 2026-06-23
+
+- Added shared-memory tensor transport to the gRPC contract. `Tensor` now carries a `oneof payload`, so a tensor travels either inline (`bytes raw_data`, field 3, unchanged and wire-compatible) or by reference to a shared-memory block via the new `ShmRef` message (`name`, `byte_offset` (reserved, always 0), `byte_size`). Same-host producers and consumers can hand off large cubes without copying them through the gRPC channel; readers that only understand `raw_data` keep working because its field number is unchanged.
+- Raised the `proto` extra floors to `grpcio>=1.76.0` / `grpcio-tools>=1.76.0` and regenerated the `cuvis_ai_pb2` stubs for the new `ShmRef` message and `Tensor.shm_ref` field.
+
 ## 0.6.0 - 2026-06-18
 
 - Changed `torch` to a lazy, guarded import so the pure-pydantic surface imports without it: importing `PipelineConfig` (or anything from `cuvis_ai_schemas.pipeline`) no longer pulls in `torch`, restoring the minimal core-dependency promise. `PortSpec.is_compatible_with` imports `torch` on first call and raises a clear `cuvis-ai-schemas[torch]` install hint when the extra is absent; the public `PortSpec` / `DimensionResolver` / `InputPort` / `OutputPort` surface is unchanged.
