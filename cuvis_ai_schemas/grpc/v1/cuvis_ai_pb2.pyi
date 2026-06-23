@@ -215,15 +215,27 @@ NODE_TAG_NUMPY: NodeTag
 NODE_TAG_JAX: NodeTag
 NODE_TAG_ONNX: NodeTag
 
+class ShmRef(_message.Message):
+    __slots__ = ("name", "byte_offset", "byte_size")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    BYTE_OFFSET_FIELD_NUMBER: _ClassVar[int]
+    BYTE_SIZE_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    byte_offset: int
+    byte_size: int
+    def __init__(self, name: _Optional[str] = ..., byte_offset: _Optional[int] = ..., byte_size: _Optional[int] = ...) -> None: ...
+
 class Tensor(_message.Message):
-    __slots__ = ("shape", "dtype", "raw_data")
+    __slots__ = ("shape", "dtype", "raw_data", "shm_ref")
     SHAPE_FIELD_NUMBER: _ClassVar[int]
     DTYPE_FIELD_NUMBER: _ClassVar[int]
     RAW_DATA_FIELD_NUMBER: _ClassVar[int]
+    SHM_REF_FIELD_NUMBER: _ClassVar[int]
     shape: _containers.RepeatedScalarFieldContainer[int]
     dtype: DType
     raw_data: bytes
-    def __init__(self, shape: _Optional[_Iterable[int]] = ..., dtype: _Optional[_Union[DType, str]] = ..., raw_data: _Optional[bytes] = ...) -> None: ...
+    shm_ref: ShmRef
+    def __init__(self, shape: _Optional[_Iterable[int]] = ..., dtype: _Optional[_Union[DType, str]] = ..., raw_data: _Optional[bytes] = ..., shm_ref: _Optional[_Union[ShmRef, _Mapping]] = ...) -> None: ...
 
 class Context(_message.Message):
     __slots__ = ("stage", "epoch", "batch_idx", "global_step")

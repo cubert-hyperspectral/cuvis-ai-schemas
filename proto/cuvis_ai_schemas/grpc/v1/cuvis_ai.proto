@@ -149,10 +149,19 @@ enum NodeTag {
 // Core Types
 // ============================================================================
 
+message ShmRef {
+  string name        = 1;  // Windows: "Local\cuvis_<pid>_<n>"  POSIX: "/cuvis_<pid>_<n>"
+  uint64 byte_offset = 2;  // reserved, always 0
+  uint64 byte_size   = 3;  // bytes the reader must map
+}
+
 message Tensor {
   repeated int64 shape = 1;
-  DType dtype = 2;
-  bytes raw_data = 3;
+  DType          dtype = 2;
+  oneof payload {
+    bytes  raw_data = 3;   // field number unchanged — wire-compatible
+    ShmRef shm_ref  = 4;
+  }
 }
 
 message Context {
