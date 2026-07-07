@@ -783,12 +783,14 @@ class GetPipelineOutputsResponse(_message.Message):
     def __init__(self, output_names: _Optional[_Iterable[str]] = ..., output_specs: _Optional[_Mapping[str, TensorSpec]] = ...) -> None: ...
 
 class GetPipelineVisualizationRequest(_message.Message):
-    __slots__ = ("session_id", "format")
+    __slots__ = ("session_id", "format", "config_content")
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     FORMAT_FIELD_NUMBER: _ClassVar[int]
+    CONFIG_CONTENT_FIELD_NUMBER: _ClassVar[int]
     session_id: str
     format: str
-    def __init__(self, session_id: _Optional[str] = ..., format: _Optional[str] = ...) -> None: ...
+    config_content: str
+    def __init__(self, session_id: _Optional[str] = ..., format: _Optional[str] = ..., config_content: _Optional[str] = ...) -> None: ...
 
 class GetPipelineVisualizationResponse(_message.Message):
     __slots__ = ("image_data", "format")
