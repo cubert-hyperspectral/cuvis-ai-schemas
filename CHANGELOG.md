@@ -1,9 +1,10 @@
 # Changelog
 
-## 0.8.0 - 2026-07-09
+## 0.8.0 - 2026-07-14
 
 - Folded `TrainerConfig` into `TrainingConfig` (breaking): deleted `cuvis_ai_schemas/training/trainer.py` and the `TrainerConfig` export; the 14 `pytorch_lightning.Trainer` keyword fields (`max_epochs`, `accelerator`, `devices`, `default_root_dir`, `precision`, `accumulate_grad_batches`, `enable_progress_bar`, `enable_checkpointing`, `log_every_n_steps`, `val_check_interval`, `check_val_every_n_epoch`, `gradient_clip_val`, `deterministic`, `benchmark`) plus `callbacks` now live flat on `TrainingConfig`. Removed the nested `trainer` field, the duplicated top-level `max_epochs` / `gradient_clip_val` / `accumulate_grad_batches` fields, the `_sync_trainer_fields` validator, and the dead `batch_size` / `num_workers` fields. A trainrun/training YAML or JSON with a `trainer:` / `batch_size` / `num_workers` key now fails `extra="forbid"` validation. The proto message name (`TrainingConfig`) is unchanged.
 - Added `TrainingConfig.to_lightning_kwargs()`: returns the explicit allowlist of the 14 raw `pl.Trainer` keyword arguments (via `model_dump(include=..., exclude_none=True)`), excluding the orchestration fields (`seed`, `optimizer`, `scheduler`, `callbacks`) so they never reach `pl.Trainer(**kwargs)`.
+- Bumped CI actions: `actions/checkout` v6 → v7, `actions/setup-python` v5 → v6, `codecov/codecov-action` v6 → v7. CI-only; no package or schema changes.
 
 ## 0.7.0 - 2026-06-23
 
