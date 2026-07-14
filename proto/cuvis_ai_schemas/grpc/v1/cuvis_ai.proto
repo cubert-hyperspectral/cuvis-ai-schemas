@@ -548,6 +548,10 @@ message GetPipelineOutputsResponse {
 message GetPipelineVisualizationRequest {
   string session_id = 1;
   string format = 2;  // "png", "svg", "dot"
+  // When set, render this pipeline YAML config's graph directly (no session, no load,
+  // no plugin env) instead of the pipeline loaded in session_id. Used to preview a
+  // pipeline's structure the moment it is selected, before it is loaded.
+  string config_content = 3;
 }
 
 message GetPipelineVisualizationResponse {
