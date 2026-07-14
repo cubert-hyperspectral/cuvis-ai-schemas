@@ -65,7 +65,6 @@ def test_training_schemas_import():
         PipelineConfig,
         PipelineMetadata,
         SchedulerConfig,
-        TrainerConfig,
         TrainingConfig,
         TrainRunConfig,
     )
@@ -76,7 +75,6 @@ def test_training_schemas_import():
     assert PipelineConfig is not None
     assert PipelineMetadata is not None
     assert SchedulerConfig is not None
-    assert TrainerConfig is not None
     assert TrainingConfig is not None
     assert TrainRunConfig is not None
 

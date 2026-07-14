@@ -70,10 +70,10 @@ def test_sample_ref_uid_is_deterministic_from_content(source, index):
 
 def test_model_strategy_unregistered_raises():
     """model_strategy raises a helpful KeyError for an unregistered model."""
-    from cuvis_ai_schemas.training.trainer import TrainerConfig
+    from cuvis_ai_schemas.training.config import TrainingConfig
 
     with pytest.raises(KeyError, match="No Hypothesis strategy registered"):
-        S.model_strategy(TrainerConfig)
+        S.model_strategy(TrainingConfig)
 
 
 def test_testing_module_requires_hypothesis_extra():

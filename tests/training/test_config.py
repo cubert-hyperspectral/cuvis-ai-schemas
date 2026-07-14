@@ -14,7 +14,6 @@ from cuvis_ai_schemas.training import (
     SchedulerConfig,
     Selector,
     SelectorKind,
-    TrainerConfig,
     TrainingConfig,
     create_callbacks_from_config,
 )
@@ -51,101 +50,115 @@ def test_scheduler_config():
     assert scheduler.warmup_epochs == 5
 
 
-def test_trainer_config():
-    """Test TrainerConfig."""
-    trainer = TrainerConfig(
-        max_epochs=100,
-        accelerator="gpu",
-        devices=1,
-        precision="16-mixed",
-    )
-    assert trainer.max_epochs == 100
-    assert trainer.accelerator == "gpu"
-
-
-def test_training_config():
-    """Test TrainingConfig with trainer field syncing."""
+def test_training_config_flat_lightning_fields():
+    """TrainingConfig carries the pl.Trainer kwargs flat (no nested trainer)."""
     config = TrainingConfig(
         seed=42,
         max_epochs=50,
-        batch_size=32,
+        accelerator="gpu",
+        devices=1,
+        precision="16-mixed",
         optimizer=OptimizerConfig(name="adamw", lr=0.001),
     )
-
-    # Verify trainer fields are synced
-    assert config.trainer.max_epochs == 50
     assert config.max_epochs == 50
+    assert config.accelerator == "gpu"
+    assert config.precision == "16-mixed"
+    assert not hasattr(config, "trainer")
 
-    # Test JSON serialization
-    json_str = config.to_json()
-    loaded = TrainingConfig.from_json(json_str)
+    # JSON round-trip is stable on the flat shape
+    loaded = TrainingConfig.from_json(config.to_json())
     assert loaded.seed == config.seed
     assert loaded.max_epochs == config.max_epochs
+    assert loaded.accelerator == config.accelerator
 
 
-def test_training_config_trainer_syncs_gradient_clip():
-    """Test _sync_trainer_fields for gradient_clip_val."""
-    # Trainer provides gradient_clip_val, top-level not set
+def test_to_lightning_kwargs_is_the_trainer_allowlist():
+    """to_lightning_kwargs returns exactly the raw pl.Trainer kwargs, nothing else."""
     config = TrainingConfig(
-        trainer=TrainerConfig(gradient_clip_val=1.0),
-    )
-    assert config.gradient_clip_val == 1.0
-
-    # Top-level provides gradient_clip_val, synced to trainer
-    config = TrainingConfig(gradient_clip_val=0.5)
-    assert config.trainer.gradient_clip_val == 0.5
-
-
-def test_training_config_trainer_syncs_accumulate_grad():
-    """Test _sync_trainer_fields for accumulate_grad_batches."""
-    config = TrainingConfig(
-        trainer=TrainerConfig(accumulate_grad_batches=4),
-    )
-    assert config.accumulate_grad_batches == 4
-
-
-def test_training_config_callbacks_synced_to_trainer():
-    """Test that callbacks are synced to trainer config."""
-    cb = CallbacksConfig(early_stopping=[EarlyStoppingConfig(monitor="val_loss")])
-    config = TrainingConfig(callbacks=cb)
-    assert config.trainer.callbacks is cb
-
-
-def test_sync_matrix_explicit_top_level_wins():
-    """An explicitly-set top-level value is pushed to the trainer, for all 3 fields."""
-    config = TrainingConfig(
-        max_epochs=50,
+        seed=7,
+        max_epochs=20,
+        accelerator="gpu",
+        optimizer=OptimizerConfig(name="adamw"),
+        scheduler=SchedulerConfig(name="cosine", t_max=10),
+        callbacks=CallbacksConfig(early_stopping=[EarlyStoppingConfig(monitor="val_loss")]),
         gradient_clip_val=1.0,
-        accumulate_grad_batches=4,
-        trainer=TrainerConfig(max_epochs=7, gradient_clip_val=2.0, accumulate_grad_batches=2),
     )
-    assert (config.max_epochs, config.trainer.max_epochs) == (50, 50)
-    assert (config.gradient_clip_val, config.trainer.gradient_clip_val) == (1.0, 1.0)
-    assert (config.accumulate_grad_batches, config.trainer.accumulate_grad_batches) == (4, 4)
+    kwargs = config.to_lightning_kwargs()
+
+    # Orchestration fields never leak into pl.Trainer(**kwargs)
+    for orchestration in ("seed", "optimizer", "scheduler", "callbacks"):
+        assert orchestration not in kwargs
+
+    # Every returned key is a real Lightning field, and set fields survive
+    assert set(kwargs) <= set(TrainingConfig._LIGHTNING_FIELDS)
+    assert kwargs["max_epochs"] == 20
+    assert kwargs["accelerator"] == "gpu"
+    assert kwargs["gradient_clip_val"] == 1.0
+    # exclude_none drops unset optionals
+    assert "devices" not in kwargs
 
 
-def test_sync_matrix_trainer_value_pulled_up_when_top_unset():
-    """A non-None trainer value is pulled up when the top-level field is unset."""
+def test_old_nested_trainer_shape_is_rejected():
+    """The pre-fold nested-trainer / dead-field shape fails under extra=forbid."""
+    with pytest.raises(ValidationError):
+        TrainingConfig.model_validate({"seed": 42, "trainer": {"max_epochs": 20}})
+    with pytest.raises(ValidationError):
+        TrainingConfig.model_validate({"max_epochs": 20, "batch_size": 32})
+    with pytest.raises(ValidationError):
+        TrainingConfig.model_validate({"max_epochs": 20, "num_workers": 4})
+
+
+def test_lightning_field_defaults():
+    """The pl.Trainer-derived fields keep their documented defaults."""
+    config = TrainingConfig()
+    assert config.max_epochs == 100
+    assert config.accelerator == "auto"
+    assert config.precision == "32-true"
+    assert config.devices is None
+    assert config.callbacks is None
+
+
+@pytest.mark.parametrize("precision", ["16-mixed", "bf16", 16, 32])
+def test_precision_accepts_str_or_int(precision):
+    """precision is a str | int union."""
+    assert TrainingConfig(precision=precision).precision == precision
+
+
+@pytest.mark.parametrize("devices", [1, "auto", None])
+def test_devices_accepts_int_str_or_none(devices):
+    """devices is an int | str | None union."""
+    assert TrainingConfig(devices=devices).devices == devices
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"max_epochs": 0},
+        {"accumulate_grad_batches": 0},
+        {"log_every_n_steps": 0},
+        {"check_val_every_n_epoch": 0},
+        {"gradient_clip_val": -1.0},
+        {"val_check_interval": -0.5},
+    ],
+)
+def test_out_of_range_lightning_values_rejected(kwargs):
+    """Field range constraints reject out-of-range Lightning values."""
+    with pytest.raises(ValidationError):
+        TrainingConfig(**kwargs)
+
+
+def test_callbacks_survive_dict_round_trip():
+    """A nested CallbacksConfig survives a dict round-trip on the flat config."""
     config = TrainingConfig(
-        trainer=TrainerConfig(max_epochs=7, gradient_clip_val=2.0, accumulate_grad_batches=2),
+        callbacks=CallbacksConfig(early_stopping=[EarlyStoppingConfig(monitor="val_loss")])
     )
-    assert config.max_epochs == 7
-    assert config.gradient_clip_val == 2.0
-    assert config.accumulate_grad_batches == 2
+    assert TrainingConfig.from_dict(config.to_dict()) == config
 
 
-def test_sync_matrix_explicit_none_clears_trainer_gradient_clip():
-    """Explicit top-level gradient_clip_val=None now clears a stale trainer value.
-
-    This is the unified-semantics fix: previously the trainer kept its value
-    because an explicit top-level None was not pushed down.
-    """
-    config = TrainingConfig(
-        gradient_clip_val=None,
-        trainer=TrainerConfig(gradient_clip_val=2.0),
-    )
-    assert config.gradient_clip_val is None
-    assert config.trainer.gradient_clip_val is None
+def test_extra_field_rejected():
+    """Unknown fields are rejected (extra='forbid')."""
+    with pytest.raises(ValidationError):
+        TrainingConfig(unknown="x")
 
 
 def test_to_dict_config_without_omegaconf_returns_plain_dict():
@@ -170,10 +183,11 @@ def test_to_dict_config_with_omegaconf_returns_dictconfig():
 
 def test_training_config_from_dict_config():
     """Test from_dict_config with a plain dict."""
-    data = {"seed": 123, "max_epochs": 25, "batch_size": 8}
+    data = {"seed": 123, "max_epochs": 25, "accelerator": "cpu"}
     config = TrainingConfig.from_dict_config(data)
     assert config.seed == 123
     assert config.max_epochs == 25
+    assert config.accelerator == "cpu"
 
 
 def test_from_dict_config_with_dictconfig():
@@ -189,9 +203,9 @@ def test_from_dict_config_with_non_dict_mapping():
     """from_dict_config coerces a non-dict mapping into a dict before validating."""
     from types import MappingProxyType
 
-    config = TrainingConfig.from_dict_config(MappingProxyType({"seed": 9, "batch_size": 4}))
+    config = TrainingConfig.from_dict_config(MappingProxyType({"seed": 9, "max_epochs": 4}))
     assert config.seed == 9
-    assert config.batch_size == 4
+    assert config.max_epochs == 4
 
 
 def test_data_config():
@@ -367,6 +381,23 @@ def test_trainrun_save_and_load(tmp_path):
     assert loaded.name == "test_run"
     assert loaded.data.data_module == "cu3s"
     assert loaded.data.params["cu3s_file_path"] == "/data/test.cu3s"
+
+
+def test_trainrun_with_training_round_trips_flat(tmp_path):
+    """A trainrun carrying a training block round-trips without a nested ``trainer`` key."""
+    config = TrainRunConfig(
+        name="grad_run",
+        data=DataConfig(data_module="cu3s", params={"cu3s_file_path": "/data/test.cu3s"}),
+        training=TrainingConfig(seed=7, max_epochs=5, accelerator="cpu"),
+    )
+    path = tmp_path / "trainrun.yaml"
+    config.save_to_file(path)
+
+    assert "trainer:" not in path.read_text(encoding="utf-8")
+    loaded = TrainRunConfig.load_from_file(path)
+    assert loaded.training is not None
+    assert loaded.training.max_epochs == 5
+    assert not hasattr(loaded.training, "trainer")
 
 
 def test_trainrun_pipeline_is_a_reference():

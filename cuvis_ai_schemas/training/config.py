@@ -4,20 +4,28 @@ from __future__ import annotations
 
 from typing import Any, ClassVar
 
-from pydantic import Field, model_validator
+from pydantic import Field
 
 from cuvis_ai_schemas.base import BaseSchemaModel
 from cuvis_ai_schemas.training.callbacks import CallbacksConfig
 from cuvis_ai_schemas.training.optimizer import OptimizerConfig
 from cuvis_ai_schemas.training.scheduler import SchedulerConfig
-from cuvis_ai_schemas.training.trainer import TrainerConfig
 
 
 class TrainingConfig(BaseSchemaModel):
-    """Complete training configuration."""
+    """Complete gradient-training configuration.
+
+    Flat set of hyperparameters for a gradient-training run: the run-level
+    knobs (``seed``, ``optimizer``, ``scheduler``, ``callbacks``) plus the
+    ``pytorch_lightning.Trainer`` keyword arguments. ``callbacks`` is schema
+    input used to build real Lightning callbacks (see
+    ``to_lightning_kwargs`` / ``create_callbacks_from_config``), not a raw
+    ``pl.Trainer`` keyword.
+    """
 
     __proto_message__: ClassVar[str] = "TrainingConfig"
 
+    # Orchestration (not pl.Trainer kwargs)
     seed: int = Field(default=42, ge=0, description="Random seed for reproducibility")
     optimizer: OptimizerConfig = Field(
         default_factory=OptimizerConfig, description="Optimizer configuration"
@@ -28,46 +36,59 @@ class TrainingConfig(BaseSchemaModel):
     callbacks: CallbacksConfig | None = Field(
         default=None, description="Training callbacks (optional)"
     )
-    trainer: TrainerConfig = Field(
-        default_factory=TrainerConfig, description="Lightning Trainer configuration"
-    )
+
+    # pl.Trainer keyword arguments
     max_epochs: int = Field(default=100, ge=1, le=10000, description="Maximum training epochs")
-    batch_size: int = Field(default=32, ge=1, description="Batch size")
-    num_workers: int = Field(default=4, ge=0, description="Number of data loading workers")
-    gradient_clip_val: float | None = Field(
-        default=None, ge=0.0, description="Gradient clipping value (optional)"
-    )
+    accelerator: str = Field(default="auto", description="Accelerator type")
+    devices: int | str | None = Field(default=None, description="Number of devices or IDs")
+    default_root_dir: str | None = Field(default=None, description="Root directory for outputs")
+    precision: str | int = Field(default="32-true", description="Precision mode")
     accumulate_grad_batches: int = Field(
         default=1, ge=1, description="Accumulate gradients over n batches"
     )
+    enable_progress_bar: bool = Field(default=True, description="Show progress bar")
+    enable_checkpointing: bool = Field(default=False, description="Enable checkpointing")
+    log_every_n_steps: int = Field(default=50, ge=1, description="Log frequency in steps")
+    val_check_interval: float | int | None = Field(
+        default=1.0, ge=0.0, description="Validation interval"
+    )
+    check_val_every_n_epoch: int | None = Field(
+        default=1, ge=1, description="Validate every n epochs"
+    )
+    gradient_clip_val: float | None = Field(
+        default=None, ge=0.0, description="Gradient clipping value (optional)"
+    )
+    deterministic: bool = Field(default=False, description="Deterministic training")
+    benchmark: bool = Field(default=False, description="Enable cudnn benchmark")
 
-    @model_validator(mode="after")
-    def _sync_trainer_fields(self) -> TrainingConfig:
-        """Keep overlapping top-level hyperparameters in sync with the trainer.
+    _LIGHTNING_FIELDS: ClassVar[frozenset[str]] = frozenset(
+        {
+            "max_epochs",
+            "accelerator",
+            "devices",
+            "default_root_dir",
+            "precision",
+            "accumulate_grad_batches",
+            "enable_progress_bar",
+            "enable_checkpointing",
+            "log_every_n_steps",
+            "val_check_interval",
+            "check_val_every_n_epoch",
+            "gradient_clip_val",
+            "deterministic",
+            "benchmark",
+        }
+    )
 
-        One uniform rule per overlapping field: an explicitly-set top-level
-        value (including ``None``) is authoritative and pushed down to the
-        trainer; otherwise a non-``None`` trainer value is pulled up. This
-        treats all three fields identically (the previous code special-cased
-        ``gradient_clip_val`` so an explicit top-level ``None`` did not clear a
-        stale trainer value).
+    def to_lightning_kwargs(self) -> dict[str, Any]:
+        """Return the subset of fields passed directly to ``pl.Trainer(**kwargs)``.
+
+        An explicit allowlist: ``pl.Trainer`` raises on an unknown keyword, so
+        a field that is not a raw trainer argument (``seed``, ``optimizer``,
+        ``scheduler``, ``callbacks``) is never forwarded. ``callbacks`` is built
+        into real Lightning callbacks separately by the trainer.
         """
-        fields_set: set[str] = getattr(self, "model_fields_set", set())
-
-        def _sync(top_name: str, trainer_name: str) -> None:
-            """Sync one overlapping field; explicit top-level value wins."""
-            if top_name not in fields_set and getattr(self.trainer, trainer_name) is not None:
-                setattr(self, top_name, getattr(self.trainer, trainer_name))
-            else:
-                setattr(self.trainer, trainer_name, getattr(self, top_name))
-
-        _sync("max_epochs", "max_epochs")
-        _sync("gradient_clip_val", "gradient_clip_val")
-        _sync("accumulate_grad_batches", "accumulate_grad_batches")
-
-        if self.callbacks is not None:
-            self.trainer.callbacks = self.callbacks
-        return self
+        return self.model_dump(include=set(self._LIGHTNING_FIELDS), exclude_none=True)
 
     def to_dict_config(self) -> dict[str, Any]:
         """Compatibility shim for legacy OmegaConf usage."""

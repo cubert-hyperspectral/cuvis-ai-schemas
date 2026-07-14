@@ -19,7 +19,6 @@ from cuvis_ai_schemas.training.data import (
 from cuvis_ai_schemas.training.optimizer import OptimizerConfig
 from cuvis_ai_schemas.training.run import TrainRunConfig
 from cuvis_ai_schemas.training.scheduler import SchedulerConfig
-from cuvis_ai_schemas.training.trainer import TrainerConfig
 
 __all__ = [
     # Callbacks
@@ -40,8 +39,6 @@ __all__ = [
     "OptimizerConfig",
     # Scheduler
     "SchedulerConfig",
-    # Trainer
-    "TrainerConfig",
     # Run
     "PipelineConfig",
     "PipelineMetadata",
