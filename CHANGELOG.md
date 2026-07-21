@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added `RestoreTrainRunRequest.session_id` (optional, empty = server-created session): restore a trainrun into an existing session so plugin resolution can use that session's client-pushed catalog. This is the only way to restore a trainrun whose pipeline declares `plugins:` — the previous fresh-session-always behavior had an empty catalog by construction, so any plugin-referencing trainrun failed with "call LoadPlugin first" and no session existed to load plugins into. Additive and wire-compatible.
 - Added cooperative training cancellation to the gRPC contract: a `StopTrain` RPC (`StopTrainRequest{session_id}` → `StopTrainResponse{accepted, message}`) on both `CuvisAIService` and `RunRuntime`, and a terminal `TRAIN_STATUS_CANCELLED = 4` value on `TrainStatus`. `StopTrain` registers a stop request that training honors at the next batch/node boundary; the terminal `CANCELLED` status is emitted on the active `Train` stream, and the stop flag stays set until the next `SetTrainRunConfig` so a stop issued between trainer phases also cancels the not-yet-started phase of the same run. Regenerated the `cuvis_ai_pb2` stubs; additive and wire-compatible (`buf breaking` clean), no pydantic model changes.
 
 ## 0.8.0 - 2026-07-14

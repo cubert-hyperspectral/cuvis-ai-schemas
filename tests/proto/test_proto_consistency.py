@@ -79,3 +79,11 @@ def test_stop_train_rpc_on_both_services() -> None:
         assert "StopTrain" in methods
         assert methods["StopTrain"].input_type.name == "StopTrainRequest"
         assert methods["StopTrain"].output_type.name == "StopTrainResponse"
+
+
+def test_restore_train_run_accepts_target_session() -> None:
+    """RestoreTrainRun can restore into a client-prepared session (plugin catalog)."""
+    fields = cuvis_ai_pb2.RestoreTrainRunRequest.DESCRIPTOR.fields_by_name
+
+    assert "session_id" in fields
+    assert fields["session_id"].number == 4

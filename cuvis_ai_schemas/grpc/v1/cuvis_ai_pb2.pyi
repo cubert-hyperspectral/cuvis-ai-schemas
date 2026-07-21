@@ -739,14 +739,16 @@ class SaveTrainRunResponse(_message.Message):
     def __init__(self, success: bool = ..., trainrun_path: _Optional[str] = ..., pipeline_path: _Optional[str] = ..., weights_path: _Optional[str] = ...) -> None: ...
 
 class RestoreTrainRunRequest(_message.Message):
-    __slots__ = ("trainrun_path", "weights_path", "strict")
+    __slots__ = ("trainrun_path", "weights_path", "strict", "session_id")
     TRAINRUN_PATH_FIELD_NUMBER: _ClassVar[int]
     WEIGHTS_PATH_FIELD_NUMBER: _ClassVar[int]
     STRICT_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     trainrun_path: str
     weights_path: str
     strict: bool
-    def __init__(self, trainrun_path: _Optional[str] = ..., weights_path: _Optional[str] = ..., strict: bool = ...) -> None: ...
+    session_id: str
+    def __init__(self, trainrun_path: _Optional[str] = ..., weights_path: _Optional[str] = ..., strict: bool = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class RestoreTrainRunResponse(_message.Message):
     __slots__ = ("session_id", "trainrun")

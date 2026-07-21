@@ -534,6 +534,12 @@ message RestoreTrainRunRequest {
   string trainrun_path = 1;  // Path to train run .yaml file
   optional string weights_path = 2;  // Optional: path to .pt weights. If omitted, loads config only
   optional bool strict = 3;          // Strict weight loading (default: true)
+  // Restore into an existing session instead of a server-created one. Plugin
+  // resolution uses that session's client-pushed catalog, so this is the ONLY
+  // way to restore a trainrun whose pipeline declares plugins: CreateSession,
+  // LoadPlugin each manifest, then RestoreTrainRun with that id. Empty keeps
+  // the fresh-session behavior (works for plugin-less pipelines only).
+  string session_id = 4;
 }
 
 message RestoreTrainRunResponse {
