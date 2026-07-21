@@ -48,3 +48,34 @@ def test_pipeline_discovery_uses_explicit_lookup_and_resolved_paths() -> None:
     assert info_fields["resolved_path"].number == 2
     assert "pipeline_path" in request_fields
     assert request_fields["pipeline_path"].number == 1
+
+
+def test_train_status_has_terminal_cancelled_value() -> None:
+    """TrainStatus must carry the terminal CANCELLED value for cooperative stop."""
+    values = cuvis_ai_pb2.TrainStatus.DESCRIPTOR.values_by_name
+
+    assert "TRAIN_STATUS_CANCELLED" in values
+    assert values["TRAIN_STATUS_CANCELLED"].number == 4
+
+
+def test_stop_train_messages_shape() -> None:
+    """StopTrain carries a session id in and an accepted flag + message out."""
+    request_fields = cuvis_ai_pb2.StopTrainRequest.DESCRIPTOR.fields_by_name
+    response_fields = cuvis_ai_pb2.StopTrainResponse.DESCRIPTOR.fields_by_name
+
+    assert set(request_fields) == {"session_id"}
+    assert request_fields["session_id"].number == 1
+    assert set(response_fields) == {"accepted", "message"}
+    assert response_fields["accepted"].number == 1
+    assert response_fields["message"].number == 2
+
+
+def test_stop_train_rpc_on_both_services() -> None:
+    """StopTrain must exist on the public service and the child runtime alike."""
+    services = cuvis_ai_pb2.DESCRIPTOR.services_by_name
+
+    for service_name in ("CuvisAIService", "RunRuntime"):
+        methods = services[service_name].methods_by_name
+        assert "StopTrain" in methods
+        assert methods["StopTrain"].input_type.name == "StopTrainRequest"
+        assert methods["StopTrain"].output_type.name == "StopTrainResponse"

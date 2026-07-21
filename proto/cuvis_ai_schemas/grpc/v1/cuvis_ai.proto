@@ -45,6 +45,9 @@ enum TrainStatus {
   TRAIN_STATUS_RUNNING = 1;
   TRAIN_STATUS_COMPLETE = 2;
   TRAIN_STATUS_ERROR = 3;
+  // Terminal status of a run stopped via StopTrain (or a dropped Train
+  // stream): the run ended early and cleanly, distinct from COMPLETE/ERROR.
+  TRAIN_STATUS_CANCELLED = 4;
 }
 
 enum PointType {
@@ -458,6 +461,21 @@ message GetTrainStatusResponse {
   TrainResponse latest_progress = 1;
 }
 
+message StopTrainRequest {
+  string session_id = 1;
+}
+
+message StopTrainResponse {
+  // True when the stop request was registered for the session (cooperative
+  // cancel: training stops at the next batch/node boundary). It does NOT
+  // mean training has already stopped — the terminal TRAIN_STATUS_CANCELLED
+  // arrives on the active Train stream. The stop flag stays set until the
+  // next SetTrainRunConfig, so a stop issued between trainer phases also
+  // cancels the not-yet-started phase of the same run.
+  bool accepted = 1;
+  string message = 2;
+}
+
 message GetTrainingCapabilitiesRequest {}
 
 message GetTrainingCapabilitiesResponse {
@@ -727,6 +745,7 @@ service CuvisAIService {
   // Training workflow
   rpc SetTrainRunConfig(SetTrainRunConfigRequest) returns (SetTrainRunConfigResponse);
   rpc Train(TrainRequest) returns (stream TrainResponse);
+  rpc StopTrain(StopTrainRequest) returns (StopTrainResponse);
   rpc GetTrainStatus(GetTrainStatusRequest) returns (GetTrainStatusResponse);
   rpc GetTrainingCapabilities(GetTrainingCapabilitiesRequest) returns (GetTrainingCapabilitiesResponse);
 
@@ -846,6 +865,7 @@ service RunRuntime {
   // Execution.
   rpc Inference(InferenceRequest) returns (InferenceResponse);
   rpc Train(TrainRequest) returns (stream TrainResponse);
+  rpc StopTrain(StopTrainRequest) returns (StopTrainResponse);
   rpc GetTrainStatus(GetTrainStatusRequest) returns (GetTrainStatusResponse);
 
   // Lifecycle.
