@@ -73,6 +73,11 @@ class CuvisAIServiceStub:
                 request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.SerializeToString,
                 response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.FromString,
                 _registered_method=True)
+        self.StopTrain = channel.unary_unary(
+                '/cuvis_ai.v1.CuvisAIService/StopTrain',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopTrainRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopTrainResponse.FromString,
+                _registered_method=True)
         self.GetTrainStatus = channel.unary_unary(
                 '/cuvis_ai.v1.CuvisAIService/GetTrainStatus',
                 request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusRequest.SerializeToString,
@@ -232,6 +237,12 @@ class CuvisAIServiceServicer:
         raise NotImplementedError('Method not implemented!')
 
     def Train(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def StopTrain(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -410,6 +421,11 @@ def add_CuvisAIServiceServicer_to_server(servicer, server):
                     servicer.Train,
                     request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.FromString,
                     response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.SerializeToString,
+            ),
+            'StopTrain': grpc.unary_unary_rpc_method_handler(
+                    servicer.StopTrain,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopTrainRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopTrainResponse.SerializeToString,
             ),
             'GetTrainStatus': grpc.unary_unary_rpc_method_handler(
                     servicer.GetTrainStatus,
@@ -798,6 +814,33 @@ class CuvisAIService:
             '/cuvis_ai.v1.CuvisAIService/Train',
             cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.SerializeToString,
             cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def StopTrain(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/cuvis_ai.v1.CuvisAIService/StopTrain',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopTrainRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopTrainResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1337,6 +1380,11 @@ class RunRuntimeStub:
                 request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.SerializeToString,
                 response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.FromString,
                 _registered_method=True)
+        self.StopTrain = channel.unary_unary(
+                '/cuvis_ai.v1.RunRuntime/StopTrain',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopTrainRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopTrainResponse.FromString,
+                _registered_method=True)
         self.GetTrainStatus = channel.unary_unary(
                 '/cuvis_ai.v1.RunRuntime/GetTrainStatus',
                 request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusRequest.SerializeToString,
@@ -1440,6 +1488,12 @@ class RunRuntimeServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def StopTrain(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def GetTrainStatus(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -1527,6 +1581,11 @@ def add_RunRuntimeServicer_to_server(servicer, server):
                     servicer.Train,
                     request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.FromString,
                     response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.SerializeToString,
+            ),
+            'StopTrain': grpc.unary_unary_rpc_method_handler(
+                    servicer.StopTrain,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopTrainRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopTrainResponse.SerializeToString,
             ),
             'GetTrainStatus': grpc.unary_unary_rpc_method_handler(
                     servicer.GetTrainStatus,
@@ -1873,6 +1932,33 @@ class RunRuntime:
             '/cuvis_ai.v1.RunRuntime/Train',
             cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainRequest.SerializeToString,
             cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.TrainResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def StopTrain(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/cuvis_ai.v1.RunRuntime/StopTrain',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopTrainRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.StopTrainResponse.FromString,
             options,
             channel_credentials,
             insecure,

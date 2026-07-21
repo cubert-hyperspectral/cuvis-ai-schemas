@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added cooperative training cancellation to the gRPC contract: a `StopTrain` RPC (`StopTrainRequest{session_id}` → `StopTrainResponse{accepted, message}`) on both `CuvisAIService` and `RunRuntime`, and a terminal `TRAIN_STATUS_CANCELLED = 4` value on `TrainStatus`. `StopTrain` registers a stop request that training honors at the next batch/node boundary; the terminal `CANCELLED` status is emitted on the active `Train` stream, and the stop flag stays set until the next `SetTrainRunConfig` so a stop issued between trainer phases also cancels the not-yet-started phase of the same run. Regenerated the `cuvis_ai_pb2` stubs; additive and wire-compatible (`buf breaking` clean), no pydantic model changes.
 - Clarified the `SampleRef.label_id` docstring: it is an optional override of the COCO `image_id` for annotation lookup, and unset (the default) keys the annotation by index. Documentation only, no schema or wire change.
 
 ## 0.8.0 - 2026-07-14
