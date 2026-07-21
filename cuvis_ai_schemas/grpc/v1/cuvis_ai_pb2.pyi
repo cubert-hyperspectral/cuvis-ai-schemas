@@ -47,6 +47,7 @@ class TrainStatus(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     TRAIN_STATUS_RUNNING: _ClassVar[TrainStatus]
     TRAIN_STATUS_COMPLETE: _ClassVar[TrainStatus]
     TRAIN_STATUS_ERROR: _ClassVar[TrainStatus]
+    TRAIN_STATUS_CANCELLED: _ClassVar[TrainStatus]
 
 class PointType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -148,6 +149,7 @@ TRAIN_STATUS_UNSPECIFIED: TrainStatus
 TRAIN_STATUS_RUNNING: TrainStatus
 TRAIN_STATUS_COMPLETE: TrainStatus
 TRAIN_STATUS_ERROR: TrainStatus
+TRAIN_STATUS_CANCELLED: TrainStatus
 POINT_TYPE_UNSPECIFIED: PointType
 POINT_TYPE_POSITIVE: PointType
 POINT_TYPE_NEGATIVE: PointType
@@ -644,6 +646,20 @@ class GetTrainStatusResponse(_message.Message):
     latest_progress: TrainResponse
     def __init__(self, latest_progress: _Optional[_Union[TrainResponse, _Mapping]] = ...) -> None: ...
 
+class StopTrainRequest(_message.Message):
+    __slots__ = ("session_id",)
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
+    session_id: str
+    def __init__(self, session_id: _Optional[str] = ...) -> None: ...
+
+class StopTrainResponse(_message.Message):
+    __slots__ = ("accepted", "message")
+    ACCEPTED_FIELD_NUMBER: _ClassVar[int]
+    MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    accepted: bool
+    message: str
+    def __init__(self, accepted: bool = ..., message: _Optional[str] = ...) -> None: ...
+
 class GetTrainingCapabilitiesRequest(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
@@ -723,14 +739,16 @@ class SaveTrainRunResponse(_message.Message):
     def __init__(self, success: bool = ..., trainrun_path: _Optional[str] = ..., pipeline_path: _Optional[str] = ..., weights_path: _Optional[str] = ...) -> None: ...
 
 class RestoreTrainRunRequest(_message.Message):
-    __slots__ = ("trainrun_path", "weights_path", "strict")
+    __slots__ = ("trainrun_path", "weights_path", "strict", "session_id")
     TRAINRUN_PATH_FIELD_NUMBER: _ClassVar[int]
     WEIGHTS_PATH_FIELD_NUMBER: _ClassVar[int]
     STRICT_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     trainrun_path: str
     weights_path: str
     strict: bool
-    def __init__(self, trainrun_path: _Optional[str] = ..., weights_path: _Optional[str] = ..., strict: bool = ...) -> None: ...
+    session_id: str
+    def __init__(self, trainrun_path: _Optional[str] = ..., weights_path: _Optional[str] = ..., strict: bool = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class RestoreTrainRunResponse(_message.Message):
     __slots__ = ("session_id", "trainrun")
