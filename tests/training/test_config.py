@@ -7,6 +7,9 @@ import pytest
 from pydantic import ValidationError
 
 from cuvis_ai_schemas.training import (
+    Constraint,
+    ConstraintKind,
+    ConstraintSeverity,
     DataConfig,
     DataSplitConfig,
     OptimizerConfig,
@@ -16,6 +19,7 @@ from cuvis_ai_schemas.training import (
     SelectorKind,
     TrainingConfig,
     create_callbacks_from_config,
+    default_constraints,
 )
 from cuvis_ai_schemas.training.callbacks import (
     CallbacksConfig,
@@ -225,7 +229,7 @@ def test_data_config():
     assert data.splits is not None
     assert data.splits.train[0].source == "a.cu3s"
     assert data.splits.train[0].ids == [0, 2, 3]
-    assert data.splits.leakage_check == "error"
+    assert data.splits.constraints == []
     assert data.batch_size == 16
     assert data.num_workers == 2
     assert data.params["cu3s_file_path"] == "/path/to/data.cu3s"
@@ -323,12 +327,53 @@ def test_selector_kind_requires_its_field(kind):
 
 
 def test_data_split_config_defaults_and_old_shape_rejected():
-    """Defaults: leakage_check=error, empty predict; the old flat shape is rejected."""
+    """Defaults: empty constraints + predict; the old flat/leakage shapes are rejected."""
     s = DataSplitConfig()
-    assert s.leakage_check == "error"
+    assert s.constraints == []  # schema default is "no checks declared"
     assert s.predict == []
     with pytest.raises(ValidationError):
         DataSplitConfig(train_ids=[0, 1])  # extra=forbid: the flat field is gone
+    with pytest.raises(ValidationError):
+        DataSplitConfig(leakage_check="warn")  # extra=forbid: leakage_check is gone
+
+
+def test_default_constraints_authoring_set():
+    """The authoring default set: no_split_overlap@error + no_train_anomalous@warn (no source overlap)."""
+    cs = default_constraints()
+    by_kind = {c.kind: c.severity for c in cs}
+    assert by_kind == {
+        ConstraintKind.NO_SPLIT_OVERLAP: ConstraintSeverity.ERROR,
+        ConstraintKind.NO_TRAIN_ANOMALOUS: ConstraintSeverity.WARN,
+    }
+    assert ConstraintKind.NO_SOURCE_OVERLAP not in by_kind
+
+
+def test_constraint_severity_defaults_to_error():
+    """A Constraint built without severity falls back to error (the field default)."""
+    assert Constraint(kind=ConstraintKind.NO_SOURCE_OVERLAP).severity == ConstraintSeverity.ERROR
+
+
+def test_duplicate_constraint_kinds_rejected():
+    """Two entries of the same kind is a ValidationError (mirrors Selector structure checks)."""
+    with pytest.raises(ValidationError):
+        DataSplitConfig(
+            constraints=[
+                Constraint(
+                    kind=ConstraintKind.NO_TRAIN_ANOMALOUS, severity=ConstraintSeverity.ERROR
+                ),
+                Constraint(
+                    kind=ConstraintKind.NO_TRAIN_ANOMALOUS, severity=ConstraintSeverity.WARN
+                ),
+            ]
+        )
+
+
+def test_constraints_round_trip_and_unknown_kind_rejected():
+    """constraints survive a dict round-trip; an unknown kind is rejected."""
+    s = DataSplitConfig(constraints=default_constraints())
+    assert DataSplitConfig.from_dict(s.to_dict()).constraints == s.constraints
+    with pytest.raises(ValidationError):
+        DataSplitConfig.from_dict({"constraints": [{"kind": "no_such_kind", "severity": "error"}]})
 
 
 def test_create_callbacks_from_config_none():

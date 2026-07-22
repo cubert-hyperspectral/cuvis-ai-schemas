@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar
 
 from pydantic import Field, model_validator
 
@@ -172,6 +172,63 @@ class Selector(BaseSchemaModel):
         return self
 
 
+class ConstraintKind(StrEnum):
+    """Data-split constraint kinds, evaluated at setup and previewed in the GUI."""
+
+    NO_SPLIT_OVERLAP = "no_split_overlap"
+    NO_SOURCE_OVERLAP = "no_source_overlap"
+    NO_TRAIN_ANOMALOUS = "no_train_anomalous"
+
+
+class ConstraintSeverity(StrEnum):
+    """How a violation is handled: ``error`` raises, ``warn`` logs and continues."""
+
+    ERROR = "error"
+    WARN = "warn"
+
+
+#: Default severity per kind when a producer seeds the authoring set or the UI
+#: re-enables a kind. The generic ``Constraint.severity`` field default is
+#: ``error``; this table is what authoring layers (GUI, generators) apply.
+DEFAULT_CONSTRAINT_SEVERITY: dict[ConstraintKind, ConstraintSeverity] = {
+    ConstraintKind.NO_SPLIT_OVERLAP: ConstraintSeverity.ERROR,
+    ConstraintKind.NO_SOURCE_OVERLAP: ConstraintSeverity.ERROR,
+    ConstraintKind.NO_TRAIN_ANOMALOUS: ConstraintSeverity.WARN,
+}
+
+
+class Constraint(BaseSchemaModel):
+    """One split constraint: a typed ``kind`` plus the ``severity`` of a violation.
+
+    Presence in ``DataSplitConfig.constraints`` means active; a disabled constraint
+    is simply absent (this subsumes the old ``leakage_check='off'``).
+    """
+
+    kind: ConstraintKind = Field(description="Constraint kind")
+    severity: ConstraintSeverity = Field(
+        default=ConstraintSeverity.ERROR, description="error raises on violation, warn logs"
+    )
+
+
+def default_constraints() -> list[Constraint]:
+    """The authoring default set seeded on a new split doc.
+
+    ``no_split_overlap`` (error, preserving the old leakage default) and
+    ``no_train_anomalous`` (warn); ``no_source_overlap`` is opt-in (off). Producers
+    (GUI ``newDoc``, generators) use this; the schema field default stays ``[]``.
+    """
+    return [
+        Constraint(
+            kind=ConstraintKind.NO_SPLIT_OVERLAP,
+            severity=DEFAULT_CONSTRAINT_SEVERITY[ConstraintKind.NO_SPLIT_OVERLAP],
+        ),
+        Constraint(
+            kind=ConstraintKind.NO_TRAIN_ANOMALOUS,
+            severity=DEFAULT_CONSTRAINT_SEVERITY[ConstraintKind.NO_TRAIN_ANOMALOUS],
+        ),
+    ]
+
+
 class DataSplitConfig(BaseSchemaModel):
     """Split assignment as composable selectors over a ``SampleRef`` universe.
 
@@ -184,10 +241,6 @@ class DataSplitConfig(BaseSchemaModel):
         default=None,
         description="Evaluate the assignment from this json (relative to the trainrun yaml dir)",
     )
-    leakage_check: Literal["error", "warn", "off"] = Field(
-        default="error",
-        description="train/val/test disjointness: error raises, warn logs, off skips",
-    )
     universe_hash: str | None = Field(
         default=None,
         description="Ordered file-list fingerprint; verified on load when dir_indices remain",
@@ -198,6 +251,18 @@ class DataSplitConfig(BaseSchemaModel):
     predict: list[Selector] = Field(
         default_factory=list, description="Predict selectors; empty -> all samples"
     )
+    constraints: list[Constraint] = Field(
+        default_factory=list,
+        description="Active split constraints; empty means no checks declared",
+    )
+
+    @model_validator(mode="after")
+    def _validate_constraints(self) -> DataSplitConfig:
+        kinds = [c.kind for c in self.constraints]
+        dupes = sorted({k.value for k in kinds if kinds.count(k) > 1})
+        if dupes:
+            raise ValueError(f"duplicate constraint kind(s): {', '.join(dupes)}")
+        return self
 
 
 class DataConfig(BaseSchemaModel):
@@ -220,4 +285,15 @@ class DataConfig(BaseSchemaModel):
     params: dict[str, Any] = Field(default_factory=dict, description="Module-specific arguments")
 
 
-__all__ = ["DataConfig", "DataSplitConfig", "SampleRef", "SelectorKind", "Selector"]
+__all__ = [
+    "DataConfig",
+    "DataSplitConfig",
+    "SampleRef",
+    "SelectorKind",
+    "Selector",
+    "Constraint",
+    "ConstraintKind",
+    "ConstraintSeverity",
+    "DEFAULT_CONSTRAINT_SEVERITY",
+    "default_constraints",
+]

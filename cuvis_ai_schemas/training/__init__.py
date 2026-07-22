@@ -10,11 +10,16 @@ from cuvis_ai_schemas.training.callbacks import (
 )
 from cuvis_ai_schemas.training.config import TrainingConfig
 from cuvis_ai_schemas.training.data import (
+    DEFAULT_CONSTRAINT_SEVERITY,
+    Constraint,
+    ConstraintKind,
+    ConstraintSeverity,
     DataConfig,
     DataSplitConfig,
     SampleRef,
     Selector,
     SelectorKind,
+    default_constraints,
 )
 from cuvis_ai_schemas.training.optimizer import OptimizerConfig
 from cuvis_ai_schemas.training.run import TrainRunConfig
@@ -35,6 +40,11 @@ __all__ = [
     "SampleRef",
     "Selector",
     "SelectorKind",
+    "Constraint",
+    "ConstraintKind",
+    "ConstraintSeverity",
+    "DEFAULT_CONSTRAINT_SEVERITY",
+    "default_constraints",
     # Optimizer
     "OptimizerConfig",
     # Scheduler

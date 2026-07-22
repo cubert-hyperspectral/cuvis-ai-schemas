@@ -46,6 +46,9 @@ from cuvis_ai_schemas.training.callbacks import (
     LearningRateMonitorConfig,
 )
 from cuvis_ai_schemas.training.data import (
+    Constraint,
+    ConstraintKind,
+    ConstraintSeverity,
     DataConfig,
     DataSplitConfig,
     SampleRef,
@@ -222,18 +225,40 @@ def sample_ref_strategy() -> SearchStrategy[SampleRef]:
     )
 
 
+def constraint_strategy() -> SearchStrategy[Constraint]:
+    """Strategy for a single :class:`Constraint`."""
+    return st.builds(
+        Constraint,
+        kind=st.sampled_from(list(ConstraintKind)),
+        severity=st.sampled_from(list(ConstraintSeverity)),
+    )
+
+
+def constraints_strategy() -> SearchStrategy[list[Constraint]]:
+    """Strategy for a valid ``constraints`` list (unique kinds, per-entry severity)."""
+    return st.lists(
+        st.sampled_from(list(ConstraintKind)),
+        unique=True,
+        max_size=len(ConstraintKind),
+    ).flatmap(
+        lambda kinds: st.tuples(*[st.sampled_from(list(ConstraintSeverity)) for _ in kinds]).map(
+            lambda sevs: [Constraint(kind=k, severity=s) for k, s in zip(kinds, sevs, strict=True)]
+        )
+    )
+
+
 def data_split_config_strategy() -> SearchStrategy[DataSplitConfig]:
     """Strategy for :class:`DataSplitConfig` (per-stage selector lists)."""
     split = st.lists(selector_strategy(), max_size=2)
     return st.builds(
         DataSplitConfig,
         splits_path=st.one_of(st.none(), identifiers),
-        leakage_check=st.sampled_from(["error", "warn", "off"]),
         universe_hash=st.one_of(st.none(), identifiers),
         train=split,
         val=split,
         test=split,
         predict=split,
+        constraints=constraints_strategy(),
     )
 
 
@@ -358,6 +383,7 @@ MODEL_STRATEGIES: dict[type[BaseSchemaModel], SearchStrategy[BaseSchemaModel]] =
     PluginCapabilities: plugin_capabilities_strategy(),
     Selector: selector_strategy(),
     SampleRef: sample_ref_strategy(),
+    Constraint: constraint_strategy(),
     DataSplitConfig: data_split_config_strategy(),
     DataConfig: data_config_strategy(),
     ConnectionConfig: connection_config_strategy(),
