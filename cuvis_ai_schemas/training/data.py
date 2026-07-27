@@ -26,7 +26,10 @@ class SampleRef(BaseSchemaModel):
         default=None, description="Read position within source; None = whole-file sample"
     )
     label_id: int | None = Field(
-        default=None, description="COCO image_id for annotation lookup; defaults to index"
+        default=None,
+        description="Optional COCO image_id override for annotation lookup; unset (the default) "
+        "keys the annotation by index. Current data modules treat index as the image_id and "
+        "leave this None; set it only for a dataset that decouples read position from COCO id.",
     )
     stem: str = Field(default="", description="Filename stem (filled from source when empty)")
     annotation: str | None = Field(default=None, description="Paired json / label path")
