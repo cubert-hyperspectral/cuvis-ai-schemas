@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- Clarified the `SampleRef.label_id` docstring: it is an optional override of the COCO `image_id` for annotation lookup, and unset (the default) keys the annotation by index. Documentation only, no schema or wire change.
+
 ## 0.8.0 - 2026-07-14
 
 - Folded `TrainerConfig` into `TrainingConfig` (breaking): deleted `cuvis_ai_schemas/training/trainer.py` and the `TrainerConfig` export; the 14 `pytorch_lightning.Trainer` keyword fields (`max_epochs`, `accelerator`, `devices`, `default_root_dir`, `precision`, `accumulate_grad_batches`, `enable_progress_bar`, `enable_checkpointing`, `log_every_n_steps`, `val_check_interval`, `check_val_every_n_epoch`, `gradient_clip_val`, `deterministic`, `benchmark`) plus `callbacks` now live flat on `TrainingConfig`. Removed the nested `trainer` field, the duplicated top-level `max_epochs` / `gradient_clip_val` / `accumulate_grad_batches` fields, the `_sync_trainer_fields` validator, and the dead `batch_size` / `num_workers` fields. A trainrun/training YAML or JSON with a `trainer:` / `batch_size` / `num_workers` key now fails `extra="forbid"` validation. The proto message name (`TrainingConfig`) is unchanged.
