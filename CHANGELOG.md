@@ -1,7 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## 0.9.0 - 2026-07-28
 
+- Changed `DataSplitConfig.leakage_check` into a typed `constraints` list (breaking): new `ConstraintKind` StrEnum (`no_split_overlap` — the old train/val/test uid-disjointness check, `no_source_overlap` — no source file spans more than one stage, `no_train_anomalous` — no sample with a `category_id != 0` in train) plus `ConstraintSeverity` (`error` / `warn`) and a `Constraint` model; a duplicate-kind list fails validation. The schema default is an empty list ("no checks declared"); producers seed the authoring default via the new `default_constraints()` helper (`no_split_overlap@error` + `no_train_anomalous@warn`; per-kind defaults in `DEFAULT_CONSTRAINT_SEVERITY`). A `splits.json` carrying `leakage_check` now fails `extra="forbid"` validation — regenerate it.
+- Added `RestoreTrainRunRequest.session_id` (optional, empty = server-created session): restore a trainrun into an existing session so plugin resolution can use that session's client-pushed catalog. This is the only way to restore a trainrun whose pipeline declares `plugins:` — the previous fresh-session-always behavior had an empty catalog by construction, so any plugin-referencing trainrun failed with "call LoadPlugin first" and no session existed to load plugins into. Additive and wire-compatible.
+- Added cooperative training cancellation to the gRPC contract: a `StopTrain` RPC (`StopTrainRequest{session_id}` → `StopTrainResponse{accepted, message}`) on both `CuvisAIService` and `RunRuntime`, and a terminal `TRAIN_STATUS_CANCELLED = 4` value on `TrainStatus`. `StopTrain` registers a stop request that training honors at the next batch/node boundary; the terminal `CANCELLED` status is emitted on the active `Train` stream, and the stop flag stays set until the next `SetTrainRunConfig` so a stop issued between trainer phases also cancels the not-yet-started phase of the same run. Regenerated the `cuvis_ai_pb2` stubs; additive and wire-compatible (`buf breaking` clean), no pydantic model changes.
 - Clarified the `SampleRef.label_id` docstring: it is an optional override of the COCO `image_id` for annotation lookup, and unset (the default) keys the annotation by index. Documentation only, no schema or wire change.
 
 ## 0.8.0 - 2026-07-14

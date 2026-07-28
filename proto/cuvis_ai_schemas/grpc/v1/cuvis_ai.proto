@@ -45,6 +45,9 @@ enum TrainStatus {
   TRAIN_STATUS_RUNNING = 1;
   TRAIN_STATUS_COMPLETE = 2;
   TRAIN_STATUS_ERROR = 3;
+  // Terminal status of a run stopped via StopTrain (or a dropped Train
+  // stream): the run ended early and cleanly, distinct from COMPLETE/ERROR.
+  TRAIN_STATUS_CANCELLED = 4;
 }
 
 enum PointType {
@@ -458,6 +461,21 @@ message GetTrainStatusResponse {
   TrainResponse latest_progress = 1;
 }
 
+message StopTrainRequest {
+  string session_id = 1;
+}
+
+message StopTrainResponse {
+  // True when the stop request was registered for the session (cooperative
+  // cancel: training stops at the next batch/node boundary). It does NOT
+  // mean training has already stopped — the terminal TRAIN_STATUS_CANCELLED
+  // arrives on the active Train stream. The stop flag stays set until the
+  // next SetTrainRunConfig, so a stop issued between trainer phases also
+  // cancels the not-yet-started phase of the same run.
+  bool accepted = 1;
+  string message = 2;
+}
+
 message GetTrainingCapabilitiesRequest {}
 
 message GetTrainingCapabilitiesResponse {
@@ -516,6 +534,12 @@ message RestoreTrainRunRequest {
   string trainrun_path = 1;  // Path to train run .yaml file
   optional string weights_path = 2;  // Optional: path to .pt weights. If omitted, loads config only
   optional bool strict = 3;          // Strict weight loading (default: true)
+  // Restore into an existing session instead of a server-created one. Plugin
+  // resolution uses that session's client-pushed catalog, so this is the ONLY
+  // way to restore a trainrun whose pipeline declares plugins: CreateSession,
+  // LoadPlugin each manifest, then RestoreTrainRun with that id. Empty keeps
+  // the fresh-session behavior (works for plugin-less pipelines only).
+  string session_id = 4;
 }
 
 message RestoreTrainRunResponse {
@@ -727,6 +751,7 @@ service CuvisAIService {
   // Training workflow
   rpc SetTrainRunConfig(SetTrainRunConfigRequest) returns (SetTrainRunConfigResponse);
   rpc Train(TrainRequest) returns (stream TrainResponse);
+  rpc StopTrain(StopTrainRequest) returns (StopTrainResponse);
   rpc GetTrainStatus(GetTrainStatusRequest) returns (GetTrainStatusResponse);
   rpc GetTrainingCapabilities(GetTrainingCapabilitiesRequest) returns (GetTrainingCapabilitiesResponse);
 
@@ -846,6 +871,7 @@ service RunRuntime {
   // Execution.
   rpc Inference(InferenceRequest) returns (InferenceResponse);
   rpc Train(TrainRequest) returns (stream TrainResponse);
+  rpc StopTrain(StopTrainRequest) returns (StopTrainResponse);
   rpc GetTrainStatus(GetTrainStatusRequest) returns (GetTrainStatusResponse);
 
   // Lifecycle.
