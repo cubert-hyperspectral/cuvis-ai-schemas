@@ -81,6 +81,21 @@ def test_stop_train_rpc_on_both_services() -> None:
         assert methods["StopTrain"].output_type.name == "StopTrainResponse"
 
 
+def test_profiling_rpcs_on_both_services() -> None:
+    """Profiling state lives on the child's pipeline, so both services carry the RPCs."""
+    services = cuvis_ai_pb2.DESCRIPTOR.services_by_name
+
+    for service_name in ("CuvisAIService", "RunRuntime"):
+        methods = services[service_name].methods_by_name
+        for rpc, request, response in (
+            ("SetProfiling", "SetProfilingRequest", "SetProfilingResponse"),
+            ("GetProfilingSummary", "GetProfilingSummaryRequest", "GetProfilingSummaryResponse"),
+        ):
+            assert rpc in methods
+            assert methods[rpc].input_type.name == request
+            assert methods[rpc].output_type.name == response
+
+
 def test_restore_train_run_accepts_target_session() -> None:
     """RestoreTrainRun can restore into a client-prepared session (plugin catalog)."""
     fields = cuvis_ai_pb2.RestoreTrainRunRequest.DESCRIPTOR.fields_by_name

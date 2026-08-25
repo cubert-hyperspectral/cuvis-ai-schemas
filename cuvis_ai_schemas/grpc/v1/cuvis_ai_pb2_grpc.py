@@ -1390,6 +1390,16 @@ class RunRuntimeStub:
                 request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusRequest.SerializeToString,
                 response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusResponse.FromString,
                 _registered_method=True)
+        self.SetProfiling = channel.unary_unary(
+                '/cuvis_ai.v1.RunRuntime/SetProfiling',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetProfilingRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetProfilingResponse.FromString,
+                _registered_method=True)
+        self.GetProfilingSummary = channel.unary_unary(
+                '/cuvis_ai.v1.RunRuntime/GetProfilingSummary',
+                request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetProfilingSummaryRequest.SerializeToString,
+                response_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetProfilingSummaryResponse.FromString,
+                _registered_method=True)
         self.CloseSession = channel.unary_unary(
                 '/cuvis_ai.v1.RunRuntime/CloseSession',
                 request_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.CloseSessionRequest.SerializeToString,
@@ -1500,6 +1510,19 @@ class RunRuntimeServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SetProfiling(self, request, context):
+        """Profiling — state lives on the child's pipeline, so both RPCs are proxied.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetProfilingSummary(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def CloseSession(self, request, context):
         """Lifecycle.
         """
@@ -1591,6 +1614,16 @@ def add_RunRuntimeServicer_to_server(servicer, server):
                     servicer.GetTrainStatus,
                     request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusRequest.FromString,
                     response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusResponse.SerializeToString,
+            ),
+            'SetProfiling': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetProfiling,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetProfilingRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetProfilingResponse.SerializeToString,
+            ),
+            'GetProfilingSummary': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetProfilingSummary,
+                    request_deserializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetProfilingSummaryRequest.FromString,
+                    response_serializer=cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetProfilingSummaryResponse.SerializeToString,
             ),
             'CloseSession': grpc.unary_unary_rpc_method_handler(
                     servicer.CloseSession,
@@ -1986,6 +2019,60 @@ class RunRuntime:
             '/cuvis_ai.v1.RunRuntime/GetTrainStatus',
             cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusRequest.SerializeToString,
             cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetTrainStatusResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetProfiling(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/cuvis_ai.v1.RunRuntime/SetProfiling',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetProfilingRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.SetProfilingResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetProfilingSummary(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/cuvis_ai.v1.RunRuntime/GetProfilingSummary',
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetProfilingSummaryRequest.SerializeToString,
+            cuvis__ai__schemas_dot_grpc_dot_v1_dot_cuvis__ai__pb2.GetProfilingSummaryResponse.FromString,
             options,
             channel_credentials,
             insecure,

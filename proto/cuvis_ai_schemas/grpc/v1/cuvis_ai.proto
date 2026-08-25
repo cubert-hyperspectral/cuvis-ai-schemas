@@ -874,6 +874,10 @@ service RunRuntime {
   rpc StopTrain(StopTrainRequest) returns (StopTrainResponse);
   rpc GetTrainStatus(GetTrainStatusRequest) returns (GetTrainStatusResponse);
 
+  // Profiling — state lives on the child's pipeline, so both RPCs are proxied.
+  rpc SetProfiling(SetProfilingRequest) returns (SetProfilingResponse);
+  rpc GetProfilingSummary(GetProfilingSummaryRequest) returns (GetProfilingSummaryResponse);
+
   // Lifecycle.
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
   rpc StopRun(StopRunRequest) returns (StopRunResponse);

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.0 - 2026-08-25
+
+- Added the profiling RPCs to the child `RunRuntime` service: `SetProfiling` and `GetProfilingSummary` now exist on both `CuvisAIService` and `RunRuntime`, reusing the existing request/response messages unchanged. Profiling state lives on the live pipeline, which the orchestrator parent never holds — without these RPCs the parent had nothing to forward profiling calls to, so profiling always failed with FAILED_PRECONDITION for child-hosted sessions. Regenerated the `cuvis_ai_pb2` stubs; additive and wire-compatible (`buf breaking` clean), no message or pydantic model changes.
+
 ## 0.9.0 - 2026-07-28
 
 - Changed `DataSplitConfig.leakage_check` into a typed `constraints` list (breaking): new `ConstraintKind` StrEnum (`no_split_overlap` — the old train/val/test uid-disjointness check, `no_source_overlap` — no source file spans more than one stage, `no_train_anomalous` — no sample with a `category_id != 0` in train) plus `ConstraintSeverity` (`error` / `warn`) and a `Constraint` model; a duplicate-kind list fails validation. The schema default is an empty list ("no checks declared"); producers seed the authoring default via the new `default_constraints()` helper (`no_split_overlap@error` + `no_train_anomalous@warn`; per-kind defaults in `DEFAULT_CONSTRAINT_SEVERITY`). A `splits.json` carrying `leakage_check` now fails `extra="forbid"` validation — regenerate it.
