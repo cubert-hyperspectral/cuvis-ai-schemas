@@ -227,17 +227,41 @@ class ShmRef(_message.Message):
     byte_size: int
     def __init__(self, name: _Optional[str] = ..., byte_offset: _Optional[int] = ..., byte_size: _Optional[int] = ...) -> None: ...
 
+class CudaIpcRef(_message.Message):
+    __slots__ = ("backend", "device_ordinal", "handle_type", "handle_blob", "ptr_blob", "byte_size", "alloc_size", "byte_offset", "exporter_pid")
+    BACKEND_FIELD_NUMBER: _ClassVar[int]
+    DEVICE_ORDINAL_FIELD_NUMBER: _ClassVar[int]
+    HANDLE_TYPE_FIELD_NUMBER: _ClassVar[int]
+    HANDLE_BLOB_FIELD_NUMBER: _ClassVar[int]
+    PTR_BLOB_FIELD_NUMBER: _ClassVar[int]
+    BYTE_SIZE_FIELD_NUMBER: _ClassVar[int]
+    ALLOC_SIZE_FIELD_NUMBER: _ClassVar[int]
+    BYTE_OFFSET_FIELD_NUMBER: _ClassVar[int]
+    EXPORTER_PID_FIELD_NUMBER: _ClassVar[int]
+    backend: int
+    device_ordinal: int
+    handle_type: int
+    handle_blob: bytes
+    ptr_blob: bytes
+    byte_size: int
+    alloc_size: int
+    byte_offset: int
+    exporter_pid: int
+    def __init__(self, backend: _Optional[int] = ..., device_ordinal: _Optional[int] = ..., handle_type: _Optional[int] = ..., handle_blob: _Optional[bytes] = ..., ptr_blob: _Optional[bytes] = ..., byte_size: _Optional[int] = ..., alloc_size: _Optional[int] = ..., byte_offset: _Optional[int] = ..., exporter_pid: _Optional[int] = ...) -> None: ...
+
 class Tensor(_message.Message):
-    __slots__ = ("shape", "dtype", "raw_data", "shm_ref")
+    __slots__ = ("shape", "dtype", "raw_data", "shm_ref", "cuda_ipc")
     SHAPE_FIELD_NUMBER: _ClassVar[int]
     DTYPE_FIELD_NUMBER: _ClassVar[int]
     RAW_DATA_FIELD_NUMBER: _ClassVar[int]
     SHM_REF_FIELD_NUMBER: _ClassVar[int]
+    CUDA_IPC_FIELD_NUMBER: _ClassVar[int]
     shape: _containers.RepeatedScalarFieldContainer[int]
     dtype: DType
     raw_data: bytes
     shm_ref: ShmRef
-    def __init__(self, shape: _Optional[_Iterable[int]] = ..., dtype: _Optional[_Union[DType, str]] = ..., raw_data: _Optional[bytes] = ..., shm_ref: _Optional[_Union[ShmRef, _Mapping]] = ...) -> None: ...
+    cuda_ipc: CudaIpcRef
+    def __init__(self, shape: _Optional[_Iterable[int]] = ..., dtype: _Optional[_Union[DType, str]] = ..., raw_data: _Optional[bytes] = ..., shm_ref: _Optional[_Union[ShmRef, _Mapping]] = ..., cuda_ipc: _Optional[_Union[CudaIpcRef, _Mapping]] = ...) -> None: ...
 
 class Context(_message.Message):
     __slots__ = ("stage", "epoch", "batch_idx", "global_step")

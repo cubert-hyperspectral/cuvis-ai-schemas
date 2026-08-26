@@ -158,12 +158,30 @@ message ShmRef {
   uint64 byte_size   = 3;  // bytes the reader must map
 }
 
+// A CUDA device buffer the producer exported for cross-process import.
+//
+// Mirrors the fields of the SDK's cuvis_cuda_ipc_descriptor_t, but this message is the
+// contract, not that struct: readers must never assume the C layout. The producer must
+// outlive every reader, because CUDA IPC carries no cross-process refcount.
+message CudaIpcRef {
+  int32  backend        = 1;  // 2 = legacy (cudaIpc), 3 = vmm (driver cuMem*)
+  int32  device_ordinal = 2;
+  int32  handle_type    = 3;  // 0 = none, 1 = win32 (rejected: needs DuplicateHandle), 2 = win32_kmt, 3 = posix_fd
+  bytes  handle_blob    = 4;  // CUDA-opaque; a 64-byte cudaIpcMemHandle_t for legacy
+  bytes  ptr_blob       = 5;  // CUDA-opaque cudaMemPoolPtrExportData; empty outside the pool backend
+  uint64 byte_size      = 6;  // usable bytes; cross-check against shape * itemsize
+  uint64 alloc_size     = 7;  // vmm maps this, NOT byte_size; they differ in practice
+  uint64 byte_offset    = 8;  // reader adds this to the imported base pointer
+  uint64 exporter_pid   = 9;
+}
+
 message Tensor {
   repeated int64 shape = 1;
   DType          dtype = 2;
   oneof payload {
-    bytes  raw_data = 3;   // field number unchanged — wire-compatible
-    ShmRef shm_ref  = 4;
+    bytes      raw_data = 3;   // field number unchanged — wire-compatible
+    ShmRef     shm_ref  = 4;
+    CudaIpcRef cuda_ipc = 5;
   }
 }
 
