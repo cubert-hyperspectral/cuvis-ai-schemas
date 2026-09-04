@@ -4,23 +4,39 @@ from __future__ import annotations
 
 from typing import Any, ClassVar
 
-from pydantic import Field
+from pydantic import Field, StrictFloat, StrictInt, field_validator
 
 from cuvis_ai_schemas.base import BaseSchemaModel
 from cuvis_ai_schemas.training.callbacks import CallbacksConfig
 from cuvis_ai_schemas.training.optimizer import OptimizerConfig
 from cuvis_ai_schemas.training.scheduler import SchedulerConfig
 
+# ``TrainingConfig`` fields consumed by the training runtime itself and never
+# passed to ``pl.Trainer``. Together with ``TrainingConfig._LIGHTNING_FIELDS``
+# this partitions the model: every field sits on exactly one side, and the test
+# suite asserts that partition, so a new field has to be filed on one of them.
+_ORCHESTRATION_FIELDS: frozenset[str] = frozenset(
+    {
+        "seed",
+        "optimizer",
+        "scheduler",
+        "callbacks",
+        "release_cuda_cache_on_validation",
+    }
+)
+
 
 class TrainingConfig(BaseSchemaModel):
     """Complete gradient-training configuration.
 
     Flat set of hyperparameters for a gradient-training run: the run-level
-    knobs (``seed``, ``optimizer``, ``scheduler``, ``callbacks``) plus the
-    ``pytorch_lightning.Trainer`` keyword arguments. ``callbacks`` is schema
-    input used to build real Lightning callbacks (see
-    ``to_lightning_kwargs`` / ``create_callbacks_from_config``), not a raw
-    ``pl.Trainer`` keyword.
+    knobs (``seed``, ``optimizer``, ``scheduler``, ``callbacks``,
+    ``release_cuda_cache_on_validation``) plus the ``pytorch_lightning.Trainer``
+    keyword arguments. Every field is on exactly one side of that split:
+    ``_ORCHESTRATION_FIELDS`` names the runtime knobs, ``_LIGHTNING_FIELDS``
+    the raw trainer kwargs that ``to_lightning_kwargs`` forwards. ``callbacks``
+    is schema input used to build real Lightning callbacks (see
+    ``create_callbacks_from_config``), not a raw ``pl.Trainer`` keyword.
     """
 
     __proto_message__: ClassVar[str] = "TrainingConfig"
@@ -35,6 +51,13 @@ class TrainingConfig(BaseSchemaModel):
     )
     callbacks: CallbacksConfig | None = Field(
         default=None, description="Training callbacks (optional)"
+    )
+    release_cuda_cache_on_validation: bool = Field(
+        default=False,
+        description=(
+            "Free cached CUDA memory around each validation pass (opt-in; costs a device "
+            "sync per validation epoch)"
+        ),
     )
 
     # pl.Trainer keyword arguments
@@ -55,6 +78,25 @@ class TrainingConfig(BaseSchemaModel):
     check_val_every_n_epoch: int | None = Field(
         default=1, ge=1, description="Validate every n epochs"
     )
+    limit_train_batches: StrictInt | StrictFloat | None = Field(
+        default=None,
+        description=(
+            "Cap on training batches per epoch: an int is a batch count (>= 0), a float is "
+            "a fraction of the loader in [0, 1]; None keeps Lightning's default"
+        ),
+    )
+    limit_val_batches: StrictInt | StrictFloat | None = Field(
+        default=None,
+        description=(
+            "Cap on validation batches per epoch: an int is a batch count (>= 0), a float is "
+            "a fraction of the loader in [0, 1]; None keeps Lightning's default"
+        ),
+    )
+    num_sanity_val_steps: int | None = Field(
+        default=None,
+        ge=-1,
+        description="Validation batches run before training starts (-1 = all, 0 = skip)",
+    )
     gradient_clip_val: float | None = Field(
         default=None, ge=0.0, description="Gradient clipping value (optional)"
     )
@@ -74,19 +116,46 @@ class TrainingConfig(BaseSchemaModel):
             "log_every_n_steps",
             "val_check_interval",
             "check_val_every_n_epoch",
+            "limit_train_batches",
+            "limit_val_batches",
+            "num_sanity_val_steps",
             "gradient_clip_val",
             "deterministic",
             "benchmark",
         }
     )
 
+    @field_validator("limit_train_batches", "limit_val_batches")
+    @classmethod
+    def _check_batch_limit(cls, value: int | float | None) -> int | float | None:
+        """Range-check a batch limit: an int is a count (>= 0), a float a fraction in [0, 1].
+
+        The strict member types already reject strings and bools, so only the
+        range is checked here. ``None`` passes through untouched.
+        """
+        if value is None:
+            return value
+        if isinstance(value, int):
+            if value < 0:
+                raise ValueError(
+                    f"an int batch limit is a batch count and must be >= 0, got {value}"
+                )
+            return value
+        if not 0.0 <= value <= 1.0:
+            raise ValueError(
+                f"a float batch limit is a fraction of the loader and must be in [0, 1], got {value}"
+            )
+        return value
+
     def to_lightning_kwargs(self) -> dict[str, Any]:
         """Return the subset of fields passed directly to ``pl.Trainer(**kwargs)``.
 
         An explicit allowlist: ``pl.Trainer`` raises on an unknown keyword, so
-        a field that is not a raw trainer argument (``seed``, ``optimizer``,
-        ``scheduler``, ``callbacks``) is never forwarded. ``callbacks`` is built
-        into real Lightning callbacks separately by the trainer.
+        the orchestration fields (``_ORCHESTRATION_FIELDS``: ``seed``,
+        ``optimizer``, ``scheduler``, ``callbacks``,
+        ``release_cuda_cache_on_validation``) are never forwarded. Fields left
+        at ``None`` are dropped so Lightning's own defaults apply. ``callbacks``
+        is built into real Lightning callbacks separately by the trainer.
         """
         return self.model_dump(include=set(self._LIGHTNING_FIELDS), exclude_none=True)
 
