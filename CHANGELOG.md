@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.12.0 - unreleased
+## 0.12.0 - 2026-09-07
 
 - Added `PluginWeightEntry`: one model weight a plugin needs, pinned to a public Hugging Face mirror file (`repo_id`, 40-hex `revision`, 64-hex `sha256`, `size_bytes`) with its user-facing description (`display_name`, `summary` of at most 60 characters, `used_for`, `kind` `weights` | `trained_pipeline`, `license`, nullable `license_file`, `description`) and its selection contract (`selected_by`, `default`, `aliases`, `explicit_path_hparams`).
 - Added `AuxFile` (`path`, `size_bytes`, `sha256`) for files fetched beside a weight's primary file at the same revision, such as a trained pipeline's yaml.
