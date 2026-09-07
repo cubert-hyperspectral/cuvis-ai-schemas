@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.11.0 - 2026-09-04
+## 0.11.0 - 2026-09-07
 
 - Added three `pytorch_lightning.Trainer` passthrough fields to `TrainingConfig`: `limit_train_batches` and `limit_val_batches` (`int | float | None`, default `None`; an int is a batch count and must be `>= 0`, a float is a fraction of the loader and must be in `[0, 1]`), and `num_sanity_val_steps` (`int | None`, default `None`, `>= -1` where `-1` runs the whole validation set and `0` skips the sanity check). The two limits use strict member types, so `"8"` and `True` are rejected instead of being coerced to a count, and an int stays an int / a float stays a float across the JSON and dict round trips; that matters because Lightning reads `1` as one batch and `1.0` as the whole loader. All three are on the `_LIGHTNING_FIELDS` allowlist: `to_lightning_kwargs()` forwards them when set and drops them when `None`, so Lightning's own defaults apply unless a config opts in.
 - Added `TrainingConfig.release_cuda_cache_on_validation` (`bool`, default `False`): an opt-in orchestration flag telling the training runtime to free cached CUDA memory around each validation pass. It is not a `pl.Trainer` keyword and is never forwarded by `to_lightning_kwargs()`; it costs a device synchronization per validation epoch, which is why it is off by default.
