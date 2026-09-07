@@ -27,6 +27,7 @@ from cuvis_ai_schemas.training.callbacks import (
     LearningRateMonitorConfig,
     ModelCheckpointConfig,
 )
+from cuvis_ai_schemas.training.config import _ORCHESTRATION_FIELDS
 from cuvis_ai_schemas.training.run import TrainRunConfig
 
 
@@ -77,7 +78,7 @@ def test_training_config_flat_lightning_fields():
 
 
 def test_to_lightning_kwargs_is_the_trainer_allowlist():
-    """to_lightning_kwargs returns exactly the raw pl.Trainer kwargs, nothing else."""
+    """to_lightning_kwargs returns exactly the non-None pl.Trainer kwargs, nothing else."""
     config = TrainingConfig(
         seed=7,
         max_epochs=20,
@@ -85,21 +86,109 @@ def test_to_lightning_kwargs_is_the_trainer_allowlist():
         optimizer=OptimizerConfig(name="adamw"),
         scheduler=SchedulerConfig(name="cosine", t_max=10),
         callbacks=CallbacksConfig(early_stopping=[EarlyStoppingConfig(monitor="val_loss")]),
+        release_cuda_cache_on_validation=True,
         gradient_clip_val=1.0,
     )
     kwargs = config.to_lightning_kwargs()
 
-    # Orchestration fields never leak into pl.Trainer(**kwargs)
-    for orchestration in ("seed", "optimizer", "scheduler", "callbacks"):
+    # Orchestration fields never leak into pl.Trainer(**kwargs), even when set
+    for orchestration in _ORCHESTRATION_FIELDS:
         assert orchestration not in kwargs
 
-    # Every returned key is a real Lightning field, and set fields survive
-    assert set(kwargs) <= set(TrainingConfig._LIGHTNING_FIELDS)
+    # Exactly the Lightning fields that are not None come back, with their values
+    expected = {f for f in TrainingConfig._LIGHTNING_FIELDS if getattr(config, f) is not None}
+    assert set(kwargs) == expected
     assert kwargs["max_epochs"] == 20
     assert kwargs["accelerator"] == "gpu"
     assert kwargs["gradient_clip_val"] == 1.0
     # exclude_none drops unset optionals
     assert "devices" not in kwargs
+
+
+def test_lightning_and_orchestration_fields_partition_the_model():
+    """Every TrainingConfig field is a pl.Trainer kwarg or an orchestration knob, never both."""
+    lightning = set(TrainingConfig._LIGHTNING_FIELDS)
+    assert lightning.isdisjoint(_ORCHESTRATION_FIELDS)
+    assert lightning | _ORCHESTRATION_FIELDS == set(TrainingConfig.model_fields)
+    assert "release_cuda_cache_on_validation" in _ORCHESTRATION_FIELDS
+    assert {"limit_train_batches", "limit_val_batches", "num_sanity_val_steps"} <= lightning
+
+
+def test_batch_limit_and_cache_release_defaults():
+    """The batch-limit passthroughs default to None (Lightning's defaults apply); the flag is off."""
+    config = TrainingConfig()
+    assert config.limit_train_batches is None
+    assert config.limit_val_batches is None
+    assert config.num_sanity_val_steps is None
+    assert config.release_cuda_cache_on_validation is False
+    kwargs = config.to_lightning_kwargs()
+    for name in ("limit_train_batches", "limit_val_batches", "num_sanity_val_steps"):
+        assert name not in kwargs
+
+
+@pytest.mark.parametrize("field", ["limit_train_batches", "limit_val_batches"])
+@pytest.mark.parametrize("value", [0, 8, 0.0, 0.5, 1.0, None])
+def test_batch_limit_accepts_counts_fractions_and_none(field, value):
+    """An int count >= 0, a float fraction in [0, 1], or None validate with their type kept."""
+    stored = getattr(TrainingConfig(**{field: value}), field)
+    assert stored == value
+    assert type(stored) is type(value)
+
+
+@pytest.mark.parametrize("field", ["limit_train_batches", "limit_val_batches"])
+@pytest.mark.parametrize("value", [-1, 1.5, -0.1, "8", True])
+def test_batch_limit_rejects_out_of_range_and_non_numeric(field, value):
+    """A negative count, a fraction outside [0, 1], a numeric string or a bool is rejected."""
+    with pytest.raises(ValidationError):
+        TrainingConfig(**{field: value})
+
+
+@pytest.mark.parametrize(
+    ("value", "expected_type"), [(8, int), (0, int), (0.5, float), (1.0, float)]
+)
+def test_batch_limit_keeps_int_vs_float_through_round_trips(value, expected_type):
+    """A batch count stays an int and a fraction stays a float across JSON and dict round trips.
+
+    Lightning reads ``1`` as one batch and ``1.0`` as the whole loader, so the
+    distinction has to survive serialization.
+    """
+    config = TrainingConfig(limit_val_batches=value)
+
+    from_json = TrainingConfig.model_validate_json(config.model_dump_json())
+    assert from_json.limit_val_batches == value
+    assert type(from_json.limit_val_batches) is expected_type
+
+    from_dict = TrainingConfig.from_dict(config.to_dict())
+    assert from_dict.limit_val_batches == value
+    assert type(from_dict.limit_val_batches) is expected_type
+
+
+@pytest.mark.parametrize("value", [-1, 0, 2])
+def test_num_sanity_val_steps_accepts_minus_one_and_up(value):
+    """-1 (all validation batches), 0 (skip the sanity check) and a positive count validate."""
+    assert TrainingConfig(num_sanity_val_steps=value).num_sanity_val_steps == value
+
+
+def test_num_sanity_val_steps_rejects_below_minus_one():
+    """Anything below -1 has no Lightning meaning and is rejected."""
+    with pytest.raises(ValidationError):
+        TrainingConfig(num_sanity_val_steps=-2)
+
+
+def test_to_lightning_kwargs_forwards_batch_limits_but_not_cache_release():
+    """The three batch-limit passthroughs reach pl.Trainer when set; the CUDA flag never does."""
+    config = TrainingConfig(
+        limit_train_batches=8,
+        limit_val_batches=0.5,
+        num_sanity_val_steps=0,
+        release_cuda_cache_on_validation=True,
+    )
+    kwargs = config.to_lightning_kwargs()
+    assert kwargs["limit_train_batches"] == 8
+    assert kwargs["limit_val_batches"] == 0.5
+    # 0 is a real value, not None, so exclude_none keeps it
+    assert kwargs["num_sanity_val_steps"] == 0
+    assert "release_cuda_cache_on_validation" not in kwargs
 
 
 def test_old_nested_trainer_shape_is_rejected():
@@ -160,9 +249,13 @@ def test_callbacks_survive_dict_round_trip():
 
 
 def test_extra_field_rejected():
-    """Unknown fields are rejected (extra='forbid')."""
+    """Unknown fields are rejected (extra='forbid'), including near-misses of the new names."""
     with pytest.raises(ValidationError):
         TrainingConfig(unknown="x")
+    with pytest.raises(ValidationError):
+        TrainingConfig(limit_validation_batches=8)
+    with pytest.raises(ValidationError):
+        TrainingConfig(release_cuda_cache=True)
 
 
 def test_to_dict_config_without_omegaconf_returns_plain_dict():
