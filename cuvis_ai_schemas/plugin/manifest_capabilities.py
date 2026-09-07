@@ -2,10 +2,15 @@
 
 One yaml file is one plugin manifest. A manifest declares where the plugin
 comes from (a git ``repo`` + ``tag`` or a local ``path``), its logical
-``name``, and the list of ``capabilities`` it provides. Each capability is a
+``name``, the list of ``capabilities`` it provides and, optionally, the model
+``weights`` those capabilities need. Each capability is a
 :class:`PluginCapabilityEntry`: an FQCN ``class_name`` plus the bucket it
 registers into (``node`` or ``data_module``) and, for nodes, optional palette
-metadata (port specs, category, tags, icon, doc summary).
+metadata (port specs, category, tags, icon, doc summary). Each weight is a
+:class:`PluginWeightEntry`: one pinned file in a public Hugging Face mirror
+(repo id, revision, sha256, size) plus what it is used for and which node
+hyper-parameter selects it, so a consumer can provision and check the weights
+without importing the plugin.
 
 The cuvis-ai server reads a plugin's declared capabilities to answer the
 node-palette RPC without ever importing the plugin's Python modules.
@@ -13,13 +18,15 @@ node-palette RPC without ever importing the plugin's Python modules.
 it drops the source (repo/path) and keeps only what the palette needs.
 
 The types are declared in dependency order so the whole module is a clean DAG
-(``NodePortSpec`` -> ``PluginCapabilityEntry`` -> manifests -> capabilities).
+(``NodePortSpec`` -> ``PluginCapabilityEntry``, ``AuxFile`` -> ``PluginWeightEntry``
+-> manifests -> capabilities).
 That is why :meth:`PluginCapabilities.from_manifest` can be fully typed against
 :data:`PluginManifest` with no forward reference and no ``TYPE_CHECKING`` trick.
 """
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Literal
 
@@ -153,7 +160,282 @@ class PluginCapabilityEntry(BaseSchemaModel):
 
 
 # ---------------------------------------------------------------------------
-# 3. _BasePluginManifest — shared base: name + capabilities + package_name
+# 2b. AuxFile + PluginWeightEntry: one pinned model file a plugin needs
+# ---------------------------------------------------------------------------
+_HEX40 = re.compile(r"[0-9a-f]{40}")
+_HEX64 = re.compile(r"[0-9a-f]{64}")
+_WEIGHT_KEY = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*")
+_REPO_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9_.-]+")
+
+
+def _require_hex(value: str, label: str, pattern: re.Pattern[str], digits: int) -> str:
+    """Require exactly ``digits`` lowercase hex digits (a git sha or a sha256)."""
+    if not pattern.fullmatch(value):
+        raise ValueError(f"{label} must be {digits} lowercase hex digits, got {value!r}")
+    return value
+
+
+def _require_repo_relative_path(value: str, label: str) -> str:
+    """Require a relative, ``/``-separated path inside a mirror repo with no odd segments."""
+    stripped = _require_non_empty(value, label)
+    if stripped.startswith("/") or "\\" in stripped:
+        raise ValueError(f"{label} must be a relative path with '/' separators, got {value!r}")
+    if any(part in ("", ".", "..") for part in stripped.split("/")):
+        raise ValueError(f"{label} must not contain empty, '.' or '..' segments, got {value!r}")
+    return stripped
+
+
+def _require_weight_key(value: str, label: str) -> str:
+    """Require a registry key: letters, digits, ``_``, ``.`` and ``-``, no whitespace."""
+    if not _WEIGHT_KEY.fullmatch(value):
+        raise ValueError(
+            f"{label} {value!r} must start with a letter or digit and contain only "
+            "letters, digits, '_', '.' and '-'."
+        )
+    return value
+
+
+def _require_identifiers(values: list[str], label: str) -> list[str]:
+    """Require unique Python identifiers (node hyper-parameter names)."""
+    for value in values:
+        if not value.isidentifier():
+            raise ValueError(f"{label} entries must be Python identifiers, got {value!r}")
+    if len(set(values)) != len(values):
+        raise ValueError(f"{label} entries must be unique, got {values!r}")
+    return values
+
+
+class AuxFile(BaseSchemaModel):
+    """A file fetched beside a weight's primary file, at the same pinned revision.
+
+    The pipeline yaml of a trained pipeline, or a config the loader reads next
+    to the checkpoint. Pinned exactly like the primary file so a consumer can
+    verify its presence and integrity.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True, validate_assignment=True)
+
+    path: str = Field(
+        min_length=1,
+        description="Path inside the mirror repo, '/'-separated, relative to the repo root.",
+    )
+    size_bytes: int = Field(gt=0, description="Size of the file in bytes.")
+    sha256: str = Field(description="sha256 of the file, 64 lowercase hex digits.")
+
+    @field_validator("path")
+    @classmethod
+    def _validate_path(cls, value: str) -> str:
+        """Require a relative in-repo path."""
+        return _require_repo_relative_path(value, "aux_files[].path")
+
+    @field_validator("sha256")
+    @classmethod
+    def _validate_sha256(cls, value: str) -> str:
+        """Require 64 lowercase hex digits."""
+        return _require_hex(value, "aux_files[].sha256", _HEX64, 64)
+
+
+class PluginWeightEntry(BaseSchemaModel):
+    """One model weight a plugin needs: a pinned file in a public Hugging Face mirror.
+
+    ``name`` is the registry key (``download-model download <name>``). Where a
+    node hyper-parameter chooses between variants, ``selected_by`` names that
+    hyper-parameter, ``default`` marks the row a pipeline gets without setting
+    it, and ``aliases`` are the other values that pick this row; a plugin whose
+    nodes always need the weight leaves ``selected_by`` unset. Names and aliases
+    share one namespace across every plugin a consumer loads.
+
+    ``kind='trained_pipeline'`` marks a Cubert-trained pipeline (a ``.pt`` plus
+    its pipeline yaml as an aux file): offered for download, never required by
+    a shipped preset, and therefore never selected by a hyper-parameter.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True, validate_assignment=True)
+
+    name: str = Field(
+        min_length=1,
+        description=(
+            "Registry key, e.g. 'efficienttam_s'. Unique across all plugins' names and aliases."
+        ),
+    )
+    display_name: str = Field(
+        min_length=1,
+        description="User-facing name, e.g. 'RTSAM (EfficientTAM small)'.",
+    )
+    summary: str = Field(
+        default="",
+        max_length=60,
+        description="Plain-language one-liner (at most 60 characters) shown under the name.",
+    )
+    used_for: list[str] = Field(
+        min_length=1,
+        description="Short feature labels the weight enables, e.g. 'Point expansion'.",
+    )
+    kind: Literal["weights", "trained_pipeline"] = Field(
+        default="weights",
+        description=(
+            "'weights': a checkpoint a plugin's node loads. 'trained_pipeline': a trained "
+            "pipeline (.pt + its yaml) that a user points the pipeline picker at."
+        ),
+    )
+    repo_id: str = Field(description="Hugging Face repo id, e.g. 'cubert-gmbh/sam3'.")
+    filename: str = Field(
+        min_length=1,
+        description="Primary file inside the repo, '/'-separated, relative to the repo root.",
+    )
+    revision: str = Field(description="Pinned repo commit, 40 lowercase hex digits.")
+    sha256: str = Field(description="sha256 of the primary file, 64 lowercase hex digits.")
+    size_bytes: int = Field(gt=0, description="Size of the primary file in bytes.")
+    aux_files: list[AuxFile] = Field(
+        default_factory=list,
+        description="Files fetched beside 'filename' at the same revision.",
+    )
+    license: str = Field(
+        min_length=1,
+        description="Licence label shown to users, e.g. 'Apache-2.0' or 'SAM License'.",
+    )
+    license_file: str | None = Field(
+        default=None,
+        description=(
+            "Licence text file in the mirror repo (a bare filename such as 'LICENSE'); "
+            "None when upstream states no licence for the weights."
+        ),
+    )
+    aliases: list[str] = Field(
+        default_factory=list,
+        description="Other hyper-parameter values that select this row, e.g. 'efficienttam'.",
+    )
+    selected_by: str | None = Field(
+        default=None,
+        description=(
+            "Node hyper-parameter whose value picks this row, e.g. 'model_type'; None when "
+            "the plugin always needs this weight."
+        ),
+    )
+    default: bool = Field(
+        default=False,
+        description="The row a pipeline gets when it does not set 'selected_by'.",
+    )
+    explicit_path_hparams: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Node hyper-parameters that bypass the model cache for this plugin, e.g. "
+            "'checkpoint_path'; a pipeline setting one of them needs no download."
+        ),
+    )
+    description: str = Field(
+        default="",
+        description="One sentence on what the weight is needed for, plus its provenance.",
+    )
+
+    @field_validator("name")
+    @classmethod
+    def _validate_name(cls, value: str) -> str:
+        """Require a registry-key shaped name."""
+        return _require_weight_key(value, "Weight name")
+
+    @field_validator("aliases")
+    @classmethod
+    def _validate_aliases(cls, values: list[str]) -> list[str]:
+        """Require registry-key shaped, unique aliases."""
+        for value in values:
+            _require_weight_key(value, "Weight alias")
+        if len(set(values)) != len(values):
+            raise ValueError(f"aliases must be unique, got {values!r}")
+        return values
+
+    @field_validator("used_for")
+    @classmethod
+    def _validate_used_for(cls, values: list[str]) -> list[str]:
+        """Require non-empty, unique labels."""
+        stripped = [_require_non_empty(value, "used_for label") for value in values]
+        if len(set(stripped)) != len(stripped):
+            raise ValueError(f"used_for labels must be unique, got {values!r}")
+        return stripped
+
+    @field_validator("repo_id")
+    @classmethod
+    def _validate_repo_id(cls, value: str) -> str:
+        """Require the 'owner/name' shape of a Hugging Face repo id."""
+        if not _REPO_ID.fullmatch(value):
+            raise ValueError(f"repo_id must look like 'owner/name', got {value!r}")
+        return value
+
+    @field_validator("filename")
+    @classmethod
+    def _validate_filename(cls, value: str) -> str:
+        """Require a relative in-repo path."""
+        return _require_repo_relative_path(value, "filename")
+
+    @field_validator("revision")
+    @classmethod
+    def _validate_revision(cls, value: str) -> str:
+        """Require a full 40-digit commit sha."""
+        return _require_hex(value, "revision", _HEX40, 40)
+
+    @field_validator("sha256")
+    @classmethod
+    def _validate_sha256(cls, value: str) -> str:
+        """Require 64 lowercase hex digits."""
+        return _require_hex(value, "sha256", _HEX64, 64)
+
+    @field_validator("license_file")
+    @classmethod
+    def _validate_license_file(cls, value: str | None) -> str | None:
+        """Require a bare filename when set."""
+        if value is None:
+            return None
+        stripped = _require_non_empty(value, "license_file")
+        if "/" in stripped or "\\" in stripped:
+            raise ValueError(
+                f"license_file must be a bare filename in the mirror repo, got {value!r}"
+            )
+        return stripped
+
+    @field_validator("selected_by")
+    @classmethod
+    def _validate_selected_by(cls, value: str | None) -> str | None:
+        """Require a Python identifier when set (it names a node hyper-parameter)."""
+        if value is not None and not value.isidentifier():
+            raise ValueError(f"selected_by must be a hyper-parameter name, got {value!r}")
+        return value
+
+    @field_validator("explicit_path_hparams")
+    @classmethod
+    def _validate_explicit_path_hparams(cls, values: list[str]) -> list[str]:
+        """Require unique Python identifiers (node hyper-parameter names)."""
+        return _require_identifiers(values, "explicit_path_hparams")
+
+    @model_validator(mode="after")
+    def _check_selection_invariants(self) -> PluginWeightEntry:
+        """Reconcile the selection fields with each other and with ``kind``.
+
+        An alias must not repeat the name; aux paths must be unique and differ
+        from the primary file; ``default`` only means something together with
+        ``selected_by``; a trained pipeline is never picked by a hyper-parameter.
+        """
+        if self.name in self.aliases:
+            raise ValueError(f"alias {self.name!r} repeats the weight's own name")
+        aux_paths = [aux.path for aux in self.aux_files]
+        if len(set(aux_paths)) != len(aux_paths):
+            raise ValueError(f"aux_files paths must be unique, got {aux_paths!r}")
+        if self.filename in aux_paths:
+            raise ValueError(f"aux_files must not repeat the primary file {self.filename!r}")
+        if self.kind == "trained_pipeline" and (self.selected_by is not None or self.default):
+            raise ValueError(
+                "kind='trained_pipeline' rows are never selected by a hyper-parameter: "
+                "leave 'selected_by' unset and 'default' false."
+            )
+        if self.default and self.selected_by is None:
+            raise ValueError(
+                "default=True requires 'selected_by' (the hyper-parameter whose absence "
+                "picks this row)"
+            )
+        return self
+
+
+# ---------------------------------------------------------------------------
+# 3. _BasePluginManifest — shared base: name + capabilities + weights + package_name
 # ---------------------------------------------------------------------------
 class _BasePluginManifest(BaseSchemaModel):
     """Shared base for a single plugin's manifest.
@@ -185,6 +467,16 @@ class _BasePluginManifest(BaseSchemaModel):
         ),
     )
 
+    weights: list[PluginWeightEntry] = Field(
+        default_factory=list,
+        description=(
+            "The model weights this plugin's capabilities need, one pinned mirror file "
+            "per entry; empty for plugins without downloadable weights. Projected from the "
+            "plugin's own declaration by cuvis-ai-core's emit_metadata, and read by the "
+            "weight registry and the installer without importing the plugin."
+        ),
+    )
+
     package_name: str | None = Field(
         default=None,
         description=(
@@ -205,6 +497,24 @@ class _BasePluginManifest(BaseSchemaModel):
             msg = f"Invalid plugin name '{value}'. Must be a valid Python identifier."
             raise ValueError(msg)
         return value
+
+    @model_validator(mode="after")
+    def _check_weight_namespace(self) -> _BasePluginManifest:
+        """Require one namespace over weight names and aliases within the manifest.
+
+        A consumer resolves a hyper-parameter value to a row by name or alias,
+        so a key that two rows claim would make the choice order-dependent.
+        """
+        owner_by_key: dict[str, str] = {}
+        for entry in self.weights:
+            for key in (entry.name, *entry.aliases):
+                if key in owner_by_key:
+                    raise ValueError(
+                        f"weights: {key!r} is declared by both {owner_by_key[key]!r} and "
+                        f"{entry.name!r}; names and aliases share one namespace."
+                    )
+                owner_by_key[key] = entry.name
+        return self
 
 
 # ---------------------------------------------------------------------------
@@ -390,19 +700,20 @@ def write_plugin_manifest(manifest: PluginManifest, yaml_path: Path) -> None:
         manifest: The manifest to serialize.
         yaml_path: Destination path; parent directories are created.
     """
+    data = manifest.model_dump(exclude_none=True, mode="json")
+    if not data.get("weights"):
+        # A manifest without weights is written exactly as earlier releases wrote it.
+        data.pop("weights", None)
     yaml_path.parent.mkdir(parents=True, exist_ok=True)
     with yaml_path.open("w", encoding="utf-8") as f:
-        yaml.safe_dump(
-            manifest.model_dump(exclude_none=True, mode="json"),
-            f,
-            sort_keys=False,
-            default_flow_style=False,
-        )
+        yaml.safe_dump(data, f, sort_keys=False, default_flow_style=False)
 
 
 __all__ = [
     "NodePortSpec",
     "PluginCapabilityEntry",
+    "AuxFile",
+    "PluginWeightEntry",
     "GitPluginSource",
     "LocalPluginSource",
     "PluginManifest",

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.0 - 2026-09-07
+
+- Added `PluginWeightEntry`: one model weight a plugin needs, pinned to a public Hugging Face mirror file (`repo_id`, 40-hex `revision`, 64-hex `sha256`, `size_bytes`) with its user-facing description (`display_name`, `summary` of at most 60 characters, `used_for`, `kind` `weights` | `trained_pipeline`, `license`, nullable `license_file`, `description`) and its selection contract (`selected_by`, `default`, `aliases`, `explicit_path_hparams`).
+- Added `AuxFile` (`path`, `size_bytes`, `sha256`) for files fetched beside a weight's primary file at the same revision, such as a trained pipeline's yaml.
+- Added `weights: list[PluginWeightEntry] = []` to the plugin manifest base; names and aliases share one namespace per manifest, `default` requires `selected_by`, and a `trained_pipeline` row carries neither.
+- `write_plugin_manifest` writes `weights` after `capabilities` and omits the key when the list is empty, so manifests without weights come out byte-identical to 0.11.0.
+- Hypothesis strategies for `AuxFile` and `PluginWeightEntry` join `MODEL_STRATEGIES`.
+- No wire change: the manifest still travels as JSON inside the unchanged `PluginManifest` proto message.
+
 ## 0.11.0 - 2026-09-07
 
 - Added three `pytorch_lightning.Trainer` passthrough fields to `TrainingConfig`: `limit_train_batches` and `limit_val_batches` (`int | float | None`, default `None`; an int is a batch count and must be `>= 0`, a float is a fraction of the loader and must be in `[0, 1]`), and `num_sanity_val_steps` (`int | None`, default `None`, `>= -1` where `-1` runs the whole validation set and `0` skips the sanity check). The two limits use strict member types, so `"8"` and `True` are rejected instead of being coerced to a count, and an int stays an int / a float stays a float across the JSON and dict round trips; that matters because Lightning reads `1` as one batch and `1.0` as the whole loader. All three are on the `_LIGHTNING_FIELDS` allowlist: `to_lightning_kwargs()` forwards them when set and drops them when `None`, so Lightning's own defaults apply unless a config opts in.

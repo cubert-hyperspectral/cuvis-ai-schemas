@@ -34,11 +34,13 @@ from cuvis_ai_schemas.pipeline.config import (
     PipelineMetadata,
 )
 from cuvis_ai_schemas.plugin.manifest_capabilities import (
+    AuxFile,
     GitPluginSource,
     LocalPluginSource,
     NodePortSpec,
     PluginCapabilities,
     PluginCapabilityEntry,
+    PluginWeightEntry,
 )
 from cuvis_ai_schemas.training.callbacks import (
     CallbacksConfig,
@@ -77,6 +79,15 @@ unit_floats: SearchStrategy[float] = st.floats(
 
 #: A path segment (no dots) for the ``node.outputs.port`` connection format.
 _segments: SearchStrategy[str] = st.from_regex(r"[A-Za-z0-9_]{1,10}", fullmatch=True)
+
+#: Lowercase hex pins: a git commit sha and a sha256.
+_hex40: SearchStrategy[str] = st.from_regex(r"[0-9a-f]{40}", fullmatch=True)
+_hex64: SearchStrategy[str] = st.from_regex(r"[0-9a-f]{64}", fullmatch=True)
+
+#: A weight registry key (starts with a letter or digit; ``_``, ``.`` and ``-`` allowed).
+_weight_keys: SearchStrategy[str] = st.from_regex(
+    r"[A-Za-z0-9][A-Za-z0-9_.-]{0,15}", fullmatch=True
+)
 
 #: JSON-safe hyperparameter values.
 _json_scalars: SearchStrategy[object] = st.one_of(
@@ -121,6 +132,68 @@ def plugin_capability_entry_strategy() -> SearchStrategy[PluginCapabilityEntry]:
     return st.one_of(node, data_module)
 
 
+def aux_file_strategy() -> SearchStrategy[AuxFile]:
+    """Strategy for :class:`AuxFile` (a pinned file beside a weight's primary file)."""
+    return st.builds(
+        AuxFile,
+        path=st.from_regex(r"[a-z][a-z0-9_]{0,11}\.(yaml|json)", fullmatch=True),
+        size_bytes=st.integers(min_value=1, max_value=10**9),
+        sha256=_hex64,
+    )
+
+
+def plugin_weight_entry_strategy() -> SearchStrategy[PluginWeightEntry]:
+    """Strategy for :class:`PluginWeightEntry` (a pinned mirror file plus its selection contract).
+
+    Aux paths end in ``.yaml``/``.json`` and the primary file in ``.pt``/``.pth`` so
+    they never collide, and aliases stay empty so a list of entries drawn with
+    ``unique_by=name`` always satisfies the manifest's one-namespace rule.
+    """
+    common: dict[str, SearchStrategy[object]] = {
+        "name": _weight_keys,
+        "display_name": st.text(min_size=1, max_size=24),
+        "summary": st.text(max_size=60),
+        "used_for": st.lists(identifiers, min_size=1, max_size=3, unique=True),
+        "repo_id": st.from_regex(r"[a-z][a-z0-9-]{0,11}/[a-z][a-z0-9_.-]{0,15}", fullmatch=True),
+        "filename": st.from_regex(r"[a-z][a-z0-9_]{0,11}\.(pt|pth)", fullmatch=True),
+        "revision": _hex40,
+        "sha256": _hex64,
+        "size_bytes": st.integers(min_value=1, max_value=10**10),
+        "aux_files": st.lists(aux_file_strategy(), max_size=2, unique_by=lambda aux: aux.path),
+        "license": st.sampled_from(["Apache-2.0", "SAM License", "unspecified (code: MIT)"]),
+        "license_file": st.one_of(st.none(), st.just("LICENSE")),
+        "explicit_path_hparams": st.lists(identifiers, max_size=2, unique=True),
+        "description": short_text,
+    }
+    selected = st.builds(
+        PluginWeightEntry,
+        kind=st.just("weights"),
+        selected_by=identifiers,
+        default=st.booleans(),
+        **common,
+    )
+    always_needed = st.builds(
+        PluginWeightEntry,
+        kind=st.just("weights"),
+        selected_by=st.none(),
+        default=st.just(False),
+        **common,
+    )
+    trained = st.builds(
+        PluginWeightEntry,
+        kind=st.just("trained_pipeline"),
+        selected_by=st.none(),
+        default=st.just(False),
+        **common,
+    )
+    return st.one_of(selected, always_needed, trained)
+
+
+def _weights_strategy() -> SearchStrategy[list[PluginWeightEntry]]:
+    """A manifest's ``weights`` list: unique names, so the namespace rule holds."""
+    return st.lists(plugin_weight_entry_strategy(), max_size=2, unique_by=lambda entry: entry.name)
+
+
 def git_plugin_source_strategy() -> SearchStrategy[GitPluginSource]:
     """Strategy for a git-sourced :class:`GitPluginSource` manifest."""
     return st.builds(
@@ -129,6 +202,7 @@ def git_plugin_source_strategy() -> SearchStrategy[GitPluginSource]:
         repo=st.just("https://github.com/cubert-hyperspectral/plugin.git"),
         tag=st.from_regex(r"v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}", fullmatch=True),
         capabilities=st.lists(plugin_capability_entry_strategy(), min_size=1, max_size=3),
+        weights=_weights_strategy(),
         package_name=st.one_of(st.none(), identifiers),
     )
 
@@ -140,6 +214,7 @@ def local_plugin_source_strategy() -> SearchStrategy[LocalPluginSource]:
         name=identifiers,
         path=st.from_regex(r"[A-Za-z0-9_./-]{1,24}", fullmatch=True),
         capabilities=st.lists(plugin_capability_entry_strategy(), min_size=1, max_size=3),
+        weights=_weights_strategy(),
         package_name=st.one_of(st.none(), identifiers),
     )
 
@@ -378,6 +453,8 @@ def callbacks_config_strategy() -> SearchStrategy[CallbacksConfig]:
 MODEL_STRATEGIES: dict[type[BaseSchemaModel], SearchStrategy[BaseSchemaModel]] = {
     NodePortSpec: node_port_spec_strategy(),
     PluginCapabilityEntry: plugin_capability_entry_strategy(),
+    AuxFile: aux_file_strategy(),
+    PluginWeightEntry: plugin_weight_entry_strategy(),
     GitPluginSource: git_plugin_source_strategy(),
     LocalPluginSource: local_plugin_source_strategy(),
     PluginCapabilities: plugin_capabilities_strategy(),
