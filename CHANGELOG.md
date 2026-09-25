@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.12.1 - 2026-09-28
+
+- Simplification pass over `cuvis_ai_schemas/` (7 files, -169/+22 lines): no wire change, no field, validator, `model_config` or class definition touched; every step ran the full test suite. Per area:
+  - grpc conversions: the `_TAG_PY_TO_PROTO` and `_CATEGORY_PY_TO_PROTO` tables are comprehensions over `NodeTag` and `NodeCategory` instead of 71 hand-written lines. Stricter by design: a future enum member without a proto counterpart now fails at import instead of silently mapping to `UNSPECIFIED`.
+  - execution context: `Context.to_dict` is `dataclasses.asdict`.
+  - node display: the style entry is spread into the display dict instead of being copied key by key.
+  - pipeline config: `pathlib.Path` and `base._get_pb2` are imported at module level instead of inside `save_to_file`, `load_from_file` and `PipelineMetadata.to_proto`; the proto module itself is still loaded lazily by `_get_pb2`.
+  - pipeline ports: `PortSpec.is_compatible_with` computes the dtype mismatch once for the tensor and the non-tensor case and returns the same message from one place.
+  - training: `create_callbacks_from_config` builds the Lightning callbacks from `model_dump()` of each config (the config fields mirror the callback keyword arguments one to one; a future config field without a Lightning counterpart raises `TypeError` at construction instead of being dropped silently); the selector field tables collapse into `_REQUIRED_FIELDS`, which already listed exactly the fields each selector kind sets.
+
 ## 0.12.0 - 2026-09-07
 
 - Added `PluginWeightEntry`: one model weight a plugin needs, pinned to a public Hugging Face mirror file (`repo_id`, 40-hex `revision`, 64-hex `sha256`, `size_bytes`) with its user-facing description (`display_name`, `summary` of at most 60 characters, `used_for`, `kind` `weights` | `trained_pipeline`, `license`, nullable `license_file`, `description`) and its selection contract (`selected_by`, `default`, `aliases`, `explicit_path_hparams`).
