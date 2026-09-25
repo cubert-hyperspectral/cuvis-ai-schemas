@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any
 
 from cuvis_ai_schemas.enums.types import ExecutionStage
@@ -45,12 +45,7 @@ class Context:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        return {
-            "stage": self.stage.value,
-            "epoch": self.epoch,
-            "batch_idx": self.batch_idx,
-            "global_step": self.global_step,
-        }
+        return asdict(self) | {"stage": self.stage.value}
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Context:
