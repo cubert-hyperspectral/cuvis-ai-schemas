@@ -4,16 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from functools import lru_cache
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import yaml
 from pydantic import Field, field_validator
 
-from cuvis_ai_schemas.base import BaseSchemaModel
+from cuvis_ai_schemas.base import BaseSchemaModel, _get_pb2
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
 
 
@@ -89,8 +88,6 @@ class PipelineMetadata(BaseSchemaModel):
         Uses field-by-field mapping (not config_bytes) because the proto
         message has typed fields that gRPC services access directly.
         """
-        from cuvis_ai_schemas.base import _get_pb2
-
         pb2 = _get_pb2()
         return pb2.PipelineMetadata(
             name=self.name,
@@ -239,8 +236,6 @@ class PipelineConfig(BaseSchemaModel):
         path : str | Path
             Output file path
         """
-        from pathlib import Path
-
         output_path = Path(path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("w", encoding="utf-8") as f:
@@ -260,8 +255,6 @@ class PipelineConfig(BaseSchemaModel):
         PipelineConfig
             Loaded configuration
         """
-        from pathlib import Path
-
         with Path(path).open("r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
         return cls.from_dict(data)

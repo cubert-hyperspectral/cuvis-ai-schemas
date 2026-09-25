@@ -184,23 +184,18 @@ class PortSpec:
             return dtype is torch.Tensor or isinstance(dtype, torch.dtype)
 
         # Check dtype compatibility with smart tensor handling
-        source_is_tensor = _is_tensor_related(self.dtype)
-        target_is_tensor = _is_tensor_related(other.dtype)
-
-        if source_is_tensor and target_is_tensor:
+        if _is_tensor_related(self.dtype) and _is_tensor_related(other.dtype):
             # Both tensor-related types
             # Allow if either is generic torch.Tensor OR both are same dtype
-            if not (
+            dtype_mismatch = not (
                 self.dtype is torch.Tensor
                 or other.dtype is torch.Tensor
                 or self.dtype == other.dtype
-            ):
-                return False, (
-                    f"Dtype mismatch: source has {_format_dtype(self.dtype)}, "
-                    f"target expects {_format_dtype(other.dtype)}"
-                )
-        elif self.dtype != other.dtype:
+            )
+        else:
             # Non-tensor types must match exactly
+            dtype_mismatch = self.dtype != other.dtype
+        if dtype_mismatch:
             return False, (
                 f"Dtype mismatch: source has {_format_dtype(self.dtype)}, "
                 f"target expects {_format_dtype(other.dtype)}"
