@@ -655,13 +655,11 @@ def _manifest_source(data: object) -> str | None:
     ``repo`` or ``tag`` selects the git model, ``path`` the local model, so a
     validation error reports one shape instead of the errors of both.
     """
-    if isinstance(data, dict):
-        if "repo" in data or "tag" in data:
-            return "git"
-        return "local" if "path" in data else None
-    if isinstance(data, GitPluginSource):
+    if not isinstance(data, dict):
+        return None
+    if "repo" in data or "tag" in data:
         return "git"
-    return "local" if isinstance(data, LocalPluginSource) else None
+    return "local" if "path" in data else None
 
 
 _MANIFEST_ADAPTER: TypeAdapter[PluginManifest] = TypeAdapter(
