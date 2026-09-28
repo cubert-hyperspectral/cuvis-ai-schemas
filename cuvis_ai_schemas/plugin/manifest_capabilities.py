@@ -10,7 +10,8 @@ metadata (port specs, category, tags, icon, doc summary). Each weight is a
 :class:`PluginWeightEntry`: one pinned file in a public Hugging Face mirror
 (repo id, revision, sha256, size) plus what it is used for and which node
 hyper-parameter selects it, so a consumer can provision and check the weights
-without importing the plugin.
+without importing the plugin. A manifest may also request pip ``extras`` of its
+own package, installed whenever the manifest is part of a pipeline's plugin set.
 
 The cuvis-ai server reads a plugin's declared capabilities to answer the
 node-palette RPC without ever importing the plugin's Python modules.
@@ -28,12 +29,25 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 import yaml
-from pydantic import ConfigDict, Field, TypeAdapter, field_validator, model_validator
+from pydantic import (
+    ConfigDict,
+    Discriminator,
+    Field,
+    Tag,
+    TypeAdapter,
+    field_validator,
+    model_validator,
+)
 
 from cuvis_ai_schemas.base import BaseSchemaModel
+
+# A PEP 508 extra name: letters and digits, with runs of '-', '_' or '.' between them.
+_EXTRA_NAME_RE = re.compile(r"[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?")
+# PEP 685: extras compare equal after lower-casing and collapsing separator runs to '-'.
+_EXTRA_SEPARATORS_RE = re.compile(r"[-_.]+")
 
 
 def _require_non_empty(value: str, label: str) -> str:
@@ -133,7 +147,10 @@ class PluginCapabilityEntry(BaseSchemaModel):
         """
         if self.kind == "node":
             if self.data_module_name or self.extras:
-                raise ValueError("kind='node' entries must not set 'data_module_name' or 'extras'.")
+                raise ValueError(
+                    "kind='node' entries must not set 'data_module_name' or 'extras'; pip extras "
+                    "for a node plugin are declared at the manifest level ('extras:' next to 'name')."
+                )
         elif not self.data_module_name:
             raise ValueError(f"kind={self.kind!r} requires a non-empty 'data_module_name'.")
         return self
@@ -489,6 +506,39 @@ class _BasePluginManifest(BaseSchemaModel):
         ),
     )
 
+    extras: list[str] = Field(
+        default_factory=list,
+        description=(
+            "pip extras of this plugin's package that the env composer installs whenever "
+            "this manifest is in a pipeline's plugin set, united with the selected data "
+            "module's extras; manifests that share one package merge into one requirement. "
+            "PEP 508 extra names, normalised per PEP 685 (lower-case, runs of '-', '_' and "
+            "'.' become one '-'), no duplicates. For extras that only a selected data module "
+            "needs, use that capability entry's 'extras' instead."
+        ),
+    )
+
+    @field_validator("extras")
+    @classmethod
+    def _require_extra_names(cls, value: list[str]) -> list[str]:
+        """Normalise the extras per PEP 685 and reject malformed or duplicate names.
+
+        The composer hashes ``pkg[a,b]`` into the environment cache key, so two
+        spellings of one extra must not produce two environments.
+        """
+        normalised: list[str] = []
+        for raw in value:
+            if not _EXTRA_NAME_RE.fullmatch(raw):
+                raise ValueError(
+                    f"Invalid extra {raw!r}: an extra name is letters, digits, '-', '_' and "
+                    "'.', starting and ending with a letter or digit (PEP 508)."
+                )
+            name = _EXTRA_SEPARATORS_RE.sub("-", raw).lower()
+            if name in normalised:
+                raise ValueError(f"Duplicate extra {name!r} (after normalisation).")
+            normalised.append(name)
+        return normalised
+
     @field_validator("name")
     @classmethod
     def _validate_name(cls, value: str) -> str:
@@ -598,7 +648,35 @@ class LocalPluginSource(_BasePluginManifest):
 PluginManifest = GitPluginSource | LocalPluginSource
 """A single plugin manifest: either a git (repo + tag) or local (path) source."""
 
-_MANIFEST_ADAPTER: TypeAdapter[PluginManifest] = TypeAdapter(PluginManifest)
+
+def _manifest_source(data: object) -> str | None:
+    """Pick the manifest model from the keys present, before validation.
+
+    ``repo`` or ``tag`` selects the git model, ``path`` the local model, so a
+    validation error reports one shape instead of the errors of both.
+    """
+    if isinstance(data, dict):
+        if "repo" in data or "tag" in data:
+            return "git"
+        return "local" if "path" in data else None
+    if isinstance(data, GitPluginSource):
+        return "git"
+    return "local" if isinstance(data, LocalPluginSource) else None
+
+
+_MANIFEST_ADAPTER: TypeAdapter[PluginManifest] = TypeAdapter(
+    Annotated[
+        Annotated[GitPluginSource, Tag("git")] | Annotated[LocalPluginSource, Tag("local")],
+        Discriminator(
+            _manifest_source,
+            custom_error_type="plugin_manifest_source",
+            custom_error_message=(
+                "A plugin manifest needs a source: 'path' for a local checkout, "
+                "or 'repo' + 'tag' for a git release."
+            ),
+        ),
+    ]
+)
 
 
 # ---------------------------------------------------------------------------
@@ -701,9 +779,10 @@ def write_plugin_manifest(manifest: PluginManifest, yaml_path: Path) -> None:
         yaml_path: Destination path; parent directories are created.
     """
     data = manifest.model_dump(exclude_none=True, mode="json")
-    if not data.get("weights"):
-        # A manifest without weights is written exactly as earlier releases wrote it.
-        data.pop("weights", None)
+    for key in ("weights", "extras"):
+        if not data.get(key):
+            # A manifest without weights or extras is written as earlier releases wrote it.
+            data.pop(key, None)
     yaml_path.parent.mkdir(parents=True, exist_ok=True)
     with yaml_path.open("w", encoding="utf-8") as f:
         yaml.safe_dump(data, f, sort_keys=False, default_flow_style=False)

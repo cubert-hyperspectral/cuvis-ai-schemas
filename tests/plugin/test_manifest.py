@@ -328,3 +328,124 @@ def test_from_manifest_builds_capabilities():
     assert len(caps.capabilities) == 2
     dm = [c for c in caps.capabilities if c.kind == "data_module"]
     assert dm[0].data_module_name == "cu3s"
+
+
+# ---------------------------------------------------------------------------
+# Manifest-level extras and one-shape validation errors
+# ---------------------------------------------------------------------------
+def _local(**overrides):
+    data = {
+        "name": "rfdetr",
+        "path": "/abs/cuvis-ai-rfdetr",
+        "capabilities": [{"class_name": "pkg.mod.Node"}],
+    }
+    data.update(overrides)
+    return data
+
+
+def test_extras_default_empty_and_round_trip(tmp_path):
+    """`extras` defaults to [] and a declared list survives write + load."""
+    assert parse_plugin_manifest(_local()).extras == []
+    manifest = parse_plugin_manifest(
+        _local(
+            name="rfdetr_seg_trt",
+            path=str(tmp_path),
+            package_name="cuvis-ai-rfdetr",
+            extras=["tensorrt"],
+        )
+    )
+    assert manifest.extras == ["tensorrt"]
+    path = tmp_path / "rfdetr_seg_trt.yaml"
+    write_plugin_manifest(manifest, path)
+    assert load_plugin_manifest(path) == manifest
+
+
+@pytest.mark.parametrize("bad", ["-trt", "tensor rt", "", "trt-", "ten$or"])
+def test_extras_rejects_malformed_names(bad):
+    """An extra is a PEP 508 name: letters, digits and separators between them."""
+    with pytest.raises(ValidationError, match="Invalid extra"):
+        parse_plugin_manifest(_local(extras=[bad]))
+
+
+def test_extras_normalised_per_pep685_and_duplicates_rejected():
+    """Names are lower-cased with separator runs collapsed; a duplicate after that is an error."""
+    assert parse_plugin_manifest(_local(extras=["Tensor_RT", "cu3s"])).extras == [
+        "tensor-rt",
+        "cu3s",
+    ]
+    with pytest.raises(ValidationError, match="Duplicate extra 'tensorrt'"):
+        parse_plugin_manifest(_local(extras=["tensorrt", "TensorRT"]))
+
+
+def test_write_omits_empty_extras_and_keeps_declared_after_package_name(tmp_path):
+    """A manifest without extras writes no key; a declared list follows `package_name`."""
+    plain_path = tmp_path / "plain.yaml"
+    write_plugin_manifest(parse_plugin_manifest(_local()), plain_path)
+    assert "extras" not in yaml.safe_load(plain_path.read_text(encoding="utf-8"))
+    path = tmp_path / "trt.yaml"
+    write_plugin_manifest(
+        parse_plugin_manifest(_local(package_name="cuvis-ai-rfdetr", extras=["tensorrt"])), path
+    )
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    keys = list(raw)
+    assert keys.index("extras") == keys.index("package_name") + 1
+    assert raw["extras"] == ["tensorrt"]
+
+
+def test_from_manifest_carries_no_extras():
+    """The palette view is install metadata free: manifest extras never reach it."""
+    caps = PluginCapabilities.from_manifest(parse_plugin_manifest(_local(extras=["tensorrt"])))
+    assert caps is not None
+    assert not hasattr(caps, "extras")
+    assert caps.capabilities[0].extras == []
+
+
+def test_manifest_error_reports_one_shape():
+    """The source model is picked from the keys present, so an error names one shape only."""
+    with pytest.raises(ValidationError) as excinfo:
+        parse_plugin_manifest(_local(extra=["tensorrt"]))  # typo of `extras`
+    errors = excinfo.value.errors()
+    assert len(errors) == 1
+    assert errors[0]["loc"][-1] == "extra"
+    assert errors[0]["type"] == "extra_forbidden"
+
+    with pytest.raises(ValidationError) as excinfo:
+        parse_plugin_manifest(
+            _local(capabilities=[{"class_name": "pkg.mod.Node", "extras": ["tensorrt"]}])
+        )
+    errors = excinfo.value.errors()
+    assert len(errors) == 1
+    assert "declared at the manifest level" in errors[0]["msg"]
+
+    with pytest.raises(ValidationError) as excinfo:
+        parse_plugin_manifest({"name": "x", "capabilities": [{"class_name": "pkg.mod.Node"}]})
+    errors = excinfo.value.errors()
+    assert len(errors) == 1
+    assert "'path'" in errors[0]["msg"]
+    assert "'repo'" in errors[0]["msg"]
+
+
+def test_source_model_picked_by_keys(tmp_path):
+    """`repo`/`tag` select the git model, `path` the local model, in memory and from a file."""
+    git = parse_plugin_manifest(
+        {
+            "name": "g",
+            "repo": "https://github.com/u/r.git",
+            "tag": "v1",
+            "capabilities": [{"class_name": "pkg.mod.Node"}],
+        }
+    )
+    assert isinstance(git, GitPluginSource)
+    with pytest.raises(ValidationError) as excinfo:
+        parse_plugin_manifest(
+            {
+                "name": "g",
+                "repo": "https://github.com/u/r.git",
+                "capabilities": [{"class_name": "pkg.mod.Node"}],
+            }
+        )
+    errors = excinfo.value.errors()
+    assert len(errors) == 1
+    assert errors[0]["loc"][-1] == "tag"
+    path = _write_yaml(tmp_path, "local.yaml", _local(path="../plugin"))
+    assert isinstance(load_plugin_manifest(path), LocalPluginSource)

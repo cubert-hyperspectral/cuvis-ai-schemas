@@ -194,6 +194,15 @@ def _weights_strategy() -> SearchStrategy[list[PluginWeightEntry]]:
     return st.lists(plugin_weight_entry_strategy(), max_size=2, unique_by=lambda entry: entry.name)
 
 
+def _extras_strategy() -> SearchStrategy[list[str]]:
+    """A manifest's ``extras``: names already in PEP 685 form, so the list survives a round trip."""
+    return st.lists(
+        st.from_regex(r"[a-z0-9]{1,4}(-[a-z0-9]{1,4}){0,2}", fullmatch=True),
+        max_size=2,
+        unique=True,
+    )
+
+
 def git_plugin_source_strategy() -> SearchStrategy[GitPluginSource]:
     """Strategy for a git-sourced :class:`GitPluginSource` manifest."""
     return st.builds(
@@ -204,6 +213,7 @@ def git_plugin_source_strategy() -> SearchStrategy[GitPluginSource]:
         capabilities=st.lists(plugin_capability_entry_strategy(), min_size=1, max_size=3),
         weights=_weights_strategy(),
         package_name=st.one_of(st.none(), identifiers),
+        extras=_extras_strategy(),
     )
 
 
@@ -216,6 +226,7 @@ def local_plugin_source_strategy() -> SearchStrategy[LocalPluginSource]:
         capabilities=st.lists(plugin_capability_entry_strategy(), min_size=1, max_size=3),
         weights=_weights_strategy(),
         package_name=st.one_of(st.none(), identifiers),
+        extras=_extras_strategy(),
     )
 
 
