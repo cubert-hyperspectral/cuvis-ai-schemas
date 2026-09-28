@@ -809,9 +809,11 @@ message InitializeSessionRequest {
   // proxied requests (LoadPipeline, Inference, Train, ...) carry the same
   // session_id end-to-end.
   string session_id = 1;
-  // Search paths the parent's SessionState already knows about. Copied into
-  // the child once at init; later SetSessionSearchPaths calls against the
-  // public surface are rejected (composed env is keyed to this set).
+  // Search paths the parent's SessionState knows at spawn time. Copied into
+  // the child once at init. Later SetSessionSearchPaths calls against the
+  // public surface update the parent only: the parent resolves a relative
+  // LoadPipelineWeights path against its current set and forwards the
+  // absolute path, so the child never needs the updated set.
   repeated string search_paths = 2;
   // Resolved plugin list (list of GitPluginSource | LocalPluginSource)
   // serialised as JSON. The child imports each plugin's `capabilities` class
