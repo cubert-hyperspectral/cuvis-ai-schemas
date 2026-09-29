@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.14.0 - 2026-10-01
+
+- Removed, breaking: the `ClearPluginCache` RPC of `CuvisAIService` and its `ClearPluginCacheRequest` / `ClearPluginCacheResponse` messages. They served the clone-era plugin cache that cuvis-ai-core retired in favour of the orchestrator's composed environments; the server has answered `UNIMPLEMENTED` since cuvis-ai-core 0.18.0. This release requires cuvis-ai-core 0.18.0 or later: earlier cores dereference the two messages when they build their service stub and fail at import against a schemas without them (cuvis-ai-core 0.17.5 pins `cuvis-ai-schemas<0.13`; older 0.17 releases have no upper bound and must be pinned to a schemas release before this one). CuvisNEXT's proto copy drops the RPC at its next sync.
+
 ## 0.13.0 - 2026-10-01
 
 - Added `extras: list[str] = []` to the plugin manifest base (after `package_name`): the pip extras of the plugin's own package that the env composer installs whenever the manifest is in a pipeline's plugin set, united with the selected data module's extras. Names are PEP 508 extra names normalised per PEP 685 (lower-case, separator runs collapsed to `-`); a duplicate after normalisation is rejected. `write_plugin_manifest` omits an empty `extras`, so manifests without extras are written byte-identically to 0.12.

@@ -681,14 +681,6 @@ message ListAvailableNodesResponse {
   repeated NodeInfo nodes = 1;
 }
 
-message ClearPluginCacheRequest {
-  string plugin_name = 1;  // Empty string = clear all
-}
-
-message ClearPluginCacheResponse {
-  int32 cleared_count = 1;
-}
-
 // ============================================================================
 // Profiling
 // ============================================================================
@@ -784,7 +776,6 @@ service CuvisAIService {
   rpc ListLoadedPlugins(ListLoadedPluginsRequest) returns (ListLoadedPluginsResponse);
   rpc GetPluginInfo(GetPluginInfoRequest) returns (GetPluginInfoResponse);
   rpc ListAvailableNodes(ListAvailableNodesRequest) returns (ListAvailableNodesResponse);
-  rpc ClearPluginCache(ClearPluginCacheRequest) returns (ClearPluginCacheResponse);
 
   // Profiling
   rpc SetProfiling(SetProfilingRequest) returns (SetProfilingResponse);

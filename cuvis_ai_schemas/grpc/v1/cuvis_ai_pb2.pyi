@@ -976,18 +976,6 @@ class ListAvailableNodesResponse(_message.Message):
     nodes: _containers.RepeatedCompositeFieldContainer[NodeInfo]
     def __init__(self, nodes: _Optional[_Iterable[_Union[NodeInfo, _Mapping]]] = ...) -> None: ...
 
-class ClearPluginCacheRequest(_message.Message):
-    __slots__ = ("plugin_name",)
-    PLUGIN_NAME_FIELD_NUMBER: _ClassVar[int]
-    plugin_name: str
-    def __init__(self, plugin_name: _Optional[str] = ...) -> None: ...
-
-class ClearPluginCacheResponse(_message.Message):
-    __slots__ = ("cleared_count",)
-    CLEARED_COUNT_FIELD_NUMBER: _ClassVar[int]
-    cleared_count: int
-    def __init__(self, cleared_count: _Optional[int] = ...) -> None: ...
-
 class SetProfilingRequest(_message.Message):
     __slots__ = ("session_id", "enabled", "synchronize_cuda", "reset", "skip_first_n")
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
