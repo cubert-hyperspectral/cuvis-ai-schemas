@@ -124,14 +124,26 @@ def create_callbacks_from_config(config: CallbacksConfig | None) -> list[Any]:
             "Install with: pip install pytorch-lightning"
         ) from exc
 
-    # Each config's fields mirror its Lightning callback's keyword arguments 1:1.
+    # Each config's fields mirror its Lightning callback's keyword arguments 1:1; the
+    # explicit field sets keep a subclass field or a computed field out of the constructor.
     callbacks: list[Any] = [
-        EarlyStopping(**es_config.model_dump()) for es_config in config.early_stopping
+        EarlyStopping(**es_config.model_dump(include=set(EarlyStoppingConfig.model_fields)))
+        for es_config in config.early_stopping
     ]
     if config.checkpoint is not None:
-        callbacks.append(ModelCheckpoint(**config.checkpoint.model_dump()))
+        callbacks.append(
+            ModelCheckpoint(
+                **config.checkpoint.model_dump(include=set(ModelCheckpointConfig.model_fields))
+            )
+        )
     if config.learning_rate_monitor is not None:
-        callbacks.append(LearningRateMonitor(**config.learning_rate_monitor.model_dump()))
+        callbacks.append(
+            LearningRateMonitor(
+                **config.learning_rate_monitor.model_dump(
+                    include=set(LearningRateMonitorConfig.model_fields)
+                )
+            )
+        )
 
     return callbacks
 
