@@ -11,8 +11,7 @@ widest** — treat schema edits as breaking-by-default and check downstream cons
 
 `cuvis-ai-schemas` (contracts, this repo) → `cuvis-ai-core` (framework: Node base class,
 pipeline engine, gRPC, training) → `cuvis-ai` (node/operator library + CLIs) → plugins.
-`cuvis-ai-cookbook` holds runnable examples; `cuvis-ai-agentic-skills` is a Claude Code
-plugin; `dev-docs` holds internal ticket docs.
+`cuvis-ai-agentic-skills` is a Claude Code plugin; `dev-docs` holds internal ticket docs.
 
 ## Layout
 

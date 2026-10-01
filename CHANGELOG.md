@@ -1,9 +1,9 @@
 # Changelog
 
-## 0.12.1 - 2026-09-28
+## 0.12.1 - 2026-10-01
 
-- Simplification pass over `cuvis_ai_schemas/` (7 files, -169/+22 lines): no wire change, no field, validator, `model_config` or class definition touched; every step ran the full test suite. Per area:
-  - grpc conversions: the `_TAG_PY_TO_PROTO` and `_CATEGORY_PY_TO_PROTO` tables are comprehensions over `NodeTag` and `NodeCategory` instead of 71 hand-written lines. Stricter by design: a future enum member without a proto counterpart now fails at import instead of silently mapping to `UNSPECIFIED`.
+- Simplification pass over `cuvis_ai_schemas/` (7 files, -169/+22 lines): no wire change, no field, `model_config` or class definition touched, and one validator (`Selector._validate_structure`) reads the merged `_REQUIRED_FIELDS` table instead of per-kind sets; every step ran the full test suite. Per area:
+  - grpc conversions: the `_TAG_PY_TO_PROTO` and `_CATEGORY_PY_TO_PROTO` tables are comprehensions over `NodeTag` and `NodeCategory` instead of 71 hand-written lines. A member without a proto constant (stubs not regenerated yet) is left out of the table and maps to `UNSPECIFIED`, as before; the proto contract test reports the skew.
   - execution context: `Context.to_dict` is `dataclasses.asdict`.
   - node display: the style entry is spread into the display dict instead of being copied key by key.
   - pipeline config: `pathlib.Path` and `base._get_pb2` are imported at module level instead of inside `save_to_file`, `load_from_file` and `PipelineMetadata.to_proto`; the proto module itself is still loaded lazily by `_get_pb2`.
