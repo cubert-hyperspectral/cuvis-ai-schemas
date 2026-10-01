@@ -77,24 +77,8 @@ class SelectorKind(StrEnum):
     INTERSECT = "intersect"
 
 
-#: Which ``Selector`` fields each kind may set; everything else must stay default.
-_ALLOWED_FIELDS: dict[SelectorKind, set[str]] = {
-    SelectorKind.FILES: {"paths"},
-    SelectorKind.FILE_INDICES: {"source", "ids"},
-    SelectorKind.DIR_INDICES: {"ids"},
-    SelectorKind.STEMS: {"stems"},
-    SelectorKind.GLOB: {"pattern"},
-    SelectorKind.TAG: {"any_of"},
-    SelectorKind.CATEGORIES: {"any_of"},
-    SelectorKind.ALL: set(),
-    SelectorKind.UNION: {"of"},
-    SelectorKind.EXCEPT: {"of"},
-    SelectorKind.INTERSECT: {"of"},
-}
-
-#: Fields each kind requires (ordered for stable error messages). For every
-#: kind this equals its allowed set: a selector must set exactly the fields
-#: valid for its kind, no more and no fewer.
+#: Exactly the ``Selector`` fields each kind sets, no more and no fewer (ordered
+#: for stable error messages); everything else must stay at its default.
 _REQUIRED_FIELDS: dict[SelectorKind, tuple[str, ...]] = {
     SelectorKind.FILES: ("paths",),
     SelectorKind.FILE_INDICES: ("source", "ids"),
@@ -157,7 +141,7 @@ class Selector(BaseSchemaModel):
 
         # Only the fields valid for this kind may be set.
         for name, is_set in present.items():
-            if is_set and name not in _ALLOWED_FIELDS[self.kind]:
+            if is_set and name not in _REQUIRED_FIELDS[self.kind]:
                 raise ValueError(f"selector kind '{kind}' must not set field '{name}'")
 
         # Every field required by this kind must be present.

@@ -104,13 +104,7 @@ def resolve_display(node: Any) -> dict[str, Any]:
     """
     category = node.get_category()
     base = CATEGORY_STYLES.get(category, CATEGORY_STYLES[NodeCategory.UNSPECIFIED])
-    return {
-        "category": category,
-        "fill": base["fill"],
-        "border": base["border"],
-        "emoji": base["emoji"],
-        "label": None,
-    }
+    return {"category": category, **base, "label": None}
 
 
 def is_plugin(node: Any, registry: Any | None = None) -> bool:

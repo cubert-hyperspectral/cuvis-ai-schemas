@@ -50,6 +50,26 @@ def test_node_tag_members_match_proto():
         assert hasattr(cuvis_ai_pb2, proto_name), proto_name
 
 
+def test_member_without_proto_constant_is_left_out_of_the_table(monkeypatch):
+    """A stub that lacks one NODE_TAG_* constant still imports: the member is left
+    out of the table and maps to UNSPECIFIED, as the hand-written tables did."""
+    pytest.importorskip("cuvis_ai_schemas.grpc.v1.cuvis_ai_pb2")
+    import importlib
+
+    from cuvis_ai_schemas.grpc import conversions
+    from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
+
+    tag = next(t for t in NodeTag if t.name != "UNSPECIFIED")
+    monkeypatch.delattr(cuvis_ai_pb2, f"NODE_TAG_{tag.name}")
+    try:
+        reloaded = importlib.reload(conversions)
+        assert tag not in reloaded._TAG_PY_TO_PROTO
+        assert reloaded.node_tag_to_proto(tag) == cuvis_ai_pb2.NODE_TAG_UNSPECIFIED
+    finally:
+        monkeypatch.undo()
+        importlib.reload(conversions)
+
+
 @pytest.mark.parametrize("category", list(NodeCategory))
 def test_node_category_display_name_title_cased(category):
     """get_display_name() returns the title-cased form."""
