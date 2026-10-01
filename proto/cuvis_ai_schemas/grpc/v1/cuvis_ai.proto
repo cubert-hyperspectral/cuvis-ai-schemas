@@ -813,7 +813,8 @@ message InitializeSessionRequest {
   // the child once at init. Later SetSessionSearchPaths calls against the
   // public surface update the parent only: the parent resolves a relative
   // LoadPipelineWeights path against its current set and forwards the
-  // absolute path, so the child never needs the updated set.
+  // absolute path (cuvis-ai-core 0.18.0 and later), so the child never
+  // needs the updated set.
   repeated string search_paths = 2;
   // Resolved plugin list (list of GitPluginSource | LocalPluginSource)
   // serialised as JSON. The child imports each plugin's `capabilities` class
