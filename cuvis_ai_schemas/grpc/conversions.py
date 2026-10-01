@@ -10,14 +10,20 @@ requires the ``[proto]`` extra (it imports ``cuvis_ai_pb2``).
 from cuvis_ai_schemas.enums import NodeCategory, NodeTag
 from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
 
+# A member without a proto constant (stubs not regenerated yet) is left out of the table and
+# maps to UNSPECIFIED, like the hand-written tables did; the CI contract test reports the skew.
 _CATEGORY_PY_TO_PROTO: dict[NodeCategory, int] = {
-    c: getattr(cuvis_ai_pb2, f"NODE_CATEGORY_{c.name}") for c in NodeCategory
+    c: getattr(cuvis_ai_pb2, f"NODE_CATEGORY_{c.name}")
+    for c in NodeCategory
+    if hasattr(cuvis_ai_pb2, f"NODE_CATEGORY_{c.name}")
 }
 _CATEGORY_PROTO_TO_PY: dict[int, NodeCategory] = {v: k for k, v in _CATEGORY_PY_TO_PROTO.items()}
 
 
 _TAG_PY_TO_PROTO: dict[NodeTag, int] = {
-    t: getattr(cuvis_ai_pb2, f"NODE_TAG_{t.name}") for t in NodeTag
+    t: getattr(cuvis_ai_pb2, f"NODE_TAG_{t.name}")
+    for t in NodeTag
+    if hasattr(cuvis_ai_pb2, f"NODE_TAG_{t.name}")
 }
 _TAG_PROTO_TO_PY: dict[int, NodeTag] = {v: k for k, v in _TAG_PY_TO_PROTO.items()}
 
