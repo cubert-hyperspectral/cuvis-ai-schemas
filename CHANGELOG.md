@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Proto comment on `InitializeSessionRequest.search_paths`: later `SetSessionSearchPaths` calls are accepted and update the parent only; the parent resolves a relative `LoadPipelineWeights` path against its current search paths and forwards the absolute path to the child (cuvis-ai-core, cuvis-ai-core 0.18.0). The comment claimed such calls were rejected.
+
 ## 0.12.1 - 2026-10-01
 
 - Simplification pass over `cuvis_ai_schemas/` (7 files, -169/+22 lines): no wire change, no field, `model_config` or class definition touched, and one validator (`Selector._validate_structure`) reads the merged `_REQUIRED_FIELDS` table instead of per-kind sets; every step ran the full test suite. Per area:
