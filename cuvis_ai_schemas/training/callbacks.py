@@ -46,7 +46,12 @@ class ModelCheckpointConfig(BaseSchemaModel):
     monitor: str = Field(default="val_loss", description="Metric to monitor")
     mode: str = Field(default="min", description="min or max")
     save_top_k: int = Field(default=3, ge=-1, description="Save top k checkpoints (-1 for all)")
-    every_n_epochs: int = Field(default=1, ge=1, description="Save every n epochs")
+    every_n_epochs: int | None = Field(
+        default=None,
+        ge=1,
+        description="Save every n epochs; None leaves the cadence to every_n_train_steps or "
+        "train_time_interval (Lightning saves every epoch when all three are unset)",
+    )
     save_last: bool | Literal["link"] | None = Field(
         default=False, description="Also save last checkpoint (or 'link' for symlink)"
     )

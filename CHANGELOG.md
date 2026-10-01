@@ -1,7 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.13.0 - 2026-10-01
 
+- Added `extras: list[str] = []` to the plugin manifest base (after `package_name`): the pip extras of the plugin's own package that the env composer installs whenever the manifest is in a pipeline's plugin set, united with the selected data module's extras. Names are PEP 508 extra names normalised per PEP 685 (lower-case, separator runs collapsed to `-`); a duplicate after normalisation is rejected. `write_plugin_manifest` omits an empty `extras`, so manifests without extras are written byte-identically to 0.12.
+- `parse_plugin_manifest` and `load_plugin_manifest` pick the source model from the keys present (`repo` or `tag` selects the git model, `path` the local one) before validating, so a manifest error reports one shape instead of the errors of both; a manifest with neither source gets one error naming both shapes. Every manifest 0.12 accepted is still accepted.
+- The node-entry rule (`kind='node' entries must not set 'data_module_name' or 'extras'`) now says where a node plugin declares its extras: at the manifest level.
+- The Hypothesis strategies of both manifest models generate `extras`.
+- `ModelCheckpointConfig.every_n_epochs` is `int | None` with default `None`: step-based (`every_n_train_steps`) and time-based (`train_time_interval`) checkpointing are expressible through the schema. With the old default of 1, Lightning rejected either of them ("should be mutually exclusive"); with all three unset it saves every epoch, as before.
+- No wire change: the manifest still travels as JSON inside the unchanged `PluginManifest` proto message.
 - Proto comment on `InitializeSessionRequest.search_paths`: later `SetSessionSearchPaths` calls are accepted and update the parent only; the parent resolves a relative `LoadPipelineWeights` path against its current search paths and forwards the absolute path to the child (cuvis-ai-core, cuvis-ai-core 0.18.0). The comment claimed such calls were rejected.
 
 ## 0.12.1 - 2026-10-01

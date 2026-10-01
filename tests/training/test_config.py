@@ -1,6 +1,7 @@
 """Tests for training schemas."""
 
 import sys
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -494,6 +495,40 @@ def test_create_callbacks_from_config_all_types():
     assert EarlyStopping in types
     assert ModelCheckpoint in types
     assert LearningRateMonitor in types
+
+
+@pytest.mark.parametrize(
+    "checkpoint_kwargs",
+    [
+        {"every_n_epochs": 2},
+        {"every_n_train_steps": 100},
+        {"train_time_interval": timedelta(minutes=10)},
+        {},
+    ],
+    ids=["epochs", "steps", "time", "default"],
+)
+def test_checkpoint_cadence_modes_build_a_lightning_callback(checkpoint_kwargs):
+    """Each of Lightning's mutually exclusive checkpoint cadences is expressible.
+
+    With ``every_n_epochs`` defaulting to 1 the step- and time-based modes raised
+    Lightning's ``MisconfigurationException`` ("should be mutually exclusive").
+    """
+    pytest.importorskip("pytorch_lightning")
+    from pytorch_lightning.callbacks import ModelCheckpoint
+
+    config = CallbacksConfig(
+        checkpoint=ModelCheckpointConfig(monitor="val_loss", **checkpoint_kwargs)
+    )
+    (callback,) = create_callbacks_from_config(config)
+    assert isinstance(callback, ModelCheckpoint)
+
+
+def test_checkpoint_every_n_epochs_is_nullable_in_the_json_schema():
+    """The published schema shows the field as integer-or-null with the floor kept."""
+    prop = ModelCheckpointConfig.model_json_schema()["properties"]["every_n_epochs"]
+    assert {"type": "null"} in prop["anyOf"]
+    assert {"type": "integer", "minimum": 1} in prop["anyOf"]
+    assert prop["default"] is None
 
 
 def test_create_callbacks_from_config_import_error():
