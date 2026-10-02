@@ -102,3 +102,16 @@ def test_restore_train_run_accepts_target_session() -> None:
 
     assert "session_id" in fields
     assert fields["session_id"].number == 4
+
+
+def test_clear_plugin_cache_messages_kept_without_their_rpc() -> None:
+    """cuvis-ai-core 0.17.x names both messages at import, so they outlive the removed RPC."""
+    request_fields = cuvis_ai_pb2.ClearPluginCacheRequest.DESCRIPTOR.fields_by_name
+    response_fields = cuvis_ai_pb2.ClearPluginCacheResponse.DESCRIPTOR.fields_by_name
+
+    assert set(request_fields) == {"plugin_name"}
+    assert request_fields["plugin_name"].number == 1
+    assert set(response_fields) == {"cleared_count"}
+    assert response_fields["cleared_count"].number == 1
+    for service in cuvis_ai_pb2.DESCRIPTOR.services_by_name.values():
+        assert "ClearPluginCache" not in service.methods_by_name
