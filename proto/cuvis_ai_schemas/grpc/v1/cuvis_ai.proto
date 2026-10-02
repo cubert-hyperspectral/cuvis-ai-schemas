@@ -681,6 +681,17 @@ message ListAvailableNodesResponse {
   repeated NodeInfo nodes = 1;
 }
 
+// No RPC takes these two any more (ClearPluginCache was removed in 0.14.0). They stay because
+// cuvis-ai-core 0.17.x names both when it imports its service, and child environments composed
+// by a 0.17.x server resolve the newest schemas release.
+message ClearPluginCacheRequest {
+  string plugin_name = 1;  // Empty string = clear all
+}
+
+message ClearPluginCacheResponse {
+  int32 cleared_count = 1;
+}
+
 // ============================================================================
 // Profiling
 // ============================================================================

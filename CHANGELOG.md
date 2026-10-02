@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.14.1 - 2026-10-02
+
+- Restored the `ClearPluginCacheRequest` and `ClearPluginCacheResponse` messages, without their RPC: cuvis-ai-core 0.17.x names both when it imports its service, and a 0.17.x server composes its child environments with the newest schemas, so since 0.14.0 none of them started. The `ClearPluginCache` RPC stays removed.
+
 ## 0.14.0 - 2026-10-01
 
 - Removed, breaking: the `ClearPluginCache` RPC of `CuvisAIService` and its `ClearPluginCacheRequest` / `ClearPluginCacheResponse` messages. They served the clone-era plugin cache that cuvis-ai-core retired in favour of the orchestrator's composed environments; the server has answered `UNIMPLEMENTED` since cuvis-ai-core 0.18.0. This release requires cuvis-ai-core 0.18.0 or later: earlier cores dereference the two messages when they build their service stub and fail at import against a schemas without them (cuvis-ai-core 0.17.5 pins `cuvis-ai-schemas<0.13`; older 0.17 releases have no upper bound and must be pinned to a schemas release before this one). CuvisNEXT's proto copy drops the RPC at its next sync.
