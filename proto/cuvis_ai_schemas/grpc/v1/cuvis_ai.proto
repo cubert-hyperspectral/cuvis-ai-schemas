@@ -38,6 +38,11 @@ enum TrainerType {
   TRAINER_TYPE_UNSPECIFIED = 0;
   TRAINER_TYPE_STATISTICAL = 1;
   TRAINER_TYPE_GRADIENT = 2;
+  // Re-run the post-fit steps (threshold calibration on the validation split,
+  // then the validation and test evaluation) on a session that already holds
+  // trained weights; no fit. A session without loaded or trained weights is
+  // answered FAILED_PRECONDITION.
+  TRAINER_TYPE_CALIBRATION = 3;
 }
 
 enum TrainStatus {
@@ -48,6 +53,58 @@ enum TrainStatus {
   // Terminal status of a run stopped via StopTrain (or a dropped Train
   // stream): the run ended early and cleanly, distinct from COMPLETE/ERROR.
   TRAIN_STATUS_CANCELLED = 4;
+}
+
+// The lifecycle hook a TrainResponse.event reports. Per-batch train responses
+// carry no event; every response after the last epoch carries one. A client
+// that does not know a hook value keeps its previous state.
+enum TrainHook {
+  TRAIN_HOOK_UNSPECIFIED = 0;
+  TRAIN_HOOK_FIT_START = 1;             // calibration_pending set
+  TRAIN_HOOK_EPOCH_END = 2;             // losses of the epoch
+  TRAIN_HOOK_VALIDATION_END = 3;        // metrics of the validation epoch
+  TRAIN_HOOK_FIT_END = 4;               // the last epoch is done, status stays RUNNING
+  TRAIN_HOOK_CHECKPOINT_RESTORED = 5;   // checkpoint set
+  TRAIN_HOOK_CALIBRATION_START = 6;     // split set
+  TRAIN_HOOK_CALIBRATION_PROGRESS = 7;  // split and progress set
+  TRAIN_HOOK_CALIBRATION_END = 8;       // split and calibration set
+  TRAIN_HOOK_EVALUATION_START = 9;      // split set
+  TRAIN_HOOK_EVALUATION_PROGRESS = 10;  // split and progress set
+  TRAIN_HOOK_EVALUATION_END = 11;       // split and evaluation set
+  TRAIN_HOOK_POST_FIT_END = 12;         // the steps are done, COMPLETE follows
+}
+
+enum EvaluationStatus {
+  EVALUATION_STATUS_UNSPECIFIED = 0;
+  EVALUATION_STATUS_EVALUATED = 1;  // metrics and frames set
+  EVALUATION_STATUS_NO_SPLIT = 2;   // the split did not resolve
+  EVALUATION_STATUS_FAILED = 3;     // the pass raised; error set, the run is still saved
+}
+
+// Why the calibration phase did nothing for any decider.
+enum CalibrationPhaseSkip {
+  CALIBRATION_PHASE_SKIP_UNSPECIFIED = 0;
+  CALIBRATION_PHASE_SKIP_NONE = 1;              // the phase ran
+  CALIBRATION_PHASE_SKIP_NO_SPLIT = 2;          // the split did not resolve
+  CALIBRATION_PHASE_SKIP_INFERENCE_FAILED = 3;  // the pass over the split raised
+  CALIBRATION_PHASE_SKIP_AMBIGUOUS_MASK = 4;    // not exactly one ground-truth mask output
+  CALIBRATION_PHASE_SKIP_SINGLE_CLASS = 5;      // every frame normal, or every frame anomalous
+}
+
+enum DeciderCalibrationStatus {
+  DECIDER_CALIBRATION_STATUS_UNSPECIFIED = 0;
+  DECIDER_CALIBRATION_STATUS_CALIBRATED = 1;  // thresholds updated on this run
+  DECIDER_CALIBRATION_STATUS_SKIPPED = 2;     // thresholds unchanged; skip says why
+}
+
+// Why one decider kept its thresholds.
+enum DeciderSkip {
+  DECIDER_SKIP_UNSPECIFIED = 0;
+  DECIDER_SKIP_NONE = 1;
+  DECIDER_SKIP_NOTHING_WIRED = 2;      // nothing feeds the decider's logits input
+  DECIDER_SKIP_NO_SCORES = 3;          // the logits source produced no tensor
+  DECIDER_SKIP_CALIBRATE_FAILED = 4;   // the decider's calibrate raised; skip_detail set
+  DECIDER_SKIP_NO_REPORT = 5;          // calibrate returned nothing
 }
 
 enum PointType {
@@ -296,7 +353,71 @@ message TrainResponse {
   map<string, float> losses = 2;
   map<string, float> metrics = 3;
   TrainStatus status = 4;
-  string message = 5;
+  string message = 5;  // one human sentence for a status line; nothing parses it
+  // The lifecycle hook this response reports, with that hook's data. Absent on
+  // per-batch train responses. The results of a run live here, never in metrics.
+  TrainEvent event = 6;
+}
+
+message TrainEvent {
+  TrainHook hook = 1;
+  ExecutionStage split = 2;            // on the calibration and evaluation hooks
+  FrameProgress progress = 3;          // on the progress hooks
+  CheckpointRestored checkpoint = 4;   // on CHECKPOINT_RESTORED
+  CalibrationOutcome calibration = 5;  // on CALIBRATION_END
+  EvaluationOutcome evaluation = 6;    // on EVALUATION_END
+  bool calibration_pending = 7;        // on FIT_START: a decider holds no thresholds yet
+}
+
+message FrameProgress {
+  int32 done = 1;   // frames seen so far over the split
+  int32 total = 2;  // frames in the split; 0 when the loader has no length
+}
+
+// What the restore of the best checkpoint did after the fit.
+message CheckpointRestored {
+  bool restored = 1;         // false: the final epoch's weights stay
+  string path = 2;           // the checkpoint file when restored
+  int32 epoch = 3;           // the epoch that checkpoint was saved at
+  string monitor = 4;        // the monitored metric of the checkpoint callback
+  optional float score = 5;  // the monitored value of the best checkpoint
+  string reason = 6;         // why nothing was restored
+}
+
+message ThresholdChange {
+  optional float before = 1;  // unset when the threshold was null before the run
+  float after = 2;
+}
+
+message DeciderCalibration {
+  string name = 1;        // node name
+  string class_name = 2;  // decider class
+  DeciderCalibrationStatus status = 3;
+  DeciderSkip skip = 4;
+  string skip_detail = 5;  // error class and text on CALIBRATE_FAILED
+  map<string, ThresholdChange> thresholds = 6;  // image_threshold, pixel_threshold, threshold, quantile
+  map<string, float> metrics = 7;               // the metrics at the chosen thresholds (f1, precision, ...)
+  bool thresholds_present = 8;  // the decider holds thresholds after the step (also when kept)
+}
+
+// The calibration phase as data: the client words it, nothing parses message text.
+message CalibrationOutcome {
+  ExecutionStage split = 1;
+  bool applicable = 2;  // the pipeline holds a calibratable decider
+  CalibrationPhaseSkip phase_skip = 3;
+  string phase_detail = 4;     // error class and text, or the mask candidates
+  int32 frames = 5;            // frames seen over the split
+  int32 anomalous_frames = 6;  // of which anomalous
+  repeated DeciderCalibration deciders = 7;
+}
+
+// One evaluation pass over a split after the fit.
+message EvaluationOutcome {
+  ExecutionStage split = 1;
+  EvaluationStatus status = 2;
+  int32 frames = 3;
+  map<string, float> metrics = 4;  // "<node>/<metric>" as the trainer reports them
+  string error = 5;                // error class and text on FAILED
 }
 
 message ParamSpec {
