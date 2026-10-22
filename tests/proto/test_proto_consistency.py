@@ -115,3 +115,181 @@ def test_clear_plugin_cache_messages_kept_without_their_rpc() -> None:
     assert response_fields["cleared_count"].number == 1
     for service in cuvis_ai_pb2.DESCRIPTOR.services_by_name.values():
         assert "ClearPluginCache" not in service.methods_by_name
+
+
+def test_trainer_type_has_calibration_value() -> None:
+    """TrainerType carries the standalone post-fit phase (calibrate and evaluate, no fit)."""
+    values = cuvis_ai_pb2.TrainerType.DESCRIPTOR.values_by_name
+
+    assert "TRAINER_TYPE_CALIBRATION" in values
+    assert values["TRAINER_TYPE_CALIBRATION"].number == 3
+
+
+def test_train_response_carries_a_typed_event() -> None:
+    """Every post-fit response reports its lifecycle hook as data, never as message text."""
+    fields = cuvis_ai_pb2.TrainResponse.DESCRIPTOR.fields_by_name
+
+    assert "event" in fields
+    assert fields["event"].number == 6
+    assert fields["event"].message_type.name == "TrainEvent"
+
+    event = cuvis_ai_pb2.TrainEvent.DESCRIPTOR.fields_by_name
+    assert {name: field.number for name, field in event.items()} == {
+        "hook": 1,
+        "split": 2,
+        "progress": 3,
+        "checkpoint": 4,
+        "calibration": 5,
+        "evaluation": 6,
+        "calibration_pending": 7,
+        "epochs": 8,
+        "node": 9,
+    }
+    assert event["hook"].enum_type.name == "TrainHook"
+    assert event["split"].enum_type.name == "ExecutionStage"
+    assert event["progress"].message_type.name == "FrameProgress"
+    assert event["checkpoint"].message_type.name == "CheckpointRestored"
+    assert event["calibration"].message_type.name == "CalibrationOutcome"
+    assert event["evaluation"].message_type.name == "EvaluationOutcome"
+    assert event["epochs"].message_type.name == "EpochProgress"
+    assert event["node"].type == event["node"].TYPE_STRING
+
+
+def test_epoch_progress_shape() -> None:
+    """The epoch counter travels typed: current is one-based, total 0 means unknown."""
+    fields = cuvis_ai_pb2.EpochProgress.DESCRIPTOR.fields_by_name
+
+    assert {name: field.number for name, field in fields.items()} == {"current": 1, "total": 2}
+    assert fields["current"].type == fields["current"].TYPE_INT32
+    assert fields["total"].type == fields["total"].TYPE_INT32
+
+
+def test_train_hook_values_are_pinned() -> None:
+    """A client switches on the hook number, so the numbers are part of the contract.
+
+    The values 13 to 19 report the fit itself (the statistical pass per node, the epoch start,
+    the train and validation batches), so every RUNNING progress response carries an event.
+    """
+    values = cuvis_ai_pb2.TrainHook.DESCRIPTOR.values_by_name
+
+    assert {name: value.number for name, value in values.items()} == {
+        "TRAIN_HOOK_UNSPECIFIED": 0,
+        "TRAIN_HOOK_FIT_START": 1,
+        "TRAIN_HOOK_EPOCH_END": 2,
+        "TRAIN_HOOK_VALIDATION_END": 3,
+        "TRAIN_HOOK_FIT_END": 4,
+        "TRAIN_HOOK_CHECKPOINT_RESTORED": 5,
+        "TRAIN_HOOK_CALIBRATION_START": 6,
+        "TRAIN_HOOK_CALIBRATION_PROGRESS": 7,
+        "TRAIN_HOOK_CALIBRATION_END": 8,
+        "TRAIN_HOOK_EVALUATION_START": 9,
+        "TRAIN_HOOK_EVALUATION_PROGRESS": 10,
+        "TRAIN_HOOK_EVALUATION_END": 11,
+        "TRAIN_HOOK_POST_FIT_END": 12,
+        "TRAIN_HOOK_STATISTICAL_NODE_START": 13,
+        "TRAIN_HOOK_STATISTICAL_PROGRESS": 14,
+        "TRAIN_HOOK_STATISTICAL_NODE_END": 15,
+        "TRAIN_HOOK_EPOCH_START": 16,
+        "TRAIN_HOOK_TRAIN_PROGRESS": 17,
+        "TRAIN_HOOK_VALIDATION_START": 18,
+        "TRAIN_HOOK_VALIDATION_PROGRESS": 19,
+    }
+
+
+def test_calibration_outcome_is_structured() -> None:
+    """The calibration result travels as enums, counts and per-decider records, not a sentence."""
+    outcome = cuvis_ai_pb2.CalibrationOutcome.DESCRIPTOR.fields_by_name
+    assert {name: field.number for name, field in outcome.items()} == {
+        "split": 1,
+        "applicable": 2,
+        "phase_skip": 3,
+        "phase_detail": 4,
+        "frames": 5,
+        "anomalous_frames": 6,
+        "deciders": 7,
+    }
+    assert outcome["split"].enum_type.name == "ExecutionStage"
+    assert outcome["phase_skip"].enum_type.name == "CalibrationPhaseSkip"
+    assert outcome["deciders"].message_type.name == "DeciderCalibration"
+    assert outcome["deciders"].label == outcome["deciders"].LABEL_REPEATED
+
+    decider = cuvis_ai_pb2.DeciderCalibration.DESCRIPTOR.fields_by_name
+    assert {name: field.number for name, field in decider.items()} == {
+        "name": 1,
+        "class_name": 2,
+        "status": 3,
+        "skip": 4,
+        "skip_detail": 5,
+        "thresholds": 6,
+        "metrics": 7,
+        "thresholds_present": 8,
+    }
+    assert decider["status"].enum_type.name == "DeciderCalibrationStatus"
+    assert decider["skip"].enum_type.name == "DeciderSkip"
+    threshold_entry = decider["thresholds"].message_type.fields_by_name
+    assert threshold_entry["value"].message_type.name == "ThresholdChange"
+
+    change = cuvis_ai_pb2.ThresholdChange.DESCRIPTOR.fields_by_name
+    assert {name: field.number for name, field in change.items()} == {"before": 1, "after": 2}
+    assert change["before"].has_presence
+    assert not change["after"].has_presence
+
+    phase = cuvis_ai_pb2.CalibrationPhaseSkip.DESCRIPTOR.values_by_name
+    assert {name: value.number for name, value in phase.items()} == {
+        "CALIBRATION_PHASE_SKIP_UNSPECIFIED": 0,
+        "CALIBRATION_PHASE_SKIP_NONE": 1,
+        "CALIBRATION_PHASE_SKIP_NO_SPLIT": 2,
+        "CALIBRATION_PHASE_SKIP_INFERENCE_FAILED": 3,
+        "CALIBRATION_PHASE_SKIP_AMBIGUOUS_MASK": 4,
+        "CALIBRATION_PHASE_SKIP_SINGLE_CLASS": 5,
+    }
+    status = cuvis_ai_pb2.DeciderCalibrationStatus.DESCRIPTOR.values_by_name
+    assert {name: value.number for name, value in status.items()} == {
+        "DECIDER_CALIBRATION_STATUS_UNSPECIFIED": 0,
+        "DECIDER_CALIBRATION_STATUS_CALIBRATED": 1,
+        "DECIDER_CALIBRATION_STATUS_SKIPPED": 2,
+    }
+    skip = cuvis_ai_pb2.DeciderSkip.DESCRIPTOR.values_by_name
+    assert {name: value.number for name, value in skip.items()} == {
+        "DECIDER_SKIP_UNSPECIFIED": 0,
+        "DECIDER_SKIP_NONE": 1,
+        "DECIDER_SKIP_NOTHING_WIRED": 2,
+        "DECIDER_SKIP_NO_SCORES": 3,
+        "DECIDER_SKIP_CALIBRATE_FAILED": 4,
+        "DECIDER_SKIP_NO_REPORT": 5,
+    }
+
+
+def test_checkpoint_progress_and_evaluation_outcomes_shape() -> None:
+    """The restore, the frame progress and each evaluation pass are typed as well."""
+    checkpoint = cuvis_ai_pb2.CheckpointRestored.DESCRIPTOR.fields_by_name
+    assert {name: field.number for name, field in checkpoint.items()} == {
+        "restored": 1,
+        "path": 2,
+        "epoch": 3,
+        "monitor": 4,
+        "score": 5,
+        "reason": 6,
+    }
+    assert checkpoint["score"].has_presence
+
+    progress = cuvis_ai_pb2.FrameProgress.DESCRIPTOR.fields_by_name
+    assert {name: field.number for name, field in progress.items()} == {"done": 1, "total": 2}
+
+    evaluation = cuvis_ai_pb2.EvaluationOutcome.DESCRIPTOR.fields_by_name
+    assert {name: field.number for name, field in evaluation.items()} == {
+        "split": 1,
+        "status": 2,
+        "frames": 3,
+        "metrics": 4,
+        "error": 5,
+    }
+    assert evaluation["split"].enum_type.name == "ExecutionStage"
+    assert evaluation["status"].enum_type.name == "EvaluationStatus"
+    values = cuvis_ai_pb2.EvaluationStatus.DESCRIPTOR.values_by_name
+    assert {name: value.number for name, value in values.items()} == {
+        "EVALUATION_STATUS_UNSPECIFIED": 0,
+        "EVALUATION_STATUS_EVALUATED": 1,
+        "EVALUATION_STATUS_NO_SPLIT": 2,
+        "EVALUATION_STATUS_FAILED": 3,
+    }

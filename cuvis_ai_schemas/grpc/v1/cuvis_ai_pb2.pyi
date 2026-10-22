@@ -40,6 +40,7 @@ class TrainerType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     TRAINER_TYPE_UNSPECIFIED: _ClassVar[TrainerType]
     TRAINER_TYPE_STATISTICAL: _ClassVar[TrainerType]
     TRAINER_TYPE_GRADIENT: _ClassVar[TrainerType]
+    TRAINER_TYPE_CALIBRATION: _ClassVar[TrainerType]
 
 class TrainStatus(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -48,6 +49,60 @@ class TrainStatus(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     TRAIN_STATUS_COMPLETE: _ClassVar[TrainStatus]
     TRAIN_STATUS_ERROR: _ClassVar[TrainStatus]
     TRAIN_STATUS_CANCELLED: _ClassVar[TrainStatus]
+
+class TrainHook(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    TRAIN_HOOK_UNSPECIFIED: _ClassVar[TrainHook]
+    TRAIN_HOOK_FIT_START: _ClassVar[TrainHook]
+    TRAIN_HOOK_EPOCH_END: _ClassVar[TrainHook]
+    TRAIN_HOOK_VALIDATION_END: _ClassVar[TrainHook]
+    TRAIN_HOOK_FIT_END: _ClassVar[TrainHook]
+    TRAIN_HOOK_CHECKPOINT_RESTORED: _ClassVar[TrainHook]
+    TRAIN_HOOK_CALIBRATION_START: _ClassVar[TrainHook]
+    TRAIN_HOOK_CALIBRATION_PROGRESS: _ClassVar[TrainHook]
+    TRAIN_HOOK_CALIBRATION_END: _ClassVar[TrainHook]
+    TRAIN_HOOK_EVALUATION_START: _ClassVar[TrainHook]
+    TRAIN_HOOK_EVALUATION_PROGRESS: _ClassVar[TrainHook]
+    TRAIN_HOOK_EVALUATION_END: _ClassVar[TrainHook]
+    TRAIN_HOOK_POST_FIT_END: _ClassVar[TrainHook]
+    TRAIN_HOOK_STATISTICAL_NODE_START: _ClassVar[TrainHook]
+    TRAIN_HOOK_STATISTICAL_PROGRESS: _ClassVar[TrainHook]
+    TRAIN_HOOK_STATISTICAL_NODE_END: _ClassVar[TrainHook]
+    TRAIN_HOOK_EPOCH_START: _ClassVar[TrainHook]
+    TRAIN_HOOK_TRAIN_PROGRESS: _ClassVar[TrainHook]
+    TRAIN_HOOK_VALIDATION_START: _ClassVar[TrainHook]
+    TRAIN_HOOK_VALIDATION_PROGRESS: _ClassVar[TrainHook]
+
+class EvaluationStatus(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    EVALUATION_STATUS_UNSPECIFIED: _ClassVar[EvaluationStatus]
+    EVALUATION_STATUS_EVALUATED: _ClassVar[EvaluationStatus]
+    EVALUATION_STATUS_NO_SPLIT: _ClassVar[EvaluationStatus]
+    EVALUATION_STATUS_FAILED: _ClassVar[EvaluationStatus]
+
+class CalibrationPhaseSkip(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    CALIBRATION_PHASE_SKIP_UNSPECIFIED: _ClassVar[CalibrationPhaseSkip]
+    CALIBRATION_PHASE_SKIP_NONE: _ClassVar[CalibrationPhaseSkip]
+    CALIBRATION_PHASE_SKIP_NO_SPLIT: _ClassVar[CalibrationPhaseSkip]
+    CALIBRATION_PHASE_SKIP_INFERENCE_FAILED: _ClassVar[CalibrationPhaseSkip]
+    CALIBRATION_PHASE_SKIP_AMBIGUOUS_MASK: _ClassVar[CalibrationPhaseSkip]
+    CALIBRATION_PHASE_SKIP_SINGLE_CLASS: _ClassVar[CalibrationPhaseSkip]
+
+class DeciderCalibrationStatus(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    DECIDER_CALIBRATION_STATUS_UNSPECIFIED: _ClassVar[DeciderCalibrationStatus]
+    DECIDER_CALIBRATION_STATUS_CALIBRATED: _ClassVar[DeciderCalibrationStatus]
+    DECIDER_CALIBRATION_STATUS_SKIPPED: _ClassVar[DeciderCalibrationStatus]
+
+class DeciderSkip(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    DECIDER_SKIP_UNSPECIFIED: _ClassVar[DeciderSkip]
+    DECIDER_SKIP_NONE: _ClassVar[DeciderSkip]
+    DECIDER_SKIP_NOTHING_WIRED: _ClassVar[DeciderSkip]
+    DECIDER_SKIP_NO_SCORES: _ClassVar[DeciderSkip]
+    DECIDER_SKIP_CALIBRATE_FAILED: _ClassVar[DeciderSkip]
+    DECIDER_SKIP_NO_REPORT: _ClassVar[DeciderSkip]
 
 class PointType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -145,11 +200,51 @@ D_TYPE_UINT16: DType
 TRAINER_TYPE_UNSPECIFIED: TrainerType
 TRAINER_TYPE_STATISTICAL: TrainerType
 TRAINER_TYPE_GRADIENT: TrainerType
+TRAINER_TYPE_CALIBRATION: TrainerType
 TRAIN_STATUS_UNSPECIFIED: TrainStatus
 TRAIN_STATUS_RUNNING: TrainStatus
 TRAIN_STATUS_COMPLETE: TrainStatus
 TRAIN_STATUS_ERROR: TrainStatus
 TRAIN_STATUS_CANCELLED: TrainStatus
+TRAIN_HOOK_UNSPECIFIED: TrainHook
+TRAIN_HOOK_FIT_START: TrainHook
+TRAIN_HOOK_EPOCH_END: TrainHook
+TRAIN_HOOK_VALIDATION_END: TrainHook
+TRAIN_HOOK_FIT_END: TrainHook
+TRAIN_HOOK_CHECKPOINT_RESTORED: TrainHook
+TRAIN_HOOK_CALIBRATION_START: TrainHook
+TRAIN_HOOK_CALIBRATION_PROGRESS: TrainHook
+TRAIN_HOOK_CALIBRATION_END: TrainHook
+TRAIN_HOOK_EVALUATION_START: TrainHook
+TRAIN_HOOK_EVALUATION_PROGRESS: TrainHook
+TRAIN_HOOK_EVALUATION_END: TrainHook
+TRAIN_HOOK_POST_FIT_END: TrainHook
+TRAIN_HOOK_STATISTICAL_NODE_START: TrainHook
+TRAIN_HOOK_STATISTICAL_PROGRESS: TrainHook
+TRAIN_HOOK_STATISTICAL_NODE_END: TrainHook
+TRAIN_HOOK_EPOCH_START: TrainHook
+TRAIN_HOOK_TRAIN_PROGRESS: TrainHook
+TRAIN_HOOK_VALIDATION_START: TrainHook
+TRAIN_HOOK_VALIDATION_PROGRESS: TrainHook
+EVALUATION_STATUS_UNSPECIFIED: EvaluationStatus
+EVALUATION_STATUS_EVALUATED: EvaluationStatus
+EVALUATION_STATUS_NO_SPLIT: EvaluationStatus
+EVALUATION_STATUS_FAILED: EvaluationStatus
+CALIBRATION_PHASE_SKIP_UNSPECIFIED: CalibrationPhaseSkip
+CALIBRATION_PHASE_SKIP_NONE: CalibrationPhaseSkip
+CALIBRATION_PHASE_SKIP_NO_SPLIT: CalibrationPhaseSkip
+CALIBRATION_PHASE_SKIP_INFERENCE_FAILED: CalibrationPhaseSkip
+CALIBRATION_PHASE_SKIP_AMBIGUOUS_MASK: CalibrationPhaseSkip
+CALIBRATION_PHASE_SKIP_SINGLE_CLASS: CalibrationPhaseSkip
+DECIDER_CALIBRATION_STATUS_UNSPECIFIED: DeciderCalibrationStatus
+DECIDER_CALIBRATION_STATUS_CALIBRATED: DeciderCalibrationStatus
+DECIDER_CALIBRATION_STATUS_SKIPPED: DeciderCalibrationStatus
+DECIDER_SKIP_UNSPECIFIED: DeciderSkip
+DECIDER_SKIP_NONE: DeciderSkip
+DECIDER_SKIP_NOTHING_WIRED: DeciderSkip
+DECIDER_SKIP_NO_SCORES: DeciderSkip
+DECIDER_SKIP_CALIBRATE_FAILED: DeciderSkip
+DECIDER_SKIP_NO_REPORT: DeciderSkip
 POINT_TYPE_UNSPECIFIED: PointType
 POINT_TYPE_POSITIVE: PointType
 POINT_TYPE_NEGATIVE: PointType
@@ -407,7 +502,7 @@ class TensorSpec(_message.Message):
     def __init__(self, name: _Optional[str] = ..., shape: _Optional[_Iterable[int]] = ..., dtype: _Optional[_Union[DType, str]] = ..., required: bool = ...) -> None: ...
 
 class TrainResponse(_message.Message):
-    __slots__ = ("context", "losses", "metrics", "status", "message")
+    __slots__ = ("context", "losses", "metrics", "status", "message", "event")
     class LossesEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -427,12 +522,149 @@ class TrainResponse(_message.Message):
     METRICS_FIELD_NUMBER: _ClassVar[int]
     STATUS_FIELD_NUMBER: _ClassVar[int]
     MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    EVENT_FIELD_NUMBER: _ClassVar[int]
     context: Context
     losses: _containers.ScalarMap[str, float]
     metrics: _containers.ScalarMap[str, float]
     status: TrainStatus
     message: str
-    def __init__(self, context: _Optional[_Union[Context, _Mapping]] = ..., losses: _Optional[_Mapping[str, float]] = ..., metrics: _Optional[_Mapping[str, float]] = ..., status: _Optional[_Union[TrainStatus, str]] = ..., message: _Optional[str] = ...) -> None: ...
+    event: TrainEvent
+    def __init__(self, context: _Optional[_Union[Context, _Mapping]] = ..., losses: _Optional[_Mapping[str, float]] = ..., metrics: _Optional[_Mapping[str, float]] = ..., status: _Optional[_Union[TrainStatus, str]] = ..., message: _Optional[str] = ..., event: _Optional[_Union[TrainEvent, _Mapping]] = ...) -> None: ...
+
+class TrainEvent(_message.Message):
+    __slots__ = ("hook", "split", "progress", "checkpoint", "calibration", "evaluation", "calibration_pending", "epochs", "node")
+    HOOK_FIELD_NUMBER: _ClassVar[int]
+    SPLIT_FIELD_NUMBER: _ClassVar[int]
+    PROGRESS_FIELD_NUMBER: _ClassVar[int]
+    CHECKPOINT_FIELD_NUMBER: _ClassVar[int]
+    CALIBRATION_FIELD_NUMBER: _ClassVar[int]
+    EVALUATION_FIELD_NUMBER: _ClassVar[int]
+    CALIBRATION_PENDING_FIELD_NUMBER: _ClassVar[int]
+    EPOCHS_FIELD_NUMBER: _ClassVar[int]
+    NODE_FIELD_NUMBER: _ClassVar[int]
+    hook: TrainHook
+    split: ExecutionStage
+    progress: FrameProgress
+    checkpoint: CheckpointRestored
+    calibration: CalibrationOutcome
+    evaluation: EvaluationOutcome
+    calibration_pending: bool
+    epochs: EpochProgress
+    node: str
+    def __init__(self, hook: _Optional[_Union[TrainHook, str]] = ..., split: _Optional[_Union[ExecutionStage, str]] = ..., progress: _Optional[_Union[FrameProgress, _Mapping]] = ..., checkpoint: _Optional[_Union[CheckpointRestored, _Mapping]] = ..., calibration: _Optional[_Union[CalibrationOutcome, _Mapping]] = ..., evaluation: _Optional[_Union[EvaluationOutcome, _Mapping]] = ..., calibration_pending: bool = ..., epochs: _Optional[_Union[EpochProgress, _Mapping]] = ..., node: _Optional[str] = ...) -> None: ...
+
+class FrameProgress(_message.Message):
+    __slots__ = ("done", "total")
+    DONE_FIELD_NUMBER: _ClassVar[int]
+    TOTAL_FIELD_NUMBER: _ClassVar[int]
+    done: int
+    total: int
+    def __init__(self, done: _Optional[int] = ..., total: _Optional[int] = ...) -> None: ...
+
+class EpochProgress(_message.Message):
+    __slots__ = ("current", "total")
+    CURRENT_FIELD_NUMBER: _ClassVar[int]
+    TOTAL_FIELD_NUMBER: _ClassVar[int]
+    current: int
+    total: int
+    def __init__(self, current: _Optional[int] = ..., total: _Optional[int] = ...) -> None: ...
+
+class CheckpointRestored(_message.Message):
+    __slots__ = ("restored", "path", "epoch", "monitor", "score", "reason")
+    RESTORED_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    EPOCH_FIELD_NUMBER: _ClassVar[int]
+    MONITOR_FIELD_NUMBER: _ClassVar[int]
+    SCORE_FIELD_NUMBER: _ClassVar[int]
+    REASON_FIELD_NUMBER: _ClassVar[int]
+    restored: bool
+    path: str
+    epoch: int
+    monitor: str
+    score: float
+    reason: str
+    def __init__(self, restored: bool = ..., path: _Optional[str] = ..., epoch: _Optional[int] = ..., monitor: _Optional[str] = ..., score: _Optional[float] = ..., reason: _Optional[str] = ...) -> None: ...
+
+class ThresholdChange(_message.Message):
+    __slots__ = ("before", "after")
+    BEFORE_FIELD_NUMBER: _ClassVar[int]
+    AFTER_FIELD_NUMBER: _ClassVar[int]
+    before: float
+    after: float
+    def __init__(self, before: _Optional[float] = ..., after: _Optional[float] = ...) -> None: ...
+
+class DeciderCalibration(_message.Message):
+    __slots__ = ("name", "class_name", "status", "skip", "skip_detail", "thresholds", "metrics", "thresholds_present")
+    class ThresholdsEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: ThresholdChange
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[ThresholdChange, _Mapping]] = ...) -> None: ...
+    class MetricsEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: float
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[float] = ...) -> None: ...
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    CLASS_NAME_FIELD_NUMBER: _ClassVar[int]
+    STATUS_FIELD_NUMBER: _ClassVar[int]
+    SKIP_FIELD_NUMBER: _ClassVar[int]
+    SKIP_DETAIL_FIELD_NUMBER: _ClassVar[int]
+    THRESHOLDS_FIELD_NUMBER: _ClassVar[int]
+    METRICS_FIELD_NUMBER: _ClassVar[int]
+    THRESHOLDS_PRESENT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    class_name: str
+    status: DeciderCalibrationStatus
+    skip: DeciderSkip
+    skip_detail: str
+    thresholds: _containers.MessageMap[str, ThresholdChange]
+    metrics: _containers.ScalarMap[str, float]
+    thresholds_present: bool
+    def __init__(self, name: _Optional[str] = ..., class_name: _Optional[str] = ..., status: _Optional[_Union[DeciderCalibrationStatus, str]] = ..., skip: _Optional[_Union[DeciderSkip, str]] = ..., skip_detail: _Optional[str] = ..., thresholds: _Optional[_Mapping[str, ThresholdChange]] = ..., metrics: _Optional[_Mapping[str, float]] = ..., thresholds_present: bool = ...) -> None: ...
+
+class CalibrationOutcome(_message.Message):
+    __slots__ = ("split", "applicable", "phase_skip", "phase_detail", "frames", "anomalous_frames", "deciders")
+    SPLIT_FIELD_NUMBER: _ClassVar[int]
+    APPLICABLE_FIELD_NUMBER: _ClassVar[int]
+    PHASE_SKIP_FIELD_NUMBER: _ClassVar[int]
+    PHASE_DETAIL_FIELD_NUMBER: _ClassVar[int]
+    FRAMES_FIELD_NUMBER: _ClassVar[int]
+    ANOMALOUS_FRAMES_FIELD_NUMBER: _ClassVar[int]
+    DECIDERS_FIELD_NUMBER: _ClassVar[int]
+    split: ExecutionStage
+    applicable: bool
+    phase_skip: CalibrationPhaseSkip
+    phase_detail: str
+    frames: int
+    anomalous_frames: int
+    deciders: _containers.RepeatedCompositeFieldContainer[DeciderCalibration]
+    def __init__(self, split: _Optional[_Union[ExecutionStage, str]] = ..., applicable: bool = ..., phase_skip: _Optional[_Union[CalibrationPhaseSkip, str]] = ..., phase_detail: _Optional[str] = ..., frames: _Optional[int] = ..., anomalous_frames: _Optional[int] = ..., deciders: _Optional[_Iterable[_Union[DeciderCalibration, _Mapping]]] = ...) -> None: ...
+
+class EvaluationOutcome(_message.Message):
+    __slots__ = ("split", "status", "frames", "metrics", "error")
+    class MetricsEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: float
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[float] = ...) -> None: ...
+    SPLIT_FIELD_NUMBER: _ClassVar[int]
+    STATUS_FIELD_NUMBER: _ClassVar[int]
+    FRAMES_FIELD_NUMBER: _ClassVar[int]
+    METRICS_FIELD_NUMBER: _ClassVar[int]
+    ERROR_FIELD_NUMBER: _ClassVar[int]
+    split: ExecutionStage
+    status: EvaluationStatus
+    frames: int
+    metrics: _containers.ScalarMap[str, float]
+    error: str
+    def __init__(self, split: _Optional[_Union[ExecutionStage, str]] = ..., status: _Optional[_Union[EvaluationStatus, str]] = ..., frames: _Optional[int] = ..., metrics: _Optional[_Mapping[str, float]] = ..., error: _Optional[str] = ...) -> None: ...
 
 class ParamSpec(_message.Message):
     __slots__ = ("name", "type", "required", "default_value", "description", "validation")

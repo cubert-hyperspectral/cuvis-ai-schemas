@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.14.2 - 2026-10-20
+
+- Added `TrainResponse.event`, a `TrainEvent` on every RUNNING response that reports progress (`TrainHook`: fit start, statistical node start, progress and end, epoch start, train progress, validation start, progress and end, epoch end, fit end, checkpoint restored, calibration start, progress and end, evaluation start, progress and end, post-fit end) with the split, a `FrameProgress` in frames of the pass (total 0 when the loader has no length or the trainer limits the pass), an `EpochProgress` (one-based `current`, `total` 0 when unlimited; on fit end the completed-epoch count), the fitted `node` on the statistical hooks, a `CheckpointRestored`, a `CalibrationOutcome` and an `EvaluationOutcome`. The opening status sentence of a phase and the terminal COMPLETE, ERROR and CANCELLED responses carry no event; the results of a run travel in the events and the COMPLETE response keeps an empty `metrics` map. `Context.epoch` stays zero-based.
+- `CalibrationOutcome` is data, not a sentence: a `CalibrationPhaseSkip` with detail, the frame counts, and one `DeciderCalibration` per decider with `DeciderCalibrationStatus`, `DeciderSkip`, a `ThresholdChange` per threshold, the metrics at the chosen thresholds and `thresholds_present`.
+- Added `TRAINER_TYPE_CALIBRATION`: the post-fit steps (threshold calibration on the validation split, then the validation and test evaluation) on a session that already holds trained weights, without a fit; cuvis-ai-core 0.18.6 serves it.
+- No Pydantic change: `TrainingConfig` and `TrainRunConfig` are unchanged.
+
 ## 0.14.1 - 2026-10-02
 
 - Restored the `ClearPluginCacheRequest` and `ClearPluginCacheResponse` messages, without their RPC: cuvis-ai-core 0.17.x names both when it imports its service, and a 0.17.x server composes its child environments with the newest schemas, so since 0.14.0 none of them started. The `ClearPluginCache` RPC stays removed.
