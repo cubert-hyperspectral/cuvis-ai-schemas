@@ -65,6 +65,13 @@ class TrainHook(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     TRAIN_HOOK_EVALUATION_PROGRESS: _ClassVar[TrainHook]
     TRAIN_HOOK_EVALUATION_END: _ClassVar[TrainHook]
     TRAIN_HOOK_POST_FIT_END: _ClassVar[TrainHook]
+    TRAIN_HOOK_STATISTICAL_NODE_START: _ClassVar[TrainHook]
+    TRAIN_HOOK_STATISTICAL_PROGRESS: _ClassVar[TrainHook]
+    TRAIN_HOOK_STATISTICAL_NODE_END: _ClassVar[TrainHook]
+    TRAIN_HOOK_EPOCH_START: _ClassVar[TrainHook]
+    TRAIN_HOOK_TRAIN_PROGRESS: _ClassVar[TrainHook]
+    TRAIN_HOOK_VALIDATION_START: _ClassVar[TrainHook]
+    TRAIN_HOOK_VALIDATION_PROGRESS: _ClassVar[TrainHook]
 
 class EvaluationStatus(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -212,6 +219,13 @@ TRAIN_HOOK_EVALUATION_START: TrainHook
 TRAIN_HOOK_EVALUATION_PROGRESS: TrainHook
 TRAIN_HOOK_EVALUATION_END: TrainHook
 TRAIN_HOOK_POST_FIT_END: TrainHook
+TRAIN_HOOK_STATISTICAL_NODE_START: TrainHook
+TRAIN_HOOK_STATISTICAL_PROGRESS: TrainHook
+TRAIN_HOOK_STATISTICAL_NODE_END: TrainHook
+TRAIN_HOOK_EPOCH_START: TrainHook
+TRAIN_HOOK_TRAIN_PROGRESS: TrainHook
+TRAIN_HOOK_VALIDATION_START: TrainHook
+TRAIN_HOOK_VALIDATION_PROGRESS: TrainHook
 EVALUATION_STATUS_UNSPECIFIED: EvaluationStatus
 EVALUATION_STATUS_EVALUATED: EvaluationStatus
 EVALUATION_STATUS_NO_SPLIT: EvaluationStatus
@@ -518,7 +532,7 @@ class TrainResponse(_message.Message):
     def __init__(self, context: _Optional[_Union[Context, _Mapping]] = ..., losses: _Optional[_Mapping[str, float]] = ..., metrics: _Optional[_Mapping[str, float]] = ..., status: _Optional[_Union[TrainStatus, str]] = ..., message: _Optional[str] = ..., event: _Optional[_Union[TrainEvent, _Mapping]] = ...) -> None: ...
 
 class TrainEvent(_message.Message):
-    __slots__ = ("hook", "split", "progress", "checkpoint", "calibration", "evaluation", "calibration_pending")
+    __slots__ = ("hook", "split", "progress", "checkpoint", "calibration", "evaluation", "calibration_pending", "epochs", "node")
     HOOK_FIELD_NUMBER: _ClassVar[int]
     SPLIT_FIELD_NUMBER: _ClassVar[int]
     PROGRESS_FIELD_NUMBER: _ClassVar[int]
@@ -526,6 +540,8 @@ class TrainEvent(_message.Message):
     CALIBRATION_FIELD_NUMBER: _ClassVar[int]
     EVALUATION_FIELD_NUMBER: _ClassVar[int]
     CALIBRATION_PENDING_FIELD_NUMBER: _ClassVar[int]
+    EPOCHS_FIELD_NUMBER: _ClassVar[int]
+    NODE_FIELD_NUMBER: _ClassVar[int]
     hook: TrainHook
     split: ExecutionStage
     progress: FrameProgress
@@ -533,7 +549,9 @@ class TrainEvent(_message.Message):
     calibration: CalibrationOutcome
     evaluation: EvaluationOutcome
     calibration_pending: bool
-    def __init__(self, hook: _Optional[_Union[TrainHook, str]] = ..., split: _Optional[_Union[ExecutionStage, str]] = ..., progress: _Optional[_Union[FrameProgress, _Mapping]] = ..., checkpoint: _Optional[_Union[CheckpointRestored, _Mapping]] = ..., calibration: _Optional[_Union[CalibrationOutcome, _Mapping]] = ..., evaluation: _Optional[_Union[EvaluationOutcome, _Mapping]] = ..., calibration_pending: bool = ...) -> None: ...
+    epochs: EpochProgress
+    node: str
+    def __init__(self, hook: _Optional[_Union[TrainHook, str]] = ..., split: _Optional[_Union[ExecutionStage, str]] = ..., progress: _Optional[_Union[FrameProgress, _Mapping]] = ..., checkpoint: _Optional[_Union[CheckpointRestored, _Mapping]] = ..., calibration: _Optional[_Union[CalibrationOutcome, _Mapping]] = ..., evaluation: _Optional[_Union[EvaluationOutcome, _Mapping]] = ..., calibration_pending: bool = ..., epochs: _Optional[_Union[EpochProgress, _Mapping]] = ..., node: _Optional[str] = ...) -> None: ...
 
 class FrameProgress(_message.Message):
     __slots__ = ("done", "total")
@@ -542,6 +560,14 @@ class FrameProgress(_message.Message):
     done: int
     total: int
     def __init__(self, done: _Optional[int] = ..., total: _Optional[int] = ...) -> None: ...
+
+class EpochProgress(_message.Message):
+    __slots__ = ("current", "total")
+    CURRENT_FIELD_NUMBER: _ClassVar[int]
+    TOTAL_FIELD_NUMBER: _ClassVar[int]
+    current: int
+    total: int
+    def __init__(self, current: _Optional[int] = ..., total: _Optional[int] = ...) -> None: ...
 
 class CheckpointRestored(_message.Message):
     __slots__ = ("restored", "path", "epoch", "monitor", "score", "reason")

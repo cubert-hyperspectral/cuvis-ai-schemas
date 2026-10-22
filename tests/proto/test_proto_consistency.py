@@ -142,6 +142,8 @@ def test_train_response_carries_a_typed_event() -> None:
         "calibration": 5,
         "evaluation": 6,
         "calibration_pending": 7,
+        "epochs": 8,
+        "node": 9,
     }
     assert event["hook"].enum_type.name == "TrainHook"
     assert event["split"].enum_type.name == "ExecutionStage"
@@ -149,10 +151,25 @@ def test_train_response_carries_a_typed_event() -> None:
     assert event["checkpoint"].message_type.name == "CheckpointRestored"
     assert event["calibration"].message_type.name == "CalibrationOutcome"
     assert event["evaluation"].message_type.name == "EvaluationOutcome"
+    assert event["epochs"].message_type.name == "EpochProgress"
+    assert event["node"].type == event["node"].TYPE_STRING
+
+
+def test_epoch_progress_shape() -> None:
+    """The epoch counter travels typed: current is one-based, total 0 means unknown."""
+    fields = cuvis_ai_pb2.EpochProgress.DESCRIPTOR.fields_by_name
+
+    assert {name: field.number for name, field in fields.items()} == {"current": 1, "total": 2}
+    assert fields["current"].type == fields["current"].TYPE_INT32
+    assert fields["total"].type == fields["total"].TYPE_INT32
 
 
 def test_train_hook_values_are_pinned() -> None:
-    """A client switches on the hook number, so the numbers are part of the contract."""
+    """A client switches on the hook number, so the numbers are part of the contract.
+
+    The values 13 to 19 report the fit itself (the statistical pass per node, the epoch start,
+    the train and validation batches), so every RUNNING progress response carries an event.
+    """
     values = cuvis_ai_pb2.TrainHook.DESCRIPTOR.values_by_name
 
     assert {name: value.number for name, value in values.items()} == {
@@ -169,6 +186,13 @@ def test_train_hook_values_are_pinned() -> None:
         "TRAIN_HOOK_EVALUATION_PROGRESS": 10,
         "TRAIN_HOOK_EVALUATION_END": 11,
         "TRAIN_HOOK_POST_FIT_END": 12,
+        "TRAIN_HOOK_STATISTICAL_NODE_START": 13,
+        "TRAIN_HOOK_STATISTICAL_PROGRESS": 14,
+        "TRAIN_HOOK_STATISTICAL_NODE_END": 15,
+        "TRAIN_HOOK_EPOCH_START": 16,
+        "TRAIN_HOOK_TRAIN_PROGRESS": 17,
+        "TRAIN_HOOK_VALIDATION_START": 18,
+        "TRAIN_HOOK_VALIDATION_PROGRESS": 19,
     }
 
 

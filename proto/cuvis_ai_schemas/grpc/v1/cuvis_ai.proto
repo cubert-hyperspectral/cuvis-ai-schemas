@@ -55,9 +55,12 @@ enum TrainStatus {
   TRAIN_STATUS_CANCELLED = 4;
 }
 
-// The lifecycle hook a TrainResponse.event reports. Per-batch train responses
-// carry no event; every response after the last epoch carries one. A client
-// that does not know a hook value keeps its previous state.
+// The lifecycle hook a TrainResponse.event reports. Every RUNNING response that
+// reports progress carries one: the statistical pass per node, the epoch start,
+// each train and validation batch, and every step after the last epoch. The
+// phase's opening status sentence and the terminal COMPLETE, ERROR and CANCELLED
+// responses carry none (hook UNSPECIFIED) and are status lines. A client that
+// does not know a hook value keeps its previous state.
 enum TrainHook {
   TRAIN_HOOK_UNSPECIFIED = 0;
   TRAIN_HOOK_FIT_START = 1;             // calibration_pending set
@@ -72,6 +75,14 @@ enum TrainHook {
   TRAIN_HOOK_EVALUATION_PROGRESS = 10;  // split and progress set
   TRAIN_HOOK_EVALUATION_END = 11;       // split and evaluation set
   TRAIN_HOOK_POST_FIT_END = 12;         // the steps are done, COMPLETE follows
+  // The fit itself, so a client shows frame progress from the first response on.
+  TRAIN_HOOK_STATISTICAL_NODE_START = 13; // node set; progress.total = train frames of the pass
+  TRAIN_HOOK_STATISTICAL_PROGRESS = 14;   // node and progress set, once per batch the node reads
+  TRAIN_HOOK_STATISTICAL_NODE_END = 15;   // node set; a node's own compute after its last batch emits nothing before this
+  TRAIN_HOOK_EPOCH_START = 16;            // epochs set; progress.total = train frames of the epoch
+  TRAIN_HOOK_TRAIN_PROGRESS = 17;         // epochs and progress set, once per train batch; the batch losses stay in losses
+  TRAIN_HOOK_VALIDATION_START = 18;       // epochs set, split VAL, progress.total = validation frames
+  TRAIN_HOOK_VALIDATION_PROGRESS = 19;    // split VAL and progress set, once per validation batch
 }
 
 enum EvaluationStatus {
@@ -226,7 +237,7 @@ message Tensor {
 
 message Context {
   ExecutionStage stage = 1;
-  int32 epoch = 2;
+  int32 epoch = 2;        // zero-based, the pipeline's own execution context (Lightning's current_epoch)
   int32 batch_idx = 3;
   int32 global_step = 4;
 }
@@ -354,8 +365,10 @@ message TrainResponse {
   map<string, float> metrics = 3;
   TrainStatus status = 4;
   string message = 5;  // one human sentence for a status line; nothing parses it
-  // The lifecycle hook this response reports, with that hook's data. Absent on
-  // per-batch train responses. The results of a run live here, never in metrics.
+  // The lifecycle hook this response reports, with that hook's data. Set on
+  // every RUNNING response that reports progress, batches included; absent on
+  // the opening status sentence of a phase and on the terminal COMPLETE, ERROR
+  // and CANCELLED responses. The results of a run live here, never in metrics.
   TrainEvent event = 6;
 }
 
@@ -367,11 +380,26 @@ message TrainEvent {
   CalibrationOutcome calibration = 5;  // on CALIBRATION_END
   EvaluationOutcome evaluation = 6;    // on EVALUATION_END
   bool calibration_pending = 7;        // on FIT_START: a decider holds no thresholds yet
+  EpochProgress epochs = 8;            // on FIT_START, EPOCH_START, TRAIN_PROGRESS, VALIDATION_START,
+                                       // VALIDATION_END, EPOCH_END and FIT_END
+  string node = 9;                     // on the STATISTICAL hooks: the node being fitted
 }
 
 message FrameProgress {
-  int32 done = 1;   // frames seen so far over the split
-  int32 total = 2;  // frames in the split; 0 when the loader has no length
+  int32 done = 1;   // frames seen so far over the pass (the running sum of batch sizes)
+  int32 total = 2;  // frames of the pass the trainer will run: the split's length when the
+                    // whole loader runs; 0 (unknown) when the loader has no length or the
+                    // trainer limits the pass (limit_train_batches, limit_val_batches)
+}
+
+// The epoch counter of a gradient fit. Unlike Context.epoch (zero-based),
+// current is one-based for display: the first epoch reads 1/E. On FIT_END,
+// current is the number of completed epochs the server counted (an early stop
+// at the third of twenty epochs reads 3/20). total is the trainer's max_epochs
+// when above 0, else 0 (unlimited, or unknown).
+message EpochProgress {
+  int32 current = 1;
+  int32 total = 2;
 }
 
 // What the restore of the best checkpoint did after the fit.
