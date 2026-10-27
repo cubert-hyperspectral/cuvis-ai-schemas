@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.3 - 2026-10-27
+
+- Added `NodeProfilingStats.flops_per_call` (`optional int64`, field 11): the floating-point operations of one forward of the node (matrix multiplication, convolution, attention), counted on its first forward after a profiling reset. Unset for the data-loading rows, a server that does not count, or a count that failed; a set 0 means the node ran none of the counted operations, so clients test presence (`HasField`), not the value.
+- The `NodeProfilingStats` dataclass gains `flops_per_call: int | None = None` as its last field (positional construction of the ten timing fields is unchanged) and a `gflop_per_s` property: the count over the mean time, `None` without a count or a positive mean. For GPU nodes the rate needs CUDA-synchronized timing.
+- Additive and wire-compatible (`buf breaking` against 0.14.2 passes): an older parent that does not know field 11 passes it through to the client. cuvis-ai-core 0.18.7 fills it.
+
 ## 0.14.2 - 2026-10-20
 
 - Added `TrainResponse.event`, a `TrainEvent` on every RUNNING response that reports progress (`TrainHook`: fit start, statistical node start, progress and end, epoch start, train progress, validation start, progress and end, epoch end, fit end, checkpoint restored, calibration start, progress and end, evaluation start, progress and end, post-fit end) with the split, a `FrameProgress` in frames of the pass (total 0 when the loader has no length or the trainer limits the pass), an `EpochProgress` (one-based `current`, `total` 0 when unlimited; on fit end the completed-epoch count), the fitted `node` on the statistical hooks, a `CheckpointRestored`, a `CalibrationOutcome` and an `EvaluationOutcome`. The opening status sentence of a phase and the terminal COMPLETE, ERROR and CANCELLED responses carry no event; the results of a run travel in the events and the COMPLETE response keeps an empty `metrics` map. `Context.epoch` stays zero-based.

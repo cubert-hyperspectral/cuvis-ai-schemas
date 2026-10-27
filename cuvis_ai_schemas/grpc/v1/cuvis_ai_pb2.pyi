@@ -1255,7 +1255,7 @@ class GetProfilingSummaryResponse(_message.Message):
     def __init__(self, node_stats: _Optional[_Iterable[_Union[NodeProfilingStats, _Mapping]]] = ...) -> None: ...
 
 class NodeProfilingStats(_message.Message):
-    __slots__ = ("node_name", "stage", "count", "mean_ms", "median_ms", "std_ms", "min_ms", "max_ms", "total_ms", "last_ms")
+    __slots__ = ("node_name", "stage", "count", "mean_ms", "median_ms", "std_ms", "min_ms", "max_ms", "total_ms", "last_ms", "flops_per_call")
     NODE_NAME_FIELD_NUMBER: _ClassVar[int]
     STAGE_FIELD_NUMBER: _ClassVar[int]
     COUNT_FIELD_NUMBER: _ClassVar[int]
@@ -1266,6 +1266,7 @@ class NodeProfilingStats(_message.Message):
     MAX_MS_FIELD_NUMBER: _ClassVar[int]
     TOTAL_MS_FIELD_NUMBER: _ClassVar[int]
     LAST_MS_FIELD_NUMBER: _ClassVar[int]
+    FLOPS_PER_CALL_FIELD_NUMBER: _ClassVar[int]
     node_name: str
     stage: ExecutionStage
     count: int
@@ -1276,7 +1277,8 @@ class NodeProfilingStats(_message.Message):
     max_ms: float
     total_ms: float
     last_ms: float
-    def __init__(self, node_name: _Optional[str] = ..., stage: _Optional[_Union[ExecutionStage, str]] = ..., count: _Optional[int] = ..., mean_ms: _Optional[float] = ..., median_ms: _Optional[float] = ..., std_ms: _Optional[float] = ..., min_ms: _Optional[float] = ..., max_ms: _Optional[float] = ..., total_ms: _Optional[float] = ..., last_ms: _Optional[float] = ...) -> None: ...
+    flops_per_call: int
+    def __init__(self, node_name: _Optional[str] = ..., stage: _Optional[_Union[ExecutionStage, str]] = ..., count: _Optional[int] = ..., mean_ms: _Optional[float] = ..., median_ms: _Optional[float] = ..., std_ms: _Optional[float] = ..., min_ms: _Optional[float] = ..., max_ms: _Optional[float] = ..., total_ms: _Optional[float] = ..., last_ms: _Optional[float] = ..., flops_per_call: _Optional[int] = ...) -> None: ...
 
 class InitializeSessionRequest(_message.Message):
     __slots__ = ("session_id", "search_paths", "resolved_plugins_json", "output_dir", "scratch_dir")

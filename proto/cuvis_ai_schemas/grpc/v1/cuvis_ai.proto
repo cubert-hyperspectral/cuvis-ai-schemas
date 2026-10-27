@@ -877,6 +877,11 @@ message NodeProfilingStats {
   double max_ms = 8;
   double total_ms = 9;
   double last_ms = 10;
+  // Floating-point operations of one forward (matrix multiplication, convolution,
+  // attention), counted on the node's first forward after a profiling reset. Unset for
+  // the data-loading rows, a server that does not count, or a count that failed; a
+  // set 0 means the node ran none of the counted operations.
+  optional int64 flops_per_call = 11;
 }
 
 // ============================================================================

@@ -1,5 +1,9 @@
 from pathlib import Path
 
+import pytest
+from google.protobuf import descriptor_pb2, descriptor_pool, message_factory
+from google.protobuf.message import Message
+
 from cuvis_ai_schemas.grpc.v1 import cuvis_ai_pb2
 
 
@@ -94,6 +98,52 @@ def test_profiling_rpcs_on_both_services() -> None:
             assert rpc in methods
             assert methods[rpc].input_type.name == request
             assert methods[rpc].output_type.name == response
+
+
+def test_node_profiling_stats_flops_per_call_has_presence() -> None:
+    """flops_per_call is optional field 11: a counted 0 is set, a missing count is unset."""
+    field = cuvis_ai_pb2.NodeProfilingStats.DESCRIPTOR.fields_by_name["flops_per_call"]
+
+    assert field.number == 11
+    assert field.has_presence
+    assert not cuvis_ai_pb2.NodeProfilingStats(node_name="N").HasField("flops_per_call")
+    assert cuvis_ai_pb2.NodeProfilingStats(node_name="N", flops_per_call=0).HasField(
+        "flops_per_call"
+    )
+
+
+def _node_profiling_stats_without_flops() -> type[Message]:
+    """NodeProfilingStats as a peer built before field 11 sees it (enum stage as int32)."""
+    message = descriptor_pb2.DescriptorProto()
+    cuvis_ai_pb2.NodeProfilingStats.DESCRIPTOR.CopyToProto(message)
+    kept = [f for f in message.field if f.name != "flops_per_call"]
+    del message.field[:]
+    message.field.extend(kept)
+    del message.oneof_decl[:]
+    for field in message.field:
+        field.ClearField("oneof_index")
+        if field.type == descriptor_pb2.FieldDescriptorProto.TYPE_ENUM:
+            field.type = descriptor_pb2.FieldDescriptorProto.TYPE_INT32
+            field.ClearField("type_name")
+    old_file = descriptor_pb2.FileDescriptorProto(
+        name="old_profiling.proto", package="old", syntax="proto3", message_type=[message]
+    )
+    pool = descriptor_pool.DescriptorPool()
+    pool.Add(old_file)
+    return message_factory.GetMessageClass(pool.FindMessageTypeByName("old.NodeProfilingStats"))
+
+
+@pytest.mark.parametrize("flops", [0, 123_456_789_012])
+def test_flops_per_call_survives_a_peer_without_field_11(flops: int) -> None:
+    """An older orchestrator parent re-serializes the child's reply with field 11 intact."""
+    new = cuvis_ai_pb2.NodeProfilingStats(node_name="N", count=2, flops_per_call=flops)
+
+    old = _node_profiling_stats_without_flops().FromString(new.SerializeToString())
+    back = cuvis_ai_pb2.NodeProfilingStats.FromString(old.SerializeToString())
+
+    assert back.HasField("flops_per_call")
+    assert back.flops_per_call == flops
+    assert back.count == 2
 
 
 def test_restore_train_run_accepts_target_session() -> None:

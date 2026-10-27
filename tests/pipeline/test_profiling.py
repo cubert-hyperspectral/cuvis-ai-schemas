@@ -48,3 +48,36 @@ def test_equality_by_value():
     """Two stats with identical fields compare equal."""
     assert _stats() == _stats()
     assert _stats(count=11) != _stats(count=10)
+
+
+def test_flops_per_call_defaults_to_none():
+    """A row built without a FLOP count carries None."""
+    assert _stats().flops_per_call is None
+
+
+def test_positional_construction_of_the_timing_fields_still_works():
+    """The ten timing fields keep their positions; the FLOP count comes last."""
+    stats = NodeProfilingStats("N", "inference", 3, 1.0, 1.0, 0.0, 1.0, 1.0, 3.0, 1.0)
+    assert stats.last_ms == 1.0
+    assert stats.flops_per_call is None
+    assert [f.name for f in dataclasses.fields(NodeProfilingStats)][-1] == "flops_per_call"
+
+
+def test_gflop_per_s_golden_pair():
+    """2e9 FLOPs per call at a mean of 4 ms is 500 GFLOP/s."""
+    assert _stats(flops_per_call=2_000_000_000, mean_ms=4.0).gflop_per_s == pytest.approx(500.0)
+
+
+def test_gflop_per_s_is_zero_for_a_present_zero_count():
+    """A counted node without matmul, conv or attention reports a rate of 0."""
+    assert _stats(flops_per_call=0, mean_ms=4.0).gflop_per_s == 0.0
+
+
+@pytest.mark.parametrize(
+    ("flops", "mean_ms"),
+    [(None, 4.0), (2_000_000_000, 0.0), (2_000_000_000, -1.0)],
+    ids=["no-count", "zero-mean", "negative-mean"],
+)
+def test_gflop_per_s_is_none_without_count_or_time(flops, mean_ms):
+    """No rate without a count or without a positive mean time."""
+    assert _stats(flops_per_call=flops, mean_ms=mean_ms).gflop_per_s is None
