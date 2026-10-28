@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 import yaml
 from pydantic import (
@@ -95,6 +95,97 @@ class NodePortSpec(BaseSchemaModel):
 
 
 # ---------------------------------------------------------------------------
+# 1b. HparamSpec: one declared constructor parameter of a node (leaf, no deps)
+# ---------------------------------------------------------------------------
+_NUMERIC_TYPES = ("int", "float")
+
+
+def _matches_type(kind: str, value: object) -> bool:
+    """Whether a JSON value fits an hparam ``type`` (bool is never a number here)."""
+    if kind == "bool":
+        return isinstance(value, bool)
+    if isinstance(value, bool):
+        return False
+    if kind == "int":
+        return isinstance(value, int)
+    if kind == "float":
+        return isinstance(value, int | float)
+    if kind == "str":
+        return isinstance(value, str)
+    return isinstance(value, int | float | str)
+
+
+class HparamSpec(BaseSchemaModel):
+    """One constructor parameter of a node, as its manifest publishes it.
+
+    The palette and the docs read these to show a node's parameters without
+    importing the node, which matters for plugins whose code the reader may not
+    have. ``list`` marks a parameter whose value is a list of ``type``; ``min``,
+    ``max`` and ``choices`` then apply to each item.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        validate_assignment=True,
+        populate_by_name=True,
+        serialize_by_alias=True,
+    )
+
+    type: Literal["int", "float", "bool", "str", "enum"] = Field(
+        description="Value type; 'enum' takes one of 'choices'."
+    )
+    is_list: bool = Field(default=False, alias="list", description="The value is a list of 'type'.")
+    default: Any = Field(
+        default=None,
+        description="Default value (JSON); absent for a required parameter.",
+    )
+    required: bool = False
+    nullable: bool = Field(default=False, description="None is an allowed value.")
+    min: float | None = Field(default=None, description="Inclusive lower bound, numbers only.")
+    max: float | None = Field(default=None, description="Inclusive upper bound, numbers only.")
+    choices: list[Any] = Field(default_factory=list, description="Allowed values, 'enum' only.")
+    description: str = ""
+
+    @model_validator(mode="after")
+    def _check_consistency(self) -> HparamSpec:
+        """Check bounds, choices and the default against the declared type."""
+        if self.choices and self.type != "enum":
+            raise ValueError("choices are only allowed for type 'enum'")
+        if self.type == "enum":
+            if not self.choices:
+                raise ValueError("type 'enum' needs a non-empty 'choices' list")
+            if len(set(map(repr, self.choices))) != len(self.choices):
+                raise ValueError(f"choices must be unique, got {self.choices!r}")
+        if (self.min is not None or self.max is not None) and self.type not in _NUMERIC_TYPES:
+            raise ValueError("min and max only apply to types 'int' and 'float'")
+        if self.min is not None and self.max is not None and self.min > self.max:
+            raise ValueError(f"min {self.min} must not exceed max {self.max}")
+        if self.required:
+            if self.default is not None:
+                raise ValueError("a required hparam has no default")
+            return self
+        if self.default is None:
+            if not self.nullable:
+                raise ValueError("an optional hparam without a default must be nullable")
+            return self
+        if self.is_list and not isinstance(self.default, list):
+            raise ValueError(f"default of a list hparam must be a list, got {self.default!r}")
+        for value in self.default if self.is_list else [self.default]:
+            self._check_value(value)
+        return self
+
+    def _check_value(self, value: Any) -> None:
+        """Check one default value (or list item) against type, range and choices."""
+        if not _matches_type(self.type, value):
+            raise ValueError(f"default {value!r} does not match type {self.type!r}")
+        if self.type == "enum" and value not in self.choices:
+            raise ValueError(f"default {value!r} is not one of the choices {self.choices!r}")
+        if self.min is not None and value < self.min or self.max is not None and value > self.max:
+            raise ValueError(f"default {value!r} is outside the range [{self.min}, {self.max}]")
+
+
+# ---------------------------------------------------------------------------
 # 2. PluginCapabilityEntry — one provided item (a node or a data module)
 # ---------------------------------------------------------------------------
 class PluginCapabilityEntry(BaseSchemaModel):
@@ -136,14 +227,32 @@ class PluginCapabilityEntry(BaseSchemaModel):
     input_specs: dict[str, NodePortSpec] = Field(default_factory=dict)
     output_specs: dict[str, NodePortSpec] = Field(default_factory=dict)
     doc_summary: str = ""
+    hparams: dict[str, HparamSpec] | None = Field(
+        default=None,
+        description=(
+            "The node's constructor parameters by name; None when the manifest does not "
+            "declare them. Required for nodes of a package source."
+        ),
+    )
+
+    @field_validator("hparams")
+    @classmethod
+    def _validate_hparam_names(
+        cls, value: dict[str, HparamSpec] | None
+    ) -> dict[str, HparamSpec] | None:
+        """Require Python identifiers as parameter names."""
+        if value is not None:
+            _require_identifiers(list(value), "hparams")
+        return value
 
     @model_validator(mode="after")
     def _check_kind_invariant(self) -> PluginCapabilityEntry:
-        """Reconcile ``kind`` with ``data_module_name`` / ``extras``.
+        """Reconcile ``kind`` with ``data_module_name`` / ``extras`` / ``hparams``.
 
         A ``node`` entry must carry neither a ``data_module_name`` nor ``extras``
         (so a misclassified module cannot silently leak into the node palette);
-        a ``data_module`` entry must declare a non-empty ``data_module_name``.
+        a ``data_module`` entry must declare a non-empty ``data_module_name`` and
+        no ``hparams``.
         """
         if self.kind == "node":
             if self.data_module_name or self.extras:
@@ -153,6 +262,8 @@ class PluginCapabilityEntry(BaseSchemaModel):
                 )
         elif not self.data_module_name:
             raise ValueError(f"kind={self.kind!r} requires a non-empty 'data_module_name'.")
+        elif self.hparams is not None:
+            raise ValueError(f"kind={self.kind!r} entries must not set 'hparams'.")
         return self
 
     @field_validator("class_name")
@@ -645,32 +756,121 @@ class LocalPluginSource(_BasePluginManifest):
         return plugin_path
 
 
-PluginManifest = GitPluginSource | LocalPluginSource
-"""A single plugin manifest: either a git (repo + tag) or local (path) source."""
+# An index name: lower-case letters and digits, with single '-' runs between them.
+_INDEX_NAME_RE = re.compile(r"[a-z0-9]([a-z0-9-]*[a-z0-9])?")
+# '==' and a PEP 440 public version without wildcards, local labels or extra clauses.
+_EXACT_PIN_RE = re.compile(
+    r"==([0-9]+(?:\.[0-9]+)*(?:(?:a|b|rc)[0-9]+)?(?:\.post[0-9]+)?(?:\.dev[0-9]+)?)"
+)
+
+
+class PackagePluginSource(_BasePluginManifest):
+    """A plugin installed as a prebuilt package from a named package index.
+
+    The manifest names the index; it never holds its location or credentials.
+    Each host maps the index name to a registry URL or a wheel folder in its own
+    configuration, so a manifest stays the same wherever the packages are served
+    from. Since the package's code may not be readable, every node entry declares
+    its ``hparams`` for the palette and the docs.
+    """
+
+    package_name: str = Field(
+        min_length=1,
+        description="The package to install, e.g. 'cuvis-ai-closed-samples'.",
+    )
+    version: str = Field(
+        description="Exact version pin, e.g. '==0.1.0'. Ranges and wildcards are rejected.",
+    )
+    index: str = Field(
+        description=(
+            "Name of the package index the host maps to a registry URL or a wheel folder, "
+            "e.g. 'cubert-closed'. A name only: never a URL, a path or a credential."
+        ),
+    )
+
+    @field_validator("package_name")
+    @classmethod
+    def _validate_package_name(cls, value: str) -> str:
+        """Require a PEP 508 project name."""
+        if not _EXTRA_NAME_RE.fullmatch(value):
+            raise ValueError(f"Invalid package_name {value!r} (PEP 508 project name).")
+        return value
+
+    @field_validator("version")
+    @classmethod
+    def _validate_version(cls, value: str) -> str:
+        """Require an exact '==' pin of one release."""
+        if not _EXACT_PIN_RE.fullmatch(value):
+            raise ValueError(
+                f"Invalid version {value!r}: a package source pins one release exactly, "
+                "e.g. '==0.1.0'."
+            )
+        return value
+
+    @field_validator("index")
+    @classmethod
+    def _validate_index(cls, value: str) -> str:
+        """Require an index name, which rules out URLs, paths and credentials."""
+        if not _INDEX_NAME_RE.fullmatch(value):
+            raise ValueError(
+                f"Invalid index {value!r}: an index name is lower-case letters, digits and "
+                "'-' (e.g. 'cubert-closed'), never a URL, path or credential."
+            )
+        return value
+
+    @model_validator(mode="after")
+    def _require_node_hparams(self) -> PackagePluginSource:
+        """Require declared ``hparams`` on every node entry."""
+        missing = [
+            entry.class_name
+            for entry in self.capabilities
+            if entry.kind == "node" and entry.hparams is None
+        ]
+        if missing:
+            raise ValueError(
+                f"Every node of a package source must declare 'hparams'; missing on {missing}."
+            )
+        return self
+
+    @property
+    def pinned_version(self) -> str:
+        """The pinned release without the '==' prefix, e.g. '0.1.0'."""
+        return self.version.removeprefix("==")
+
+
+PluginManifest = GitPluginSource | LocalPluginSource | PackagePluginSource
+"""A single plugin manifest: a git (repo + tag), local (path) or package (index) source."""
 
 
 def _manifest_source(data: object) -> str | None:
     """Pick the manifest model from the keys present, before validation.
 
-    ``repo`` or ``tag`` selects the git model, ``path`` the local model, so a
-    validation error reports one shape instead of the errors of both.
+    ``repo`` or ``tag`` selects the git model, ``index`` or ``version`` the
+    package model, ``path`` the local model, so a validation error reports one
+    shape instead of the errors of all three. Keys of another source then fail
+    as unknown keys of the selected model.
     """
     if not isinstance(data, dict):
         return None
     if "repo" in data or "tag" in data:
         return "git"
+    if "index" in data or "version" in data:
+        return "package"
     return "local" if "path" in data else None
 
 
 _MANIFEST_ADAPTER: TypeAdapter[PluginManifest] = TypeAdapter(
     Annotated[
-        Annotated[GitPluginSource, Tag("git")] | Annotated[LocalPluginSource, Tag("local")],
+        Annotated[GitPluginSource, Tag("git")]
+        | Annotated[LocalPluginSource, Tag("local")]
+        | Annotated[PackagePluginSource, Tag("package")],
         Discriminator(
             _manifest_source,
             custom_error_type="plugin_manifest_source",
             custom_error_message=(
                 "A plugin manifest needs a source: 'path' for a local checkout, "
-                "or 'repo' + 'tag' for a git release."
+                "'repo' + 'tag' for a git release, or 'package_name' + 'version' + "
+                "'index' for a prebuilt package."
             ),
         ),
     ]
@@ -740,7 +940,7 @@ def load_plugin_manifest(yaml_path: Path) -> PluginManifest:
         yaml_path: Path to a single-plugin manifest YAML file.
 
     Returns:
-        The validated :data:`PluginManifest` (git or local).
+        The validated :data:`PluginManifest` (git, local or package).
 
     Raises:
         FileNotFoundError: ``yaml_path`` does not exist.
@@ -788,11 +988,13 @@ def write_plugin_manifest(manifest: PluginManifest, yaml_path: Path) -> None:
 
 __all__ = [
     "NodePortSpec",
+    "HparamSpec",
     "PluginCapabilityEntry",
     "AuxFile",
     "PluginWeightEntry",
     "GitPluginSource",
     "LocalPluginSource",
+    "PackagePluginSource",
     "PluginManifest",
     "PluginCapabilities",
     "parse_plugin_manifest",

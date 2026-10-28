@@ -178,6 +178,12 @@ class NodeTag(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     NODE_TAG_NUMPY: _ClassVar[NodeTag]
     NODE_TAG_JAX: _ClassVar[NodeTag]
     NODE_TAG_ONNX: _ClassVar[NodeTag]
+
+class NodeAvailability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    NODE_AVAILABILITY_UNSPECIFIED: _ClassVar[NodeAvailability]
+    NODE_AVAILABILITY_AVAILABLE: _ClassVar[NodeAvailability]
+    NODE_AVAILABILITY_NEEDS_ACCESS: _ClassVar[NodeAvailability]
 PROCESSING_MODE_UNSPECIFIED: ProcessingMode
 PROCESSING_MODE_RAW: ProcessingMode
 PROCESSING_MODE_REFLECTANCE: ProcessingMode
@@ -311,6 +317,9 @@ NODE_TAG_TORCH: NodeTag
 NODE_TAG_NUMPY: NodeTag
 NODE_TAG_JAX: NodeTag
 NODE_TAG_ONNX: NodeTag
+NODE_AVAILABILITY_UNSPECIFIED: NodeAvailability
+NODE_AVAILABILITY_AVAILABLE: NodeAvailability
+NODE_AVAILABILITY_NEEDS_ACCESS: NodeAvailability
 
 class ShmRef(_message.Message):
     __slots__ = ("name", "byte_offset", "byte_size")
@@ -1119,7 +1128,7 @@ class PortSpec(_message.Message):
     def __init__(self, name: _Optional[str] = ..., dtype: _Optional[_Union[DType, str]] = ..., shape: _Optional[_Iterable[int]] = ..., optional: bool = ..., description: _Optional[str] = ..., variadic: bool = ...) -> None: ...
 
 class NodeInfo(_message.Message):
-    __slots__ = ("class_name", "full_path", "source", "plugin_name", "input_specs", "output_specs", "icon_svg", "category", "tags")
+    __slots__ = ("class_name", "full_path", "source", "plugin_name", "input_specs", "output_specs", "icon_svg", "category", "tags", "doc_summary", "hparams", "availability")
     class InputSpecsEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -1143,6 +1152,9 @@ class NodeInfo(_message.Message):
     ICON_SVG_FIELD_NUMBER: _ClassVar[int]
     CATEGORY_FIELD_NUMBER: _ClassVar[int]
     TAGS_FIELD_NUMBER: _ClassVar[int]
+    DOC_SUMMARY_FIELD_NUMBER: _ClassVar[int]
+    HPARAMS_FIELD_NUMBER: _ClassVar[int]
+    AVAILABILITY_FIELD_NUMBER: _ClassVar[int]
     class_name: str
     full_path: str
     source: str
@@ -1152,7 +1164,34 @@ class NodeInfo(_message.Message):
     icon_svg: bytes
     category: NodeCategory
     tags: _containers.RepeatedScalarFieldContainer[NodeTag]
-    def __init__(self, class_name: _Optional[str] = ..., full_path: _Optional[str] = ..., source: _Optional[str] = ..., plugin_name: _Optional[str] = ..., input_specs: _Optional[_Mapping[str, PortSpec]] = ..., output_specs: _Optional[_Mapping[str, PortSpec]] = ..., icon_svg: _Optional[bytes] = ..., category: _Optional[_Union[NodeCategory, str]] = ..., tags: _Optional[_Iterable[_Union[NodeTag, str]]] = ...) -> None: ...
+    doc_summary: str
+    hparams: _containers.RepeatedCompositeFieldContainer[HparamSpec]
+    availability: NodeAvailability
+    def __init__(self, class_name: _Optional[str] = ..., full_path: _Optional[str] = ..., source: _Optional[str] = ..., plugin_name: _Optional[str] = ..., input_specs: _Optional[_Mapping[str, PortSpec]] = ..., output_specs: _Optional[_Mapping[str, PortSpec]] = ..., icon_svg: _Optional[bytes] = ..., category: _Optional[_Union[NodeCategory, str]] = ..., tags: _Optional[_Iterable[_Union[NodeTag, str]]] = ..., doc_summary: _Optional[str] = ..., hparams: _Optional[_Iterable[_Union[HparamSpec, _Mapping]]] = ..., availability: _Optional[_Union[NodeAvailability, str]] = ...) -> None: ...
+
+class HparamSpec(_message.Message):
+    __slots__ = ("name", "type", "list", "default_json", "required", "nullable", "min", "max", "choices_json", "description")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    TYPE_FIELD_NUMBER: _ClassVar[int]
+    LIST_FIELD_NUMBER: _ClassVar[int]
+    DEFAULT_JSON_FIELD_NUMBER: _ClassVar[int]
+    REQUIRED_FIELD_NUMBER: _ClassVar[int]
+    NULLABLE_FIELD_NUMBER: _ClassVar[int]
+    MIN_FIELD_NUMBER: _ClassVar[int]
+    MAX_FIELD_NUMBER: _ClassVar[int]
+    CHOICES_JSON_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    type: str
+    list: bool
+    default_json: str
+    required: bool
+    nullable: bool
+    min: float
+    max: float
+    choices_json: _containers.RepeatedScalarFieldContainer[str]
+    description: str
+    def __init__(self, name: _Optional[str] = ..., type: _Optional[str] = ..., list: bool = ..., default_json: _Optional[str] = ..., required: bool = ..., nullable: bool = ..., min: _Optional[float] = ..., max: _Optional[float] = ..., choices_json: _Optional[_Iterable[str]] = ..., description: _Optional[str] = ...) -> None: ...
 
 class LoadPluginRequest(_message.Message):
     __slots__ = ("session_id", "manifest")

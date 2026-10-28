@@ -343,3 +343,44 @@ def test_checkpoint_progress_and_evaluation_outcomes_shape() -> None:
         "EVALUATION_STATUS_NO_SPLIT": 2,
         "EVALUATION_STATUS_FAILED": 3,
     }
+
+
+def test_node_info_carries_doc_summary_hparams_and_availability() -> None:
+    """NodeInfo fields 10 to 12 are additive: a palette gets docs, parameters and access."""
+    fields = cuvis_ai_pb2.NodeInfo.DESCRIPTOR.fields_by_name
+
+    assert fields["doc_summary"].number == 10
+    assert fields["hparams"].number == 11
+    assert fields["hparams"].message_type.name == "HparamSpec"
+    assert fields["availability"].number == 12
+    assert fields["availability"].enum_type.name == "NodeAvailability"
+
+
+def test_node_availability_values_are_pinned() -> None:
+    """Zero is UNSPECIFIED (not checked), so an older server's NodeInfo reads as 'load decides'."""
+    values = cuvis_ai_pb2.NodeAvailability.DESCRIPTOR.values_by_name
+
+    assert values["NODE_AVAILABILITY_UNSPECIFIED"].number == 0
+    assert values["NODE_AVAILABILITY_AVAILABLE"].number == 1
+    assert values["NODE_AVAILABILITY_NEEDS_ACCESS"].number == 2
+    assert cuvis_ai_pb2.NodeInfo().availability == 0
+
+
+def test_hparam_spec_message_shape() -> None:
+    """HparamSpec carries typed JSON for default and choices and optional bounds."""
+    fields = cuvis_ai_pb2.HparamSpec.DESCRIPTOR.fields_by_name
+
+    assert {name: f.number for name, f in fields.items()} == {
+        "name": 1,
+        "type": 2,
+        "list": 3,
+        "default_json": 4,
+        "required": 5,
+        "nullable": 6,
+        "min": 7,
+        "max": 8,
+        "choices_json": 9,
+        "description": 10,
+    }
+    assert fields["min"].has_presence
+    assert fields["max"].has_presence
