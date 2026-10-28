@@ -36,8 +36,10 @@ from cuvis_ai_schemas.pipeline.config import (
 from cuvis_ai_schemas.plugin.manifest_capabilities import (
     AuxFile,
     GitPluginSource,
+    HparamSpec,
     LocalPluginSource,
     NodePortSpec,
+    PackagePluginSource,
     PluginCapabilities,
     PluginCapabilityEntry,
     PluginWeightEntry,
@@ -109,6 +111,33 @@ def node_port_spec_strategy() -> SearchStrategy[NodePortSpec]:
     )
 
 
+def hparam_spec_strategy() -> SearchStrategy[HparamSpec]:
+    """Strategy for a valid :class:`HparamSpec`: bounded, required, enum, list and nullable."""
+    bounded = st.integers(-5, 5).flatmap(
+        lambda low: st.builds(
+            HparamSpec,
+            type=st.just("int"),
+            min=st.just(float(low)),
+            max=st.just(float(low + 10)),
+            default=st.integers(low, low + 10),
+            description=short_text,
+        )
+    )
+    return st.one_of(
+        bounded,
+        st.builds(
+            HparamSpec, type=st.sampled_from(["int", "float", "str"]), required=st.just(True)
+        ),
+        st.sampled_from(["abs", "sq"]).map(
+            lambda pick: HparamSpec(type="enum", choices=["abs", "sq"], default=pick)
+        ),
+        st.lists(st.booleans(), max_size=3).map(
+            lambda values: HparamSpec(type="bool", list=True, default=values)
+        ),
+        st.just(HparamSpec(type="str", nullable=True)),
+    )
+
+
 def plugin_capability_entry_strategy() -> SearchStrategy[PluginCapabilityEntry]:
     """Strategy for :class:`PluginCapabilityEntry` (node or data_module)."""
     node = st.builds(
@@ -121,6 +150,9 @@ def plugin_capability_entry_strategy() -> SearchStrategy[PluginCapabilityEntry]:
         input_specs=st.dictionaries(identifiers, node_port_spec_strategy(), max_size=2),
         output_specs=st.dictionaries(identifiers, node_port_spec_strategy(), max_size=2),
         doc_summary=short_text,
+        hparams=st.one_of(
+            st.none(), st.dictionaries(identifiers, hparam_spec_strategy(), max_size=2)
+        ),
     )
     data_module = st.builds(
         PluginCapabilityEntry,
@@ -226,6 +258,25 @@ def local_plugin_source_strategy() -> SearchStrategy[LocalPluginSource]:
         capabilities=st.lists(plugin_capability_entry_strategy(), min_size=1, max_size=3),
         weights=_weights_strategy(),
         package_name=st.one_of(st.none(), identifiers),
+        extras=_extras_strategy(),
+    )
+
+
+def package_plugin_source_strategy() -> SearchStrategy[PackagePluginSource]:
+    """Strategy for a :class:`PackagePluginSource` manifest (every node declares hparams)."""
+    node = st.builds(
+        PluginCapabilityEntry,
+        class_name=fqcns,
+        doc_summary=short_text,
+        hparams=st.dictionaries(identifiers, hparam_spec_strategy(), max_size=2),
+    )
+    return st.builds(
+        PackagePluginSource,
+        name=identifiers,
+        package_name=st.from_regex(r"[a-z][a-z0-9]{0,6}(-[a-z0-9]{1,6}){0,2}", fullmatch=True),
+        version=st.from_regex(r"==[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}", fullmatch=True),
+        index=st.from_regex(r"[a-z0-9]{1,6}(-[a-z0-9]{1,6}){0,2}", fullmatch=True),
+        capabilities=st.lists(node, min_size=1, max_size=3),
         extras=_extras_strategy(),
     )
 
@@ -468,6 +519,8 @@ MODEL_STRATEGIES: dict[type[BaseSchemaModel], SearchStrategy[BaseSchemaModel]] =
     PluginWeightEntry: plugin_weight_entry_strategy(),
     GitPluginSource: git_plugin_source_strategy(),
     LocalPluginSource: local_plugin_source_strategy(),
+    PackagePluginSource: package_plugin_source_strategy(),
+    HparamSpec: hparam_spec_strategy(),
     PluginCapabilities: plugin_capabilities_strategy(),
     Selector: selector_strategy(),
     SampleRef: sample_ref_strategy(),

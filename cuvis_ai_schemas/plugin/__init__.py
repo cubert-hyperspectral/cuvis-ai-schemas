@@ -3,8 +3,10 @@
 from cuvis_ai_schemas.plugin.manifest_capabilities import (
     AuxFile,
     GitPluginSource,
+    HparamSpec,
     LocalPluginSource,
     NodePortSpec,
+    PackagePluginSource,
     PluginCapabilities,
     PluginCapabilityEntry,
     PluginManifest,
@@ -17,8 +19,10 @@ from cuvis_ai_schemas.plugin.manifest_capabilities import (
 __all__ = [
     "AuxFile",
     "GitPluginSource",
+    "HparamSpec",
     "LocalPluginSource",
     "NodePortSpec",
+    "PackagePluginSource",
     "PluginCapabilities",
     "PluginCapabilityEntry",
     "PluginManifest",

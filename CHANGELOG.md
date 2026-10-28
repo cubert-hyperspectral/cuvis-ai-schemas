@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.15.0 - 2026-10-28
+
+- Added `PackagePluginSource`, a third plugin manifest source: a prebuilt package from a named package index (`package_name`, an exact `version` pin such as `==0.1.0`, and `index`, a lower-case name such as `cubert-closed`). The manifest names the index only; each host maps the name to a registry URL or a wheel folder in its own configuration, so URLs, paths and credentials never appear in a manifest. Every node of a package source declares `hparams`. `parse_plugin_manifest` and `load_plugin_manifest` pick the source from the keys (`repo`/`tag`, `index`/`version`, `path`); keys of another source are rejected.
+- Added `HparamSpec` and an optional `hparams` mapping on `PluginCapabilityEntry`: each constructor parameter's type (`int`, `float`, `bool`, `str`, `enum`, or a `list` of one of them), default, `required`, `nullable`, inclusive `min` and `max`, enum `choices` and a description, checked against each other at load. Data module entries carry none. A manifest without `hparams` is written exactly as before.
+- `NodeInfo` gains `doc_summary` (field 10), `repeated HparamSpec hparams` (field 11) and `NodeAvailability availability` (field 12: `UNSPECIFIED` = not checked, `AVAILABLE`, `NEEDS_ACCESS` when the host has no location for the plugin's index). `hparam_spec_to_proto` and `proto_to_hparam_spec` in `cuvis_ai_schemas.grpc.conversions` carry a spec over the wire, with the default and each choice as JSON so their types survive.
+- Additive on the wire (`buf breaking` against 0.14.3 passes). A manifest that uses a package source or `hparams` needs this release to parse: older schemas reject the unknown keys, so consumers raise their floor before such a manifest ships.
+
 ## 0.14.3 - 2026-10-27
 
 - Added `NodeProfilingStats.flops_per_call` (`optional int64`, field 11): the floating-point operations of one forward of the node (matrix multiplication, convolution, attention), counted on its first forward after a profiling reset. Unset for the data-loading rows, a server that does not count, or a count that failed; a set 0 means the node ran none of the counted operations, so clients test presence (`HasField`), not the value.

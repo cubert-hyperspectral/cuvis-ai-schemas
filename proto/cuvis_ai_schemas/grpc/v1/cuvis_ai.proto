@@ -789,6 +789,31 @@ message NodeInfo {
   bytes        icon_svg = 7;        // SVG payload (empty when no icon resolves)
   NodeCategory category = 8;        // Primary graph role / execution contract
   repeated NodeTag tags = 9;        // Orthogonal axes (modality/task/lifecycle/properties/backend)
+  string doc_summary = 10;          // One-line description from the manifest (empty when none)
+  repeated HparamSpec hparams = 11; // Constructor parameters declared in the manifest
+  NodeAvailability availability = 12;  // Whether this host can install the node's plugin
+}
+
+// Whether the host can install a node's plugin. Only a plugin from a named
+// package index can need access; every other node reads UNSPECIFIED or AVAILABLE.
+enum NodeAvailability {
+  NODE_AVAILABILITY_UNSPECIFIED  = 0;  // Not checked; the pipeline load decides
+  NODE_AVAILABILITY_AVAILABLE    = 1;  // The host has a location for the plugin's index
+  NODE_AVAILABILITY_NEEDS_ACCESS = 2;  // No location configured for the plugin's index
+}
+
+// One constructor parameter of a node, as its plugin manifest declares it.
+message HparamSpec {
+  string name = 1;
+  string type = 2;               // "int", "float", "bool", "str" or "enum"
+  bool list = 3;                 // The value is a list of `type`
+  string default_json = 4;       // JSON of the default; empty when there is none
+  bool required = 5;
+  bool nullable = 6;
+  optional double min = 7;       // Inclusive bounds, numbers only
+  optional double max = 8;
+  repeated string choices_json = 9;  // JSON of each allowed value, enum only
+  string description = 10;
 }
 
 // Request/Response messages
