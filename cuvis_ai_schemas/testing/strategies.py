@@ -42,6 +42,7 @@ from cuvis_ai_schemas.plugin.manifest_capabilities import (
     PluginCapabilityEntry,
     PluginWeightEntry,
 )
+from cuvis_ai_schemas.training.calibration import CalibrationConfig
 from cuvis_ai_schemas.training.callbacks import (
     CallbacksConfig,
     EarlyStoppingConfig,
@@ -460,6 +461,17 @@ def callbacks_config_strategy() -> SearchStrategy[CallbacksConfig]:
     )
 
 
+def calibration_config_strategy() -> SearchStrategy[CalibrationConfig]:
+    """Strategy for :class:`CalibrationConfig`: plain F1, or a precision or recall target."""
+    targeted = st.builds(
+        CalibrationConfig,
+        objective=st.sampled_from(["precision", "recall"]),
+        target=st.floats(min_value=0.0, max_value=1.0, allow_nan=False),
+        level=st.sampled_from(["pixels", "frames"]),
+    )
+    return st.one_of(st.just(CalibrationConfig()), targeted)
+
+
 #: Registry mapping each supported model class to its Hypothesis strategy.
 MODEL_STRATEGIES: dict[type[BaseSchemaModel], SearchStrategy[BaseSchemaModel]] = {
     NodePortSpec: node_port_spec_strategy(),
@@ -483,6 +495,7 @@ MODEL_STRATEGIES: dict[type[BaseSchemaModel], SearchStrategy[BaseSchemaModel]] =
     EarlyStoppingConfig: early_stopping_config_strategy(),
     LearningRateMonitorConfig: learning_rate_monitor_config_strategy(),
     CallbacksConfig: callbacks_config_strategy(),
+    CalibrationConfig: calibration_config_strategy(),
 }
 
 

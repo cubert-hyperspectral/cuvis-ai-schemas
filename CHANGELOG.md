@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.4 - 2026-10-29
+
+- Added `CalibrationConfig` (exported from `cuvis_ai_schemas.training`) and `TrainRunConfig.calibration`: what the decider thresholds are calibrated to on the validation split. `objective` is `f1` (the default), `precision` or `recall`; `target` is a number in [0, 1], required for precision and recall and refused with f1; `level` is `pixels` (the default) or `frames`, and f1 keeps the default because it calibrates by each decider's own rule. Unknown keys are refused, as everywhere else in the schemas.
+- A trainrun without the block serializes as in 0.14.3: the field is left out of `to_dict`, `to_json`, `save_to_file` and the proto bytes while it is unset, so readers on 0.14.3 or earlier still read runs written with 0.14.4. A trainrun that carries the block needs cuvis-ai-core 0.19.1 or later to be restored; earlier cores refuse the unknown key.
+- No proto change: `TrainRunConfig` travels as JSON bytes. The Hypothesis strategies cover `CalibrationConfig`.
+
 ## 0.14.3 - 2026-10-27
 
 - Added `NodeProfilingStats.flops_per_call` (`optional int64`, field 11): the floating-point operations of one forward of the node (matrix multiplication, convolution, attention), counted on its first forward after a profiling reset. Unset for the data-loading rows, a server that does not count, or a count that failed; a set 0 means the node ran none of the counted operations, so clients test presence (`HasField`), not the value.

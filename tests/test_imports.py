@@ -63,6 +63,7 @@ def test_pipeline_schemas_import():
 def test_training_schemas_import():
     """Test that training schemas can be imported."""
     from cuvis_ai_schemas.training import (
+        CalibrationConfig,
         CallbacksConfig,
         DataConfig,
         OptimizerConfig,
@@ -73,6 +74,7 @@ def test_training_schemas_import():
         TrainRunConfig,
     )
 
+    assert CalibrationConfig is not None
     assert CallbacksConfig is not None
     assert DataConfig is not None
     assert OptimizerConfig is not None
