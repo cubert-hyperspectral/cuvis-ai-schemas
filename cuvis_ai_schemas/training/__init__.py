@@ -1,6 +1,7 @@
 """Training configuration schemas for cuvis-ai."""
 
 from cuvis_ai_schemas.pipeline.config import PipelineConfig, PipelineMetadata
+from cuvis_ai_schemas.training.calibration import CalibrationConfig
 from cuvis_ai_schemas.training.callbacks import (
     CallbacksConfig,
     EarlyStoppingConfig,
@@ -26,6 +27,8 @@ from cuvis_ai_schemas.training.run import TrainRunConfig
 from cuvis_ai_schemas.training.scheduler import SchedulerConfig
 
 __all__ = [
+    # Calibration
+    "CalibrationConfig",
     # Callbacks
     "CallbacksConfig",
     "EarlyStoppingConfig",

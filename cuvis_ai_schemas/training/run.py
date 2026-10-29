@@ -10,6 +10,7 @@ import yaml
 from pydantic import Field, field_validator, model_validator
 
 from cuvis_ai_schemas.base import BaseSchemaModel
+from cuvis_ai_schemas.training.calibration import CalibrationConfig
 from cuvis_ai_schemas.training.config import TrainingConfig
 from cuvis_ai_schemas.training.data import DataConfig
 
@@ -34,6 +35,15 @@ class TrainRunConfig(BaseSchemaModel):
     training: TrainingConfig | None = Field(
         default=None,
         description="Training configuration (required if gradient training)",
+    )
+    calibration: CalibrationConfig | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description=(
+            "What the decider thresholds are calibrated to on the validation split. "
+            "Unset calibrates to F1 and is left out when the run is written, so a reader "
+            "that predates the block still reads the run."
+        ),
     )
 
     loss_nodes: list[str] = Field(
