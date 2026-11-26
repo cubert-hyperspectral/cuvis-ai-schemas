@@ -22,6 +22,7 @@ from cuvis_ai_schemas.training.data import (
     SelectorKind,
     default_constraints,
 )
+from cuvis_ai_schemas.training.ema import EmaConfig
 from cuvis_ai_schemas.training.optimizer import OptimizerConfig
 from cuvis_ai_schemas.training.run import TrainRunConfig
 from cuvis_ai_schemas.training.scheduler import SchedulerConfig
@@ -37,6 +38,8 @@ __all__ = [
     "create_callbacks_from_config",
     # Config
     "TrainingConfig",
+    # Weight averaging
+    "EmaConfig",
     # Data
     "DataConfig",
     "DataSplitConfig",

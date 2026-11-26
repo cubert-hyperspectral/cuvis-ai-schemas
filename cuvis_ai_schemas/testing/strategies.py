@@ -58,6 +58,7 @@ from cuvis_ai_schemas.training.data import (
     Selector,
     SelectorKind,
 )
+from cuvis_ai_schemas.training.ema import EmaConfig
 from cuvis_ai_schemas.training.optimizer import OptimizerConfig
 from cuvis_ai_schemas.training.scheduler import SchedulerConfig
 
@@ -472,6 +473,18 @@ def calibration_config_strategy() -> SearchStrategy[CalibrationConfig]:
     return st.one_of(st.just(CalibrationConfig()), targeted)
 
 
+def ema_config_strategy() -> SearchStrategy[EmaConfig]:
+    """Strategy for :class:`EmaConfig`: decay in (0, 1], any warm-up, either weights."""
+    return st.builds(
+        EmaConfig,
+        decay=st.floats(min_value=1e-6, max_value=1.0, allow_nan=False),
+        tau=st.floats(min_value=0.0, max_value=1e6, allow_nan=False),
+        update_interval=st.integers(min_value=1, max_value=1000),
+        update_on_epoch_end=st.booleans(),
+        evaluate=st.sampled_from(["ema", "live"]),
+    )
+
+
 #: Registry mapping each supported model class to its Hypothesis strategy.
 MODEL_STRATEGIES: dict[type[BaseSchemaModel], SearchStrategy[BaseSchemaModel]] = {
     NodePortSpec: node_port_spec_strategy(),
@@ -496,6 +509,7 @@ MODEL_STRATEGIES: dict[type[BaseSchemaModel], SearchStrategy[BaseSchemaModel]] =
     LearningRateMonitorConfig: learning_rate_monitor_config_strategy(),
     CallbacksConfig: callbacks_config_strategy(),
     CalibrationConfig: calibration_config_strategy(),
+    EmaConfig: ema_config_strategy(),
 }
 
 

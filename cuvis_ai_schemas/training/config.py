@@ -8,6 +8,7 @@ from pydantic import Field, StrictFloat, StrictInt, field_validator
 
 from cuvis_ai_schemas.base import BaseSchemaModel
 from cuvis_ai_schemas.training.callbacks import CallbacksConfig
+from cuvis_ai_schemas.training.ema import EmaConfig
 from cuvis_ai_schemas.training.optimizer import OptimizerConfig
 from cuvis_ai_schemas.training.scheduler import SchedulerConfig
 
@@ -22,6 +23,7 @@ _ORCHESTRATION_FIELDS: frozenset[str] = frozenset(
         "scheduler",
         "callbacks",
         "release_cuda_cache_on_validation",
+        "ema",
     }
 )
 
@@ -31,7 +33,7 @@ class TrainingConfig(BaseSchemaModel):
 
     Flat set of hyperparameters for a gradient-training run: the run-level
     knobs (``seed``, ``optimizer``, ``scheduler``, ``callbacks``,
-    ``release_cuda_cache_on_validation``) plus the ``pytorch_lightning.Trainer``
+    ``release_cuda_cache_on_validation``, ``ema``) plus the ``pytorch_lightning.Trainer``
     keyword arguments. Every field is on exactly one side of that split:
     ``_ORCHESTRATION_FIELDS`` names the runtime knobs, ``_LIGHTNING_FIELDS``
     the raw trainer kwargs that ``to_lightning_kwargs`` forwards. ``callbacks``
@@ -57,6 +59,15 @@ class TrainingConfig(BaseSchemaModel):
         description=(
             "Free cached CUDA memory around each validation pass (opt-in; costs a device "
             "sync per validation epoch)"
+        ),
+    )
+    ema: EmaConfig | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description=(
+            "Exponential moving average of the trained weights (optional). Unset trains "
+            "without an average and is left out when the config is written, so a reader "
+            "that predates the field still reads it."
         ),
     )
 
@@ -153,7 +164,7 @@ class TrainingConfig(BaseSchemaModel):
         An explicit allowlist: ``pl.Trainer`` raises on an unknown keyword, so
         the orchestration fields (``_ORCHESTRATION_FIELDS``: ``seed``,
         ``optimizer``, ``scheduler``, ``callbacks``,
-        ``release_cuda_cache_on_validation``) are never forwarded. Fields left
+        ``release_cuda_cache_on_validation``, ``ema``) are never forwarded. Fields left
         at ``None`` are dropped so Lightning's own defaults apply. ``callbacks``
         is built into real Lightning callbacks separately by the trainer.
         """

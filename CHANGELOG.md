@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Added `EmaConfig` (exported from `cuvis_ai_schemas.training`) and `TrainingConfig.ema`: an exponential moving average of the trained weights. `decay` in (0, 1] (default 0.999), `tau` the warm-up time constant in updates (the decay ramps up as `decay * (1 - exp(-n / tau))`; 0, the default, keeps it constant), `update_interval` optimizer steps between updates (default 1), `update_on_epoch_end` one more update at the end of every training epoch (default off), and `evaluate`: the weights validation, test, the best-checkpoint choice and the saved pipeline use, `ema` (the default) or `live`. Unknown keys are refused. RF-DETR's trainer, for example, is `decay: 0.993, tau: 100, update_on_epoch_end: true`.
+- `ema` is a runtime field (`_ORCHESTRATION_FIELDS`) and is never passed to `pl.Trainer`. A config without it serializes as before: the field is left out of `to_dict`, `to_json`, `save_to_file` and the proto bytes while it is unset, so readers that predate it still read such configs. A config that sets it needs a cuvis-ai-core that knows the field; older cores refuse the unknown key.
+- No proto change: `TrainingConfig` travels as JSON bytes. The Hypothesis strategies cover `EmaConfig`.
+
 ## 0.14.4 - 2026-10-29
 
 - Added `CalibrationConfig` (exported from `cuvis_ai_schemas.training`) and `TrainRunConfig.calibration`: what the decider thresholds are calibrated to on the validation split. `objective` is `f1` (the default), `precision` or `recall`; `target` is a number in [0, 1], required for precision and recall and refused with f1; `level` is `pixels` (the default) or `frames`, and f1 keeps the default because it calibrates by each decider's own rule. Unknown keys are refused, as everywhere else in the schemas.
